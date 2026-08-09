@@ -1,0 +1,35 @@
+name: Crypto Quest — گزارش روزانه به تلگرام
+
+# هر ۶ ساعت اجرا شود
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  # امکان اجرای دستی
+  workflow_dispatch:
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ۱. دریافت کد پروژه
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      # ۲. نصب پایتون
+      - name: نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ۳. ساخت گزارش و ارسال به تلگرام
+      - name: ارسال گزارش به تلگرام
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # ساخت گزارش (اینجا می‌توانی گزارش خودکار بسازی)
+          python3 scripts/generate_report.py
+          # ارسال به تلگرام
+          python3 scripts/telegram_send.py --file report.txt
