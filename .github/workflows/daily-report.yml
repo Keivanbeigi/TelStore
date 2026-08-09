@@ -25,9 +25,8 @@ jobs:
         run: |
           python3 scripts/generate_smart_report.py
 
-      - name: Send report to Telegram
+      - name: Broadcast to all premium subscribers
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python3 scripts/telegram_send.py --file report.txt
+          python3 scripts/broadcast.py --file report.txt --premium
