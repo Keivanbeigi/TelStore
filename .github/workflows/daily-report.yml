@@ -8,7 +8,7 @@ on:
 jobs:
   send-report:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -19,10 +19,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Generate and send report
+      - name: Generate smart AI report
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          python3 scripts/generate_smart_report.py
+
+      - name: Send report to Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python3 scripts/generate_report.py
           python3 scripts/telegram_send.py --file report.txt
