@@ -30,7 +30,23 @@ import datetime
 # ------------------------------------------------------------
 #  تنظیمات
 # ------------------------------------------------------------
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+def _load_token():
+    """Read TELEGRAM_BOT_TOKEN from env or the project .env file."""
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if tok:
+        return tok
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8-sig") as f:
+                m = re.search(r'^TELEGRAM_BOT_TOKEN=([^\r\n]+)', f.read(), re.M)
+            if m:
+                return m.group(1).strip().strip('"').strip("'")
+        except Exception:
+            pass
+    return ""
+
+TOKEN = _load_token()
 SUBSCRIBERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "subscribers.json")
 
 # قیمت‌ها
