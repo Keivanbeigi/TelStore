@@ -42,6 +42,7 @@ import urllib.parse
 
 import nowpayments  # crypto payment gateway (optional)
 import channel_access  # VIP channel membership management (optional)
+import admin  # owner admin panel
 
 # ------------------------------------------------------------
 #  Config
@@ -511,7 +512,102 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data == "unsubscribe":
         handle_unsubscribe(chat_id, message_id)
 
+def handle_admin_command(chat_id, command):
+    """Owner-only commands (stats, broadcast, add/kick member, set price)."""
+    global PRICE_CRYPTO_USD
+    if not admin.is_owner(chat_id):
+        # Not the owner - ignore silently (or tell them politely once).
+        return False
+
+    cmd = command.strip()
+
+    if cmd == "/stats":
+        data = load_subscribers()
+        subs = data.get("subscribers", [])
+        total = len(subs)
+        premium = len([s for s in subs if s.get("plan") == "premium"])
+        free = len([s for s in subs if s.get("plan") == "free"])
+        revenue = premium * PRICE_CRYPTO_USD
+        text = (f"📊 Subscriber statistics:\n\n"
+                f"👥 Total: {total}\n"
+                f"💎 Premium: {premium}\n"
+                f"🆓 Free: {free}\n\n"
+                f"💰 Est. monthly revenue: ${revenue:.2f}")
+        send_message(chat_id, text, back_menu_keyboard())
+        return True
+
+    elif cmd == "/admin":
+        text = ("🛠 Owner commands:\n\n"
+                "📊 /stats - subscriber & revenue summary\n"
+                "📢 /broadcast <text> - message all subscribers\n"
+                "➕ /add_member <user_id> - grant premium (30 days)\n"
+                "🚫 /kick <user_id> - remove a subscriber\n"
+                "💰 /set_price <usd> - change monthly price")
+        send_message(chat_id, text, back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/broadcast "):
+        msg = cmd.split(" ", 1)[1].strip()
+        data = load_subscribers()
+        subs = data.get("subscribers", [])
+        sent, failed = 0, 0
+        for s in subs:
+            cid = s.get("chat_id")
+            if cid:
+                if send_message(cid, f"📢 {msg}"):
+                    sent += 1
+                else:
+                    failed += 1
+        send_message(chat_id, f"📢 Broadcast sent to {sent} subscriber(s)."
+                             + (f" ({failed} failed)" if failed else ""),
+                     back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/add_member "):
+        user_id = cmd.split(" ", 1)[1].strip()
+        if not user_id.lstrip("-").isdigit():
+            send_message(chat_id, "❌ Invalid user id.", back_menu_keyboard())
+            return True
+        err = admin.add_premium_member(SUBSCRIBERS_FILE, user_id)
+        if err:
+            send_message(chat_id, f"❌ {err}", back_menu_keyboard())
+        else:
+            # Also grant channel access if a channel is configured.
+            access = channel_access.grant_access(user_id)
+            text = f"✅ Premium granted to {user_id} for 30 days."
+            if access.get("ok") and access.get("channel"):
+                text += f"\n🔓 Channel invite:\n{access.get('invite_link')}"
+            send_message(chat_id, text, back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/kick "):
+        user_id = cmd.split(" ", 1)[1].strip()
+        removed = admin.remove_member(SUBSCRIBERS_FILE, user_id)
+        channel_access.revoke_access(user_id)
+        text = f"🚫 Removed {user_id}." if removed else f"⚠️ {user_id} was not a subscriber."
+        send_message(chat_id, text, back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/set_price "):
+        try:
+            new_price = float(cmd.split(" ", 1)[1].strip())
+            if new_price <= 0:
+                raise ValueError
+        except ValueError:
+            send_message(chat_id, "❌ Invalid price. Use /set_price 5.0", back_menu_keyboard())
+            return True
+        # Price is loaded at import time; this only updates for the current run.
+        PRICE_CRYPTO_USD = new_price
+        send_message(chat_id, f"💰 Price updated to ${new_price:.2f}/month (for this run).",
+                     back_menu_keyboard())
+        return True
+
+    return False
+
 def handle_command(chat_id, username, command):
+    # Owner-only commands first.
+    if handle_admin_command(chat_id, command):
+        return
     data = load_subscribers()
 
     if command == "/start":
@@ -539,6 +635,7 @@ _SWEEP_INTERVAL = 6 * 60 * 60  # sweep expired memberships every 6 hours
 _last_sweep = 0.0
 
 def main():
+    global _last_sweep
     if not TOKEN:
         print("ERROR: TELEGRAM_BOT_TOKEN not set", file=sys.stderr)
         sys.exit(1)
