@@ -66,14 +66,6 @@ CRYPTO_NETWORKS = [
         "recommended": False,
         "note": "کارمزد کم، شبکه لایه ۲",
         "recommended_label": ""
-    },
-    {
-        "name": "TRON",
-        "standard": "TRC-20",
-        "currency": "USDT (TRC-20)",
-        "recommended": False,
-        "note": "محبوب برای USDT، کارمزد ثابت و کم",
-        "recommended_label": ""
     }
 ]
 
