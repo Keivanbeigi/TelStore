@@ -41,6 +41,7 @@ import urllib.request
 import urllib.parse
 
 import nowpayments  # crypto payment gateway (optional)
+import channel_access  # VIP channel membership management (optional)
 
 # ------------------------------------------------------------
 #  Config
@@ -394,8 +395,15 @@ def handle_check_payment(chat_id, username, message_id):
             sub["payment_method"] = "nowpayments"
         save_subscribers(data)
         _save_pending(chat_id, "")  # clear pending
+
+        # Grant VIP channel access (if a channel is configured).
+        access = channel_access.grant_access(chat_id)
         text = ("✅ Payment confirmed! 🎉\n"
                 "Your Premium is now active for 30 days.")
+        if access.get("ok") and access.get("channel"):
+            text += f"\n\n🔓 VIP channel access granted! Join here:\n{access.get('invite_link')}"
+        elif access.get("ok") and access.get("message"):
+            text += f"\n\n{access['message']}"
         return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
     if state in ("waiting", "confirming", "partially_paid", "expired"):
@@ -440,6 +448,7 @@ def handle_unsubscribe(chat_id, message_id=None):
     if sub:
         data["subscribers"] = [s for s in data["subscribers"] if str(s.get("chat_id")) != str(chat_id)]
         save_subscribers(data)
+        channel_access.revoke_access(chat_id)  # remove from VIP channel if configured
         text = "🚫 Your subscription has been cancelled."
     else:
         text = "You are not subscribed."
@@ -462,9 +471,18 @@ def handle_pay(chat_id, username, data, txhash):
             sub["premium_until"] = (datetime.datetime.now() + datetime.timedelta(days=30)).isoformat()
             sub["payment_method"] = "crypto"
         save_subscribers(data)
-    send_message(chat_id, f"✅ Crypto payment received! (tx: {txhash[:20]}...)\n"
-                          f"Your Premium is active for 30 days. Awaiting final confirmation.",
-                 back_menu_keyboard())
+
+    # Grant VIP channel access (if a channel is configured).
+    access = channel_access.grant_access(chat_id)
+    msg = (f"✅ Crypto payment received! (tx: {txhash[:20]}...)\n"
+           f"Your Premium is active for 30 days.")
+    if access.get("ok") and access.get("channel"):
+        msg += f"\n\n🔓 VIP channel access granted! Join here:\n{access.get('invite_link')}"
+    elif access.get("ok") and access.get("message"):
+        msg += f"\n\n{access['message']}"
+    else:
+        msg += "\n\n(Awaiting final confirmation.)"
+    send_message(chat_id, msg, back_menu_keyboard())
 
 def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     """Handle inline keyboard button taps."""
@@ -517,6 +535,9 @@ def handle_command(chat_id, username, command):
 # ------------------------------------------------------------
 #  Main polling loop
 # ------------------------------------------------------------
+_SWEEP_INTERVAL = 6 * 60 * 60  # sweep expired memberships every 6 hours
+_last_sweep = 0.0
+
 def main():
     if not TOKEN:
         print("ERROR: TELEGRAM_BOT_TOKEN not set", file=sys.stderr)
@@ -557,6 +578,16 @@ def main():
                     handle_command(chat_id, username, text)
         except Exception as e:
             print("loop error:", e)
+
+        # Periodically sweep expired premium memberships (every ~6 hours).
+        try:
+            if time.time() - _last_sweep >= _SWEEP_INTERVAL:
+                kicked = channel_access.check_expired(SUBSCRIBERS_FILE)
+                if kicked:
+                    print(f"   Sweep: removed {len(kicked)} expired member(s)")
+                _last_sweep = time.time()
+        except Exception as e:
+            print("sweep error:", e)
         time.sleep(0.3)
 
 if __name__ == "__main__":
