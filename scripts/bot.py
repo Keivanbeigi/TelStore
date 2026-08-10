@@ -36,8 +36,74 @@ SUBSCRIBERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sub
 # قیمت‌ها
 PRICE_CRYPTO_USD = 5          # $5/ماه
 PRICE_RIALS = 200000          # ۲۰۰ هزار تومن/ماه
-CRYPTO_ADDRESS = "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD"  # کیف پول کریپتو (EVM)
-CRYPTO_CURRENCY = "USDT (ERC-20) / ETH"
+
+# کیف پول کریپتو — چندشبکه‌ای
+CRYPTO_ADDRESS = "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD"
+
+# شبکه‌های پشتیبانی‌شده (BSC اول و پیشنهادی)
+# هر شبکه: نام، استاندارد توکن، پیشنهادی یا نه، و توضیح
+CRYPTO_NETWORKS = [
+    {
+        "name": "BSC",
+        "standard": "BEP-20",
+        "currency": "USDT (BEP-20) / BNB",
+        "recommended": True,
+        "note": "پیشنهادی — کارمزد بسیار پایین و سریع",
+        "recommended_label": "⭐ پیشنهادی"
+    },
+    {
+        "name": "Ethereum",
+        "standard": "ERC-20",
+        "currency": "USDT (ERC-20) / ETH",
+        "recommended": False,
+        "note": "امن اما کارمزد (گس) بالا",
+        "recommended_label": ""
+    },
+    {
+        "name": "Polygon",
+        "standard": "MATIC",
+        "currency": "USDC / POL",
+        "recommended": False,
+        "note": "کارمزد کم، شبکه لایه ۲",
+        "recommended_label": ""
+    },
+    {
+        "name": "TRON",
+        "standard": "TRC-20",
+        "currency": "USDT (TRC-20)",
+        "recommended": False,
+        "note": "محبوب برای USDT، کارمزد ثابت و کم",
+        "recommended_label": ""
+    }
+]
+
+def get_recommended_network():
+    """شبکه پیشنهادی (BSC) را برمی‌گرداند."""
+    for n in CRYPTO_NETWORKS:
+        if n.get("recommended"):
+            return n
+    return CRYPTO_NETWORKS[0]
+
+def format_crypto_payment():
+    """متن کامل راهنمای پرداخت چندشبکه‌ای را می‌سازد."""
+    lines = [f"💰 قیمت: ${PRICE_CRYPTO_USD}/ماه\n",
+             "🌐 شبکه‌های پشتیبانی‌شده:"]
+    for n in CRYPTO_NETWORKS:
+        flag = n.get("recommended_label", "")
+        lines.append(f"  {flag}{n['name']} ({n['standard']}): {n['currency']}")
+        lines.append(f"      {n['note']}")
+    lines.append("")
+    lines.append(f"🏦 آدرس کیف پول (همه شبکه‌ها):")
+    lines.append(f"  `{CRYPTO_ADDRESS}`")
+    lines.append("")
+    lines.append("💡 برای کارمزد کمتر، از شبکه BSC استفاده کن.")
+    lines.append("")
+    lines.append("بعد از پرداخت، هش تراکنش را با این فرمت بفرست:")
+    lines.append("  /pay <txhash>")
+    lines.append("")
+    lines.append("📲 پرداخت ریالی: /pay_rial")
+    return "\n".join(lines)
+
 ZARINPAL_MERCHANT = ""        # ← Merchant ID زرین‌پال (اختیاری)
 
 # ------------------------------------------------------------
@@ -127,15 +193,7 @@ def handle_command(chat_id, username, command):
             send_message(chat_id, f"💎 شما Premium هستید تا {until}\nبرای مدیریت /status بزنید.")
         else:
             text = (f"💎 اشتراک Premium — گزارش روزانه هر ۶ ساعت\n\n"
-                    f"💰 قیمت:\n"
-                    f"• کریپتو: ${PRICE_CRYPTO_USD}/ماه ({CRYPTO_CURRENCY})\n"
-                    f"• ریالی: {PRICE_RIALS:,} تومان/ماه\n\n"
-                    f"🔗 پرداخت کریپتو:\n"
-                    f"مبلغ ${PRICE_CRYPTO_USD} را به آدرس زیر ارسال کن:\n"
-                    f"`{CRYPTO_ADDRESS}`\n\n"
-                    f"بعد از پرداخت، هش تراکنش را با این فرمت بفرست:\n"
-                    f"/pay <txhash>\n\n"
-                    f"📲 برای پرداخت ریالی، /pay_rial بزنید.")
+                    f"{format_crypto_payment()}")
             send_message(chat_id, text)
 
     elif command.startswith("/pay "):
