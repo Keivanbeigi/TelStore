@@ -98,7 +98,8 @@ def format_crypto_payment():
              "🌐 شبکه‌های پشتیبانی‌شده:"]
     for n in CRYPTO_NETWORKS:
         flag = n.get("recommended_label", "")
-        lines.append(f"  {flag}{n['name']} ({n['standard']}): {n['currency']}")
+        flag_str = flag + " " if flag else ""
+        lines.append(f"  {flag_str}{n['name']} ({n['standard']}): {n['currency']}")
         lines.append(f"      {n['note']}")
     lines.append("")
     lines.append(f"🏦 آدرس کیف پول (همه شبکه‌ها):")
