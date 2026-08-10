@@ -36,8 +36,8 @@ SUBSCRIBERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sub
 # قیمت‌ها
 PRICE_CRYPTO_USD = 5          # $5/ماه
 PRICE_RIALS = 200000          # ۲۰۰ هزار تومن/ماه
-CRYPTO_ADDRESS = "0xYOUR_WALLET_ADDRESS"  # ← آدرس کیف پول کریپتوی خودت
-CRYPTO_CURRENCY = "USDT (TRC20)"
+CRYPTO_ADDRESS = "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD"  # کیف پول کریپتو (EVM)
+CRYPTO_CURRENCY = "USDT (ERC-20) / ETH"
 ZARINPAL_MERCHANT = ""        # ← Merchant ID زرین‌پال (اختیاری)
 
 # ------------------------------------------------------------
