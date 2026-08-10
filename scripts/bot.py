@@ -45,30 +45,43 @@ import nowpayments  # crypto payment gateway (optional)
 # ------------------------------------------------------------
 #  Config
 # ------------------------------------------------------------
-def _load_token():
-    """Read TELEGRAM_BOT_TOKEN from env or the project .env file."""
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    if tok:
-        return tok
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+def _env_file():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+
+def _load_env_str(key, default=""):
+    """Read a string value from env or the project .env file."""
+    val = os.environ.get(key, "").strip()
+    if val:
+        return val
+    env_path = _env_file()
     if os.path.exists(env_path):
         try:
             with open(env_path, "r", encoding="utf-8-sig") as f:
-                m = re.search(r'^TELEGRAM_BOT_TOKEN=([^\r\n]+)', f.read(), re.M)
+                m = re.search(rf'^{key}=([^\r\n]+)', f.read(), re.M)
             if m:
                 return m.group(1).strip().strip('"').strip("'")
         except Exception:
             pass
-    return ""
+    return default
+
+def _load_env_float(key, default=5.0):
+    try:
+        return float(_load_env_str(key, str(default)))
+    except ValueError:
+        return default
+
+def _load_token():
+    """Read TELEGRAM_BOT_TOKEN from env or the project .env file."""
+    return _load_env_str("TELEGRAM_BOT_TOKEN")
 
 TOKEN = _load_token()
 SUBSCRIBERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "subscribers.json")
 
-# Prices
-PRICE_CRYPTO_USD = 5          # $5/month
-
-# Crypto wallet (EVM - same address for all networks)
-CRYPTO_ADDRESS = "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD"
+# Configurable via .env (this bot is a sellable template - each buyer sets their own)
+PRICE_CRYPTO_USD = _load_env_float("PRICE_USD", 5.0)          # $/month
+CRYPTO_ADDRESS = _load_env_str(
+    "CRYPTO_ADDRESS",
+    "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD")             # payout wallet (buyer's)
 
 # Supported networks (BSC first and recommended). Only BSC gets the recommended badge.
 CRYPTO_NETWORKS = [
@@ -304,27 +317,95 @@ def handle_pay_done(chat_id, message_id):
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
 def handle_nowpayments(chat_id, message_id):
-    """Route the customer to a NOWPayments crypto payment invoice."""
+    """Create a NOWPayments invoice so the customer pays to the owner's account."""
     if not nowpayments.is_configured():
         text = ("💳 Card / crypto payments coming soon!\n\n"
                 "For now, use the manual wallet address from the network options "
                 "below to pay directly.")
         return edit_message(chat_id, message_id, text, network_keyboard())
 
-    # Default to USDT on TRON (low fees, widely supported) unless BSC preferred.
-    pay_currency = "usdttrc20"
+    # USDT on TRON (low fees, widely supported) as the default pay currency.
     payment = nowpayments.create_payment(
         price_usd=PRICE_CRYPTO_USD,
-        pay_currency=pay_currency,
+        pay_currency="usdttrc20",
         order_id=f"cq-{chat_id}-{int(time.time())}",
         description="Crypto Quest Premium - 30 days",
     )
     text = nowpayments.format_payment_instructions(payment)
     if "Invoice" in text:
-        # Payment invoice created -> show it with a back button.
-        return edit_message(chat_id, message_id, text, back_menu_keyboard(), parse_mode="Markdown")
-    # Error case
+        # Remember this pending payment for status checks.
+        _save_pending(chat_id, payment.get("payment_id"))
+        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
+
+# --- pending NOWPayments invoices (chat_id -> payment_id) ---
+PENDING_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pending_payments.json")
+
+def _load_pending():
+    if os.path.exists(PENDING_FILE):
+        try:
+            with open(PENDING_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_pending(chat_id, payment_id):
+    data = _load_pending()
+    data[str(chat_id)] = str(payment_id)
+    with open(PENDING_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def pay_check_keyboard():
+    """Keyboard for a created NOWPayments invoice."""
+    return {
+        "inline_keyboard": [
+            [{"text": "🔎 Check payment status", "callback_data": "check_payment"}],
+            [{"text": "◀️ Back to menu", "callback_data": "menu"}],
+        ]
+    }
+
+def handle_check_payment(chat_id, username, message_id):
+    """Check the status of the customer's pending NOWPayments invoice."""
+    pending = _load_pending()
+    payment_id = pending.get(str(chat_id))
+    if not payment_id:
+        text = "No pending payment found. Tap \"Buy Premium\" to start a new one."
+        return edit_message(chat_id, message_id, text, back_menu_keyboard())
+
+    status = nowpayments.get_payment_status(payment_id)
+    # NOWPayments returns {'payment_status': 'finished'|'waiting'|'confirming'|...}
+    state = status.get("payment_status", "unknown") if isinstance(status, dict) else "unknown"
+
+    if state == "finished":
+        # Payment confirmed -> activate premium for 30 days.
+        data = load_subscribers()
+        sub = find_subscriber(data, chat_id)
+        until = (datetime.datetime.now() + datetime.timedelta(days=30)).isoformat()
+        if not sub:
+            data["subscribers"].append({
+                "chat_id": str(chat_id), "username": username or "",
+                "plan": "premium", "subscribed_at": datetime.datetime.now().isoformat(),
+                "premium_until": until, "payment_method": "nowpayments",
+            })
+        else:
+            sub["plan"] = "premium"
+            sub["premium_until"] = until
+            sub["payment_method"] = "nowpayments"
+        save_subscribers(data)
+        _save_pending(chat_id, "")  # clear pending
+        text = ("✅ Payment confirmed! 🎉\n"
+                "Your Premium is now active for 30 days.")
+        return edit_message(chat_id, message_id, text, back_menu_keyboard())
+
+    if state in ("waiting", "confirming", "partially_paid", "expired"):
+        text = (f"⏳ Payment status: **{state}**\n\n"
+                "Send the exact amount to the address above, then check again "
+                "in a minute.")
+        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
+
+    text = ("⚠️ Could not check payment status. Please try again in a moment.")
+    return edit_message(chat_id, message_id, text, pay_check_keyboard())
 
 def handle_status(chat_id, message_id=None):
     data = load_subscribers()
@@ -401,6 +482,8 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         handle_pay_network(chat_id, message_id, net)
     elif cb_data == "pay_nowpayments":
         handle_nowpayments(chat_id, message_id)
+    elif cb_data == "check_payment":
+        handle_check_payment(chat_id, username, message_id)
     elif cb_data == "pay_done":
         handle_pay_done(chat_id, message_id)
     elif cb_data == "status":
