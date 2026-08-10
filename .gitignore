@@ -3,3 +3,4 @@ __pycache__/
 report.txt
 .env
 *.env
+subscribers.json
