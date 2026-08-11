@@ -47,6 +47,19 @@ python bot.py
 See **[INSTALL.md](INSTALL.md)** for the full step-by-step guide (creating the
 bot, the VIP channel, NOWPayments, owner setup, troubleshooting).
 
+### Run it 24/7 on your own server
+
+This bot is built to run as a **24/7 background service** — you don't need your
+computer on. On any small Linux VPS (Ubuntu/Debian, ~$2–5/mo), just:
+
+```bash
+bash scripts/deploy_server.sh
+```
+
+It installs a **systemd service** that auto-starts on boot and keeps the bot
+online even after you close your SSH session or reboot. See
+**[DEPLOY_SERVER.md](DEPLOY_SERVER.md)** for the full guide.
+
 ---
 
 ## 🧩 What you get
