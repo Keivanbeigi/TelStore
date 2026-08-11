@@ -29,6 +29,12 @@ API_URL = "https://api.nowpayments.io/v1"
 
 API_KEY = config.NOWPAYMENTS_API_KEY
 
+# Cloudflare in front of api.nowpayments.io returns 403 (error 1010) for
+# Python-urllib's default User-Agent. Send a normal browser User-Agent so the
+# request isn't blocked (curl works by default; Python urllib does not).
+_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
+
 def is_configured():
     """True if a NOWPayments API key is set in .env."""
     return bool(API_KEY)
@@ -41,6 +47,7 @@ def _post(path, payload):
     data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data)
     req.add_header("Content-Type", "application/json")
+    req.add_header("User-Agent", _UA)
     req.add_header("x-api-key", API_KEY)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -59,6 +66,7 @@ def _get(path, params=None):
     if params:
         url += "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url)
+    req.add_header("User-Agent", _UA)
     req.add_header("x-api-key", API_KEY)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
