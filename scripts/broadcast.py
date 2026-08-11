@@ -63,7 +63,10 @@ def main():
     token = config.TOKEN
 
     if args.test:
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID", config.OWNER_CHAT_ID or "129735937")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", config.OWNER_CHAT_ID)
+        if not chat_id:
+            print("ERROR: --test needs TELEGRAM_CHAT_ID or OWNER_CHAT_ID", file=sys.stderr)
+            sys.exit(1)
         ok = send_one(token, chat_id, text)
         print(f"✅ test sent to {chat_id}" if ok else "❌ test failed")
         sys.exit(0 if ok else 1)

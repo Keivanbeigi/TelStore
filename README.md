@@ -1,112 +1,102 @@
-# 🎯 GitHub Actions — گزارش خودکار به تلگرام (کاملاً رایگان)
+# 🤖 Crypto Quest Telegram Bot
 
-> این راه‌حل یک **سرور رایگان مجازی** است که با اکانت GitHub خودت
-> گزارش‌ها را هر ۶ ساعت به تلگرامت می‌فرستد. **بدون کارت، بدون هزینه.**
-
----
-
-## 🚀 مراحل راه‌اندازی (حدود ۱۰ دقیقه)
-
-### ۱. ساخت اکانت GitHub (اگر نداری)
-1. به https://github.com برو
-2. ثبت‌نام (رایگان) — ایمیل، رمز، اسم کاربری
-
-### ۲. ساخت یک ریپازیتوری (Repository) جدید
-1. بعد از لاگین، روی **+** (بالا) → **New repository**
-2. نام: `crypto-quest-report` (یا هر اسمی)
-3. **Public** یا **Private** — فرقی نداره (پیشنهاد: Private)
-4. روی **Create repository** کلیک کن
-
-### ۳. آپلود فایل‌های پروژه
-فایل‌های داخل پوشه `github/` را آپلود کن:
-```
-github/
-├── .github/
-│   └── workflows/
-│       └── daily-report.yml      ← تنظیمات cron
-└── scripts/
-    ├── generate_report.py        ← ساخت گزارش
-    └── telegram_send.py          ← ارسال به تلگرام
-```
-
-**روش آپلود (راحت‌ترین):**
-- در ریپازیتوری، روی **Add file** → **Upload files**
-- کل محتوای پوشه `github/` را بکش و رها کن
-- روی **Commit changes** کلیک کن
-
-### ۴. تنظیم Secrets (رمزهای مخفی)
-این مهم‌ترین قسمت است — توکن تلگرام و Chat ID را به GitHub می‌دهی:
-
-1. در ریپازیتوری، برو به **Settings** → **Secrets and variables** → **Actions**
-2. روی **New repository secret** کلیک کن
-3. دو تا secret بساز:
-
-| نام Secret | مقدار |
-|-----------|--------|
-| `TELEGRAM_BOT_TOKEN` | توکن بات (مثل `8851071782:AA...`) |
-| `TELEGRAM_CHAT_ID` | Chat ID (مثل `129735937`) |
-
-> ⚠️ **امنیت:** این secrets فقط برای GitHub Actions قابل دسترسی‌اند و توی کد لو نمی‌روند.
-
-### ۵. اجرای تست (اختیاری ولی پیشنهادی)
-- در ریپازیتوری، برو به **Actions** → سمت چپ **«Crypto Quest — گزارش روزانه به تلگرام»**
-- روی **Run workflow** → **Run workflow** کلیک کن
-- چند دقیقه صبر کن — باید یه پیام به تلگرامت برسه!
+A ready-to-sell **Telegram VIP subscription bot** for channel owners. Sell
+Premium memberships to your audience: customers pay in crypto, get Premium, and
+are **auto-added** to your private VIP channel. Includes a full owner admin
+panel.
 
 ---
 
-## ⏰ زمان‌بندی
+## ✨ Features
 
-Cron در `daily-report.yml` تنظیم شده:
-```yaml
-schedule:
-  - cron: '0 */6 * * *'   # هر ۶ ساعت
+- 🛒 **Multi-product shop** — sell as many products as you want, each with its
+  **own price** (edit one list in `config.py`):
+  - **Channel subscriptions** (VIP access, any price/length) and
+  - **Digital products** (e-book, course, invite link, anything) auto-delivered.
+- 💰 **Manual crypto payment** — BSC (recommended), Ethereum, Polygon. Payouts go
+  straight to the **buyer's own wallet**.
+- 💳 **NOWPayments gateway (optional)** — card & 230+ crypto coins, auto
+  invoices. No card required to receive crypto.
+- 🔓 **Auto VIP-channel membership** — paying customers are added via an invite
+  link; expired subscriptions are auto-kicked (6h sweep).
+- 🛠 **Owner admin panel** — `/stats`, `/products`, `/broadcast`,
+  `/add_member`, `/kick`, `/set_price`.
+- 🌍 **Configurable via `.env`** (token, wallet, owner) **+ `config.py`
+  `PRODUCTS`** (your products & prices).
+- 🛡 **No external packages** — runs on plain Python (standard library only),
+  works even from restricted networks.
+- 📦 **Clean architecture** — `config.py` (settings + products), `lang.py` (all
+  text) and `bot.py` (logic) are separated so the buyer or a dev can extend it
+  easily.
+
+---
+
+## 🚀 Quick start
+
+```bash
+# 1. Put the scripts/ folder anywhere
+# 2. Copy the template and fill in YOUR values
+cp .env.example .env      # (Windows: copy .env.example .env)
+
+# 3. Set your bot token + wallet in .env
+
+# 4. Run
+python bot.py
 ```
 
-ساعت‌ها: **۰۰:۰۰، ۰۶:۰۰، ۱۲:۰۰، ۱۸:۰۰** (به وقت UTC)
-(ممکن است چند دقیقه تأخیر داشته باشد)
+See **[INSTALL.md](INSTALL.md)** for the full step-by-step guide (creating the
+bot, the VIP channel, NOWPayments, owner setup, troubleshooting).
 
 ---
 
-## 📈 برای ساخت گزارش هوشمندتر
+## 🧩 What you get
 
-الان `generate_report.py` فقط یک گزارش ثابت می‌سازد. برای گزارش هوشمندتر (که واقعاً ماموریت‌ها را چک کند)، می‌توانی:
-1. اسکریپت را طوری بسازی که به Galxe/Layer3 با API وصل شود
-2. یا یک Gemini API key اضافه کنی که گزارش را با هوش مصنوعی بنویسد
-
-> 💡 **در آینده:** اگر Gemini API key داشتی، می‌توانیم گزارش را با هوش مصنوعی تولید کنیم — فقط یک secret دیگه اضافه می‌شود.
-
----
-
-## ❓ سوالات متداول
-
-### س: رایگان است؟ محدودیتی ندارد؟
-- **رایگان:** بله، GitHub Actions ۲۰۰۰ دقیقه/ماه رایگان است.
-- **محدودیت:** برای یه cron هر ۶ ساعت، ماهانه ~۲۴۰ دقیقه استفاده می‌کنی — خیلی کمتر از سقف.
-
-### س: اگر حسابم روی سرور دیگر باشد؟
-- GitHub Actions مستقل است — روی سرور تو اجرا نمی‌شود، روی سرورهای GitHub. پس **سیستم تو می‌تواند خاموش باشد** و باز کار می‌کند. ✅
-
-### س: چطور توکن و Chat ID را بدانم؟
-- **توکن:** از @BotFather در تلگرام (همان `@KVN111_bot`)
-- **Chat ID:** عددی مثل `129735937` (مشخصه اکانت تلگرامت)
-
-### س: می‌خواهم هر ۱ ساعت باشد؟
-- فقط cron را در `daily-report.yml` عوض کن:
-  ```yaml
-  cron: '0 * * * *'   # هر ۱ ساعت
-  ```
+```
+scripts/
+  bot.py             the bot (run: python bot.py)
+  config.py          all settings (from .env)
+  lang.py            all messages & buttons (reword/translate here)
+  admin.py           owner commands
+  channel_access.py  auto VIP-channel membership
+  nowpayments.py     card/crypto gateway
+  broadcast.py       push reports/messages to subscribers
+  .env.example       configuration template
+INSTALL.md           buyer install guide
+ARCHITECTURE.md      developer guide
+```
 
 ---
 
-## ✅ خلاصه
+## ⚙️ Configuration
 
-| کار | وضعیت |
-|-----|--------|
-| اکانت GitHub | باید بسازی (رایگان) |
-| ریپازیتوری + آپلود فایل‌ها | باید انجام بدی |
-| تنظیم ۲ تا Secret | باید انجام بدی |
-| اجرای تست | اختیاری |
-| گزارش هر ۶ ساعت | خودکار بعد از راه‌اندازی |
+**`config.py → PRODUCTS`** — your catalogue. Add/edit products (each has its own
+price, kind, and delivery). See `INSTALL.md` Step 4b for a worked example.
 
-**بعد از این مراحل، گزارش‌ها هر ۶ ساعت به تلگرامت می‌آیند — حتی وقتی سیستم خودت خاموش است!** 🎉
+**`.env`** — secrets & global settings:
+
+| Key | Description |
+|-----|-------------|
+| `TELEGRAM_BOT_TOKEN` | your bot token from @BotFather |
+| `CRYPTO_ADDRESS` | your wallet (BSC/ETH/Polygon) where payments go |
+| `OWNER_CHAT_ID` | your Telegram id — gets the admin panel |
+| `CHANNEL_ID` / `CHANNEL_LINK` | (optional) VIP channel auto-membership |
+| `NOWPAYMENTS_API_KEY` | (optional) card/crypto gateway |
+
+> `PRICE_USD` and `PREMIUM_DAYS` are kept only as fallbacks. Your real prices
+> and durations now live in `config.py → PRODUCTS`.
+
+---
+
+## 🛠 Owner commands
+
+`/stats` · `/products` · `/broadcast <text>` · `/add_member <id>` · `/kick <id>` · `/set_price <usd>` · `/admin`
+
+---
+
+## 📄 License / sale terms
+
+This is a **source-code template sale**. The buyer configures their own bot
+token, wallet, and channel. All customer payments go **directly to the buyer's
+own wallet** — the seller never touches funds.
+
+*Everything in this package is English and fully self-contained.*
