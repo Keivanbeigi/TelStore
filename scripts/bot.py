@@ -290,14 +290,29 @@ def shop_keyboard():
     return {"inline_keyboard": rows}
 
 
-def main_menu_keyboard():
+def main_menu_keyboard(chat_id=None):
+    """Main menu. If chat_id is the owner, an extra owner-only button appears."""
+    rows = [
+        [{"text": lang.BTN["shop"], "callback_data": "shop"}],
+        [{"text": lang.BTN["free_sub"], "callback_data": "sub_free"}],
+        [{"text": lang.BTN["status"], "callback_data": "status"}],
+        [{"text": lang.BTN["help"], "callback_data": "help"}],
+        [{"text": lang.BTN["unsubscribe"], "callback_data": "unsubscribe"}],
+    ]
+    # Owner-only management button (private to the owner).
+    if chat_id is not None and admin.is_owner(chat_id):
+        rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
+    return {"inline_keyboard": rows}
+
+
+def owner_keyboard():
+    """Owner menu: product management actions (owner only)."""
     return {
         "inline_keyboard": [
-            [{"text": lang.BTN["shop"], "callback_data": "shop"}],
-            [{"text": lang.BTN["free_sub"], "callback_data": "sub_free"}],
-            [{"text": lang.BTN["status"], "callback_data": "status"}],
-            [{"text": lang.BTN["help"], "callback_data": "help"}],
-            [{"text": lang.BTN["unsubscribe"], "callback_data": "unsubscribe"}],
+            [{"text": lang.BTN["owner_add_product"], "callback_data": "owner_add_product"}],
+            [{"text": lang.BTN["owner_list_products"], "callback_data": "owner_list_products"}],
+            [{"text": lang.BTN["owner_howto_add"], "callback_data": "owner_howto_add"}],
+            [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
         ]
     }
 
@@ -309,8 +324,6 @@ def pay_done_keyboard():
             [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
         ]
     }
-
-
 def back_menu_keyboard():
     return {
         "inline_keyboard": [
@@ -334,8 +347,8 @@ def pay_check_keyboard():
 def show_main_menu(chat_id, message_id=None):
     text = lang.TXT["welcome"]
     if message_id is not None:
-        return edit_message(chat_id, message_id, text, main_menu_keyboard())
-    return send_message(chat_id, text, main_menu_keyboard())
+        return edit_message(chat_id, message_id, text, main_menu_keyboard(chat_id))
+    return send_message(chat_id, text, main_menu_keyboard(chat_id))
 
 
 def handle_subscribe(chat_id, username, data):
@@ -359,6 +372,20 @@ def handle_shop(chat_id, message_id=None):
     if message_id is not None:
         return edit_message(chat_id, message_id, text, shop_keyboard())
     return send_message(chat_id, text, shop_keyboard())
+
+
+def _owner_list(chat_id, message_id):
+    """Owner-only: show all products with ids (to manage them)."""
+    lines = [lang.TXT["products_title"], ""]
+    for p in config.PRODUCTS:
+        lines.append(lang.TXT["products_line"].format(
+            emoji=p.get("emoji", lang.TXT["emoji_default"]), name=p["name"],
+            price=p.get("price_usd", 0), duration=lang.product_duration(p),
+            kind=p.get("kind", "channel"),
+        ))
+    lines.append("")
+    lines.append("Use /remove_product <id> to delete one.")
+    edit_message(chat_id, message_id, "\n".join(lines), owner_keyboard())
 
 
 def handle_product(chat_id, message_id, product_id):
@@ -654,6 +681,19 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         handle_subscribe(chat_id, username, load_subscribers())
     elif cb_data == "shop":
         handle_shop(chat_id, message_id)
+    elif cb_data == "owner_manage":
+        # Owner-only management menu. Ignore if not the owner.
+        if admin.is_owner(chat_id):
+            edit_message(chat_id, message_id, lang.TXT["owner_menu_title"], owner_keyboard())
+    elif cb_data == "owner_add_product":
+        if admin.is_owner(chat_id):
+            edit_message(chat_id, message_id, lang.TXT["prod_usage_add"], owner_keyboard())
+    elif cb_data == "owner_list_products":
+        if admin.is_owner(chat_id):
+            _owner_list(chat_id, message_id)
+    elif cb_data == "owner_howto_add":
+        if admin.is_owner(chat_id):
+            edit_message(chat_id, message_id, lang.TXT["owner_howto_text"], owner_keyboard())
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
     elif cb_data.startswith("prod_"):
@@ -867,9 +907,9 @@ def handle_command(chat_id, username, command):
         if isinstance(pending, dict) and pending.get("product_id") and command.strip():
             handle_pay(chat_id, username, command.strip())
             return
-        send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard())
+        send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard(chat_id))
     else:
-        send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard())
+        send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard(chat_id))
 
 
 # ---------------------------------------------------------------------------

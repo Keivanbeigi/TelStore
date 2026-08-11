@@ -179,6 +179,20 @@ TXT = {
                        "  /add_product VIP Year | 49.99 | 365 | channel"),
     "prod_usage_remove": "❌ Usage: /remove_product <id>",
     "prod_need_desc": "For a digital product, set its delivery text with /set_deliver <id> <text>.",
+    "owner_menu_title": "⚙️ Owner Menu — manage your products & shop.",
+    "owner_howto_text": (
+        "How to add a product (type this to the bot):\n\n"
+        "/add_product Name | price | days | kind\n\n"
+        "Examples:\n"
+        "  /add_product VIP Month | 5.00 | 30 | channel\n"
+        "  /add_product Crypto Course | 19.99 | 0 | digital\n\n"
+        "  kind = channel (VIP access) or digital (send link/text)\n"
+        "  days = 0 for lifetime\n\n"
+        "After adding a digital product, set what the buyer gets:\n"
+        "  /set_deliver <id> <text>\n\n"
+        "Remove a product:\n"
+        "  /remove_product <id>"
+    ),
 }
 
 
@@ -198,6 +212,11 @@ BTN = {
     "pay_done": "✅ I paid",
     "check_payment": "🔎 Check payment status",
     "recommended_bsc": "⭐ {name} (Recommended)",
+    "owner_manage": "⚙️ Owner Menu",
+    "owner_add_product": "➕ Add Product",
+    "owner_list_products": "🛒 List Products",
+    "owner_howto_add": "❓ How to add",
+    "back": "◀️ Back",
 }
 
 
