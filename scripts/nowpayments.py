@@ -20,30 +20,14 @@ HOW TO ACTIVATE (you must do this - Iran-friendly account needed):
 API reference: https://documenter.getpostman.com/view/7908511/SVYdfCq2
 """
 import json
-import os
-import re
 import urllib.request
 import urllib.parse
 
+import config
+
 API_URL = "https://api.nowpayments.io/v1"
 
-def _load_api_key():
-    """Read NOWPAYMENTS_API_KEY from env or the project .env file."""
-    key = os.environ.get("NOWPAYMENTS_API_KEY", "").strip()
-    if key:
-        return key
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    if os.path.exists(env_path):
-        try:
-            with open(env_path, "r", encoding="utf-8-sig") as f:
-                m = re.search(r'^NOWPAYMENTS_API_KEY=([^\r\n]+)', f.read(), re.M)
-            if m:
-                return m.group(1).strip().strip('"').strip("'")
-        except Exception:
-            pass
-    return ""
-
-API_KEY = _load_api_key()
+API_KEY = config.NOWPAYMENTS_API_KEY
 
 def is_configured():
     """True if a NOWPayments API key is set in .env."""

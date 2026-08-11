@@ -28,19 +28,27 @@
 | Stale-update drain (fixes 400), fast polling | ✅ |
 | `subscribers.json` gitignored (runtime data) | ✅ |
 
-## Phase 2 — Auto channel membership (next)
+## Phase 2 — Auto channel membership (DONE ✅)
 - Bot must be an **admin of the channel** (owner adds it).
 - On payment confirmed -> bot automatically **adds member** to VIP channel.
 - On subscription expiry -> bot **removes** member.
 - Periodic cron check for expiring subscriptions.
 
-## Phase 3 — Owner admin panel (later)
+## Phase 3 — Owner admin panel (DONE ✅)
 - Owner commands: `/stats`, `/broadcast`, `/add_member`, `/kick`, `/set_price`
 - View subscriber count and revenue
 - Broadcast to all subscribers
 - Manual member management
 
-## Phase 4 — Sales package (later)
+## Phase 4 — Quality refactor (DONE ✅)
+- Split monolith `bot.py` into single-responsibility modules
+  (`config.py`, `lang.py`, `admin.py`, `channel_access.py`, `nowpayments.py`, `broadcast.py`)
+- **No hard-coded UI text in logic** — all strings in `lang.py`
+- **No duplicated `.env` loading** — all modules import `config.py`
+- `ARCHITECTURE.md` — human-friendly developer guide
+- Verified: all modules compile + functional smoke test + live `getMe` ✅
+
+## Phase 5 — Sales package (NEXT)
 - **README install guide** (step-by-step for the buyer)
 - Deliverable: source + `.env.example` + install guide
 - Publish on: Fiverr, CodeCanyon, Sellix, Gumroad
@@ -58,13 +66,3 @@
 - **Fiverr** — gig "Telegram VIP subscription bot"
 - **CodeCanyon** — source code marketplace
 - **Sellix / Gumroad** — direct sale with crypto/card payment
-
----
-
-## Files
-```
-scripts/bot.py          - main bot (polling, inline menu, payments)
-scripts/nowpayments.py  - NOWPayments gateway integration
-scripts/.env.example    - configuration template for buyers
-scripts/subscribers.json- runtime subscriber data (gitignored)
-```

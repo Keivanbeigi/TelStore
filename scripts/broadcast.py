@@ -1,48 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ارسال گزارش به همه مشترک‌های کانال (broadcast)
-================================================
-این اسکریپت گزارش را به همه مشترک‌ها می‌فرستد:
-- مشترک‌های Premium → گزارش روزانه (هر ۶ ساعت)
-- مشترک‌های Free → فقط در روزهای مشخص (اختیاری)
+Broadcast a report to all channel subscribers
+===============================================
+Sends a report to subscribers:
+- Premium subscribers -> daily report (every 6 hours)
+- Free subscribers -> only on Sundays (optional)
 
-استفاده:
-  python broadcast.py --file report.txt            # به همه premium + free
-  python broadcast.py --file report.txt --premium  # فقط به premium
-  python broadcast.py --file report.txt --test     # فقط به خودت (تست)
+Configured via scripts/config.py (reads the project `.env`).
+
+Usage:
+  python broadcast.py --file report.txt            # send to all premium + free
+  python broadcast.py --file report.txt --premium  # send to premium only
+  python broadcast.py --file report.txt --test     # send to yourself only (test)
 """
 import argparse
+import datetime
 import json
 import os
-import re
 import sys
 import urllib.request
 import urllib.parse
-import datetime
 
-
-def load_token():
-    t = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    if t:
-        return t
-    for p in [os.path.expanduser("~/.crypto-quest.env"),
-              os.path.expanduser("~/.hermes/.env")]:
-        if os.path.exists(p):
-            try:
-                with open(p, "r", encoding="utf-8") as f:
-                    m = re.search(r'^TELEGRAM_BOT_TOKEN=([^\r\n]+)', f.read(), re.M)
-                    if m:
-                        return m.group(1).strip().strip('"').strip("'")
-            except Exception:
-                pass
-    raise SystemExit("ERROR: TELEGRAM_BOT_TOKEN not found")
+import config
 
 
 def load_subscribers():
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "subscribers.json")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
+    if os.path.exists(config.SUBSCRIBERS_FILE):
+        with open(config.SUBSCRIBERS_FILE, "r", encoding="utf-8") as f:
             return json.load(f).get("subscribers", [])
     return []
 
@@ -53,8 +38,7 @@ def send_one(token, chat_id, text):
     req = urllib.request.Request(url, data=data)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            d = json.loads(resp.read().decode())
-            return d.get("ok", False)
+            return json.loads(resp.read().decode()).get("ok", False)
     except Exception:
         return False
 
@@ -62,9 +46,13 @@ def send_one(token, chat_id, text):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", required=True)
-    ap.add_argument("--premium", action="store_true", help="فقط به premium")
-    ap.add_argument("--test", action="store_true", help="فقط به chat_id از TELEGRAM_CHAT_ID")
+    ap.add_argument("--premium", action="store_true", help="send to premium only")
+    ap.add_argument("--test", action="store_true", help="send only to the test chat id")
     args = ap.parse_args()
+
+    if not config.TOKEN:
+        print("ERROR: TELEGRAM_BOT_TOKEN not set", file=sys.stderr)
+        sys.exit(1)
 
     with open(args.file, "r", encoding="utf-8") as f:
         text = f.read().strip()
@@ -72,10 +60,10 @@ def main():
         print("ERROR: empty report", file=sys.stderr)
         sys.exit(1)
 
-    token = load_token()
+    token = config.TOKEN
 
     if args.test:
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "129735937")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", config.OWNER_CHAT_ID or "129735937")
         ok = send_one(token, chat_id, text)
         print(f"✅ test sent to {chat_id}" if ok else "❌ test failed")
         sys.exit(0 if ok else 1)
@@ -94,13 +82,13 @@ def main():
             continue
         if args.premium and plan != "premium":
             continue
-        # free: فقط یک‌شنبه‌ها (7)
+        # free: only on Sundays (7)
         if not args.premium and plan == "free" and today != 7:
             continue
         if send_one(token, chat_id, text):
             sent += 1
 
-    print(f"✅ ارسال به {sent} مشترک انجام شد")
+    print(f"✅ Sent to {sent} subscriber(s)")
     sys.exit(0 if sent > 0 else 1)
 
 

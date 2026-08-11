@@ -15,35 +15,21 @@ Owner commands:
   /kick <user_id>       - remove a subscriber (and revoke channel access)
   /set_price <usd>      - change the monthly premium price
   /admin                - list owner commands
+
+All settings come from ``config`` (single source of truth). This module has NO
+duplicated .env loading.
 """
 import json
 import os
-import re
 import datetime
 
+import config
 
-def _env_file():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-
-def _load_env_str(key, default=""):
-    val = os.environ.get(key, "").strip()
-    if val:
-        return val
-    if os.path.exists(_env_file()):
-        try:
-            with open(_env_file(), "r", encoding="utf-8-sig") as f:
-                m = re.search(rf'^{key}=([^\r\n]+)', f.read(), re.M)
-            if m:
-                return m.group(1).strip().strip('"').strip("'")
-        except Exception:
-            pass
-    return default
-
-OWNER_CHAT_ID = _load_env_str("OWNER_CHAT_ID", "").strip()
 
 def is_owner(chat_id):
     """True if the given chat_id is the configured owner."""
-    return bool(OWNER_CHAT_ID) and str(chat_id) == str(OWNER_CHAT_ID)
+    return bool(config.OWNER_CHAT_ID) and str(chat_id) == str(config.OWNER_CHAT_ID)
+
 
 def load_subscribers(path):
     if os.path.exists(path):
@@ -54,35 +40,16 @@ def load_subscribers(path):
             pass
     return {"subscribers": []}
 
+
 def save_subscribers(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-def stats_text(subscribers_file):
-    """Build a stats summary from subscribers.json."""
-    data = load_subscribers(subscribers_file)
-    subs = data.get("subscribers", [])
-    total = len(subs)
-    premium = [s for s in subs if s.get("plan") == "premium"]
-    free = [s for s in subs if s.get("plan") == "free"]
-    # Estimate revenue from premium count * price (price from subscribers is not stored, use premium count only)
-    active_premium = sum(
-        1 for s in premium if s.get("premium_until")
-    )
-    lines = [
-        "📊 Subscriber statistics:",
-        "",
-        f"👥 Total subscribers: {total}",
-        f"💎 Premium: {len(premium)}",
-        f"🆓 Free: {len(free)}",
-        "",
-        "💰 Estimated monthly revenue:",
-    ]
-    # Price is read from the caller (PRICE_CRYPTO_USD). Passed via message or recomputed.
-    return lines
 
-def add_premium_member(path, user_id, days=30):
+def add_premium_member(path, user_id, days=None):
     """Add/upgrade a user to premium for N days. Returns an error string or None."""
+    if days is None:
+        days = config.PREMIUM_DAYS
     data = load_subscribers(path)
     subs = data.get("subscribers", [])
     now = datetime.datetime.now()
@@ -109,6 +76,7 @@ def add_premium_member(path, user_id, days=30):
     save_subscribers(path, data)
     return None
 
+
 def remove_member(path, user_id):
     """Remove a user from subscribers. Returns True if removed."""
     data = load_subscribers(path)
@@ -121,5 +89,5 @@ def remove_member(path, user_id):
 
 
 if __name__ == "__main__":
-    print("OWNER_CHAT_ID:", OWNER_CHAT_ID or "(not set)")
+    print("OWNER_CHAT_ID:", config.OWNER_CHAT_ID or "(not set)")
     print("is_owner test with none:", is_owner(None))
