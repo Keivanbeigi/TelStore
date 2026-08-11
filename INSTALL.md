@@ -159,8 +159,12 @@ PRODUCTS = [
 4. The **"Pay with Card / Crypto (NOWPayments)"** button now appears and creates
    live invoices. Set a payout wallet in the dashboard so funds settle there.
 
-> Note: without a public webhook, a customer's NOWPayments payment is confirmed
-> when they tap **"Check payment status"** after paying. This works fine.
+> 💡 **Auto-delivery (no server needed):** the bot automatically checks pending
+> NOWPayments invoices every ~20 seconds and delivers the product the moment a
+> payment is confirmed — the customer does **not** need to press anything.
+> A payment is delivered exactly once (safe against double-sends). This works
+> perfectly on a laptop or a VPS; a public webhook (IPN) is only needed if the
+> bot isn't running 24/7.
 
 ---
 

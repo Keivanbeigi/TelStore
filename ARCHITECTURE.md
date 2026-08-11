@@ -141,6 +141,13 @@ Bonus path: NOWPayments (`pay_nowpayments[:<product>]` → create invoice →
 `check_payment`). The pending record stores the product id so the confirmed
 payment delivers the right item.
 
+**Auto-delivery (IPN-like, no server):** the main loop calls
+`poll_pending_payments()` every ~20s. For each pending invoice it asks
+NOWPayments for the status; when a payment becomes `finished` it delivers the
+product automatically and messages the customer — no manual "Check payment
+status" tap required. A paid invoice is delivered exactly once (pending is
+cleared on delivery).
+
 ## Shared logic you should reuse
 
 - `_deliver_product(chat_id, username, product, method)` — the ONLY place that
@@ -149,6 +156,10 @@ payment delivers the right item.
 - `grant_channel_access(chat_id)` — grants VIP-channel access and returns the
   text suffix. Called inside `_deliver_product` for `kind="channel"`.
 - `_expiry(days)` — ISO expiry for a grant (0 days → lifetime).
+- `_finalize_paid_payment(chat_id, payment_id, product_id)` — delivers a
+  confirmed NOWPayments payment once + clears it. Used by both the manual
+  "Check payment status" button and `poll_pending_payments()`.
+- `poll_pending_payments()` — background auto-poll for auto-delivery.
 
 ## Rules for contributors
 
