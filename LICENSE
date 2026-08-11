@@ -1,0 +1,30 @@
+Crypto Quest Telegram Bot — Single-Site License
+=================================================
+
+Copyright (c) 2026 Crypto Quest. All rights reserved.
+
+This license grants the PURCHASER (the "Licensee") the right to use one (1)
+copy of this software for their own use — running the bot for their own
+channel, shop, or business.
+
+What you MAY do:
+  * Use the bot for your own Telegram channel(s) / shop(s) / business(es).
+  * Modify the configuration (products, prices, .env settings) for your own use.
+  * Deploy the bot on your own server(s).
+
+What you may NOT do:
+  * Resell, redistribute, sublicense, or share this software or any modified
+    copy of it to third parties.
+  * Offer it as a service, template, or source code for sale to others.
+  * Remove or alter this license / copyright notice.
+  * Claim authorship of the software.
+
+This is a SINGLE-SITE license. Each site/business that runs the bot must
+purchase its own copy.
+
+The software is provided "AS IS", without warranty of any kind, express or
+implied. In no event shall the author be liable for any claim, damages, or
+other liability arising from the use of this software.
+
+For a resellable / multi-site license, contact the author for a separate
+commercial license.

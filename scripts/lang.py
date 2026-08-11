@@ -195,6 +195,8 @@ TXT = {
     ),
     "owner_edit_menu": "⚙️ Edit Menu",
     "owner_edit_menu_title": "⚙️ Edit the main menu. Tap a button to toggle it:",
+    "owner_remove_title": "🗑️ Tap a product to remove it:",
+    "owner_confirm_remove": "⚠️ Remove \"{name}\"?",
     "owner_menu_updated": "✅ Menu updated.",
     "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
 }
@@ -221,6 +223,9 @@ BTN = {
     "owner_list_products": "🛒 List Products",
     "owner_howto_add": "❓ How to add",
     "owner_edit_menu": "⚙️ Edit Menu",
+    "owner_remove_product": "🗑️ Remove Product",
+    "owner_confirm_yes": "✅ Yes, remove",
+    "owner_confirm_no": "❌ Cancel",
     "back": "◀️ Back",
 }
 

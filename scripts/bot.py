@@ -311,10 +311,34 @@ def owner_keyboard():
     return {
         "inline_keyboard": [
             [{"text": lang.BTN["owner_add_product"], "callback_data": "owner_add_product"}],
+            [{"text": lang.BTN["owner_remove_product"], "callback_data": "owner_remove_product"}],
             [{"text": lang.BTN["owner_list_products"], "callback_data": "owner_list_products"}],
             [{"text": lang.BTN["owner_howto_add"], "callback_data": "owner_howto_add"}],
             [{"text": lang.BTN["owner_edit_menu"], "callback_data": "owner_edit_menu"}],
             [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
+        ]
+    }
+
+
+def remove_product_keyboard():
+    """Owner: list products, each as a button to remove."""
+    rows = []
+    for p in config.PRODUCTS:
+        rows.append([
+            {"text": f"{p.get('emoji', lang.TXT['emoji_default'])} {p['name']} — ${p.get('price_usd',0):.2f}",
+             "callback_data": f"rm_prod:{p['id']}"}
+        ])
+    rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
+
+
+def confirm_remove_keyboard(product_id):
+    """Owner: confirm before removing a product."""
+    return {
+        "inline_keyboard": [
+            [{"text": lang.BTN["owner_confirm_yes"], "callback_data": f"rm_confirm:{product_id}"}],
+            [{"text": lang.BTN["owner_confirm_no"], "callback_data": "owner_remove_product"}],
         ]
     }
 
@@ -712,6 +736,27 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data == "owner_edit_menu":
         if admin.is_owner(chat_id):
             edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
+    elif cb_data == "owner_remove_product":
+        if admin.is_owner(chat_id):
+            edit_message(chat_id, message_id, lang.TXT["owner_remove_title"], remove_product_keyboard())
+    elif cb_data.startswith("rm_prod:"):
+        if admin.is_owner(chat_id):
+            pid = cb_data[len("rm_prod:"):]
+            p = config.get_product(pid)
+            if p:
+                edit_message(chat_id, message_id,
+                             lang.TXT["owner_confirm_remove"].format(name=p["name"]),
+                             confirm_remove_keyboard(pid))
+    elif cb_data.startswith("rm_confirm:"):
+        if admin.is_owner(chat_id):
+            pid = cb_data[len("rm_confirm:"):]
+            p = config.get_product(pid)
+            if p:
+                config.PRODUCTS = [x for x in config.PRODUCTS if x.get("id") != pid]
+                config.save_products()
+                edit_message(chat_id, message_id,
+                             lang.TXT["prod_removed"].format(name=p["name"]),
+                             owner_keyboard())
     elif cb_data.startswith("toggle_menu:"):
         if admin.is_owner(chat_id):
             key = cb_data[len("toggle_menu:"):]

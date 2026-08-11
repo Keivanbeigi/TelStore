@@ -10,7 +10,7 @@ panel.
 ## ✨ Features
 
 - 🛒 **Multi-product shop** — sell as many products as you want, each with its
-  **own price** (edit one list in `config.py`):
+  **own price**, added/managed **right from Telegram** (Owner Menu → Add/Remove):
   - **Channel subscriptions** (VIP access, any price/length) and
   - **Digital products** (e-book, course, invite link, anything) auto-delivered.
 - 💰 **Manual crypto payment** — BSC (recommended), Ethereum, Polygon. Payouts go
@@ -69,8 +69,9 @@ ARCHITECTURE.md      developer guide
 
 ## ⚙️ Configuration
 
-**`config.py → PRODUCTS`** — your catalogue. Add/edit products (each has its own
-price, kind, and delivery). See `INSTALL.md` Step 4b for a worked example.
+**Products** — add/change/remove them **from Telegram** (Owner Menu → Add
+Product / Remove Product). No code editing needed. They're stored in
+`products.json`. See `INSTALL.md` Step 4b.
 
 **`.env`** — secrets & global settings:
 
@@ -78,12 +79,14 @@ price, kind, and delivery). See `INSTALL.md` Step 4b for a worked example.
 |-----|-------------|
 | `TELEGRAM_BOT_TOKEN` | your bot token from @BotFather |
 | `CRYPTO_ADDRESS` | your wallet (BSC/ETH/Polygon) where payments go |
-| `OWNER_CHAT_ID` | your Telegram id — gets the admin panel |
+| `OWNER_CHAT_ID` | your Telegram id — gets the admin panel & Owner Menu |
 | `CHANNEL_ID` / `CHANNEL_LINK` | (optional) VIP channel auto-membership |
 | `NOWPAYMENTS_API_KEY` | (optional) card/crypto gateway |
+| `COINGATE_AUTH_TOKEN` | (optional) web payment page gateway |
 
 > `PRICE_USD` and `PREMIUM_DAYS` are kept only as fallbacks. Your real prices
-> and durations now live in `config.py → PRODUCTS`.
+> and durations are managed from the Telegram Owner Menu (stored in
+> `products.json`).
 
 ---
 
@@ -95,8 +98,17 @@ price, kind, and delivery). See `INSTALL.md` Step 4b for a worked example.
 
 ## 📄 License / sale terms
 
-This is a **source-code template sale**. The buyer configures their own bot
-token, wallet, and channel. All customer payments go **directly to the buyer's
-own wallet** — the seller never touches funds.
+This is a **single-site license** (see [LICENSE](LICENSE)).
+
+- The buyer configures their own bot token, wallet, and channel. All customer
+  payments go **directly to the buyer's own wallet** — the seller never touches
+  funds.
+- The buyer may use this bot **for their own channel / shop / business** and
+  may modify its configuration freely.
+- **Reselling, redistributing, or offering this software (or any modified copy)
+  to third parties is NOT permitted.** Each site that runs the bot needs its own
+  license.
+- For a resellable / multi-site license, contact the author for a separate
+  commercial agreement.
 
 *Everything in this package is English and fully self-contained.*
