@@ -199,6 +199,7 @@ TXT = {
     "owner_confirm_remove": "⚠️ Remove \"{name}\"?",
     "owner_menu_updated": "✅ Menu updated.",
     "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
+    "sale_notification": "🛎️ NEW SALE!\n\n🛒 Product: {name}\n💰 Price: ${price:.2f}\n👤 Buyer: {user}\n💳 Method: {method}\n🕐 {time}",
 }
 
 

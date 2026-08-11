@@ -197,11 +197,29 @@ def grant_channel_access(chat_id):
     return suffix
 
 
+def _notify_owner_sale(chat_id, username, product, payment_method):
+    """Notify the owner (OWNER_CHAT_ID) when a product is sold & delivered."""
+    owner = config.OWNER_CHAT_ID
+    if not owner:
+        return
+    buyer = username or str(chat_id)
+    method = payment_method if payment_method else "crypto"
+    text = lang.TXT["sale_notification"].format(
+        name=product.get("name", "item"),
+        price=product.get("price_usd", 0),
+        user=buyer,
+        method=method,
+        time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    )
+    send_message(owner, text)
+
+
 def _deliver_product(chat_id, username, product, payment_method):
     """Deliver a paid product: grant channel access OR send digital delivery.
 
     Returns (completed_msg, ok) where ok=True means delivery succeeded.
     Sets/updates the subscriber's paid access record for status tracking.
+    Also notifies the owner of the sale.
     """
     data = load_subscribers()
     sub = find_subscriber(data, chat_id)
@@ -222,6 +240,9 @@ def _deliver_product(chat_id, username, product, payment_method):
         sub["payment_method"] = payment_method
         sub["product_id"] = product.get("id")
     save_subscribers(data)
+
+    # Notify the owner that a sale happened (only on confirmed delivery).
+    _notify_owner_sale(chat_id, username, product, payment_method)
 
     if kind == "digital":
         deliver_text = product.get("deliver") or product.get("description", product["name"])
