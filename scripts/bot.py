@@ -557,10 +557,11 @@ def handle_unsubscribe(chat_id, message_id=None):
 
 
 def handle_pay(chat_id, username, txhash):
-    """Manual /pay <txhash> handler.
+    """Manual /pay <txhash> handler (or free-text hash after "I paid").
 
     Delivers the product the user selected in the shop (stored in pending),
-    or the default/first product if none was selected.
+    or the default/first product if none was selected. Clears the pending
+    "pay" marker so we don't re-deliver on a second message.
     """
     pending = _load_pending().get(str(chat_id))
     product_id = pending.get("product_id") if isinstance(pending, dict) else None
@@ -569,6 +570,7 @@ def handle_pay(chat_id, username, txhash):
         return send_message(chat_id, lang.TXT["product_sold_out"], back_menu_keyboard())
     msg, _ = _deliver_product(chat_id, username, product, "crypto")
     msg = msg.replace("(crypto)", txhash[:20] + "...", 1)
+    _save_pending(chat_id, "")  # clear the pending "pay" marker
     return send_message(chat_id, msg, back_menu_keyboard())
 
 
@@ -725,6 +727,14 @@ def handle_command(chat_id, username, command):
         handle_status(chat_id)
     elif command == "/help":
         handle_help(chat_id)
+    elif not command.startswith("/"):
+        # Not a slash command -> if the user is mid-payment (selected a network
+        # and tapped "I paid"), treat this free-text as a transaction hash.
+        pending = _load_pending().get(str(chat_id))
+        if isinstance(pending, dict) and pending.get("product_id") and command.strip():
+            handle_pay(chat_id, username, command.strip())
+            return
+        send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard())
     else:
         send_message(chat_id, lang.TXT["unknown_command"], main_menu_keyboard())
 
