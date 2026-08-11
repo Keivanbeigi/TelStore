@@ -716,7 +716,10 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         if admin.is_owner(chat_id):
             key = cb_data[len("toggle_menu:"):]
             if key in config.MENU_ITEMS:
-                config.toggle_menu_item(key)
+                now_visible = config.toggle_menu_item(key)
+                # Message the owner to confirm what happened, then refresh the editor.
+                state = "shown" if now_visible else "hidden"
+                answer_callback(callback_id, text=f"Menu button {state}.")
                 edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
