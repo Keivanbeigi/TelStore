@@ -128,7 +128,8 @@ try:
     )
     with urllib.request.urlopen(req, timeout=15) as r:
         d = json.loads(r.read())
-    print(f"{d.get('statusAvailable', False)}|{d.get('message','ok')}")
+    ok = d.get("message") == "OK" or d.get("statusAvailable") is True
+    print(f"{ok}|{d.get('message','ok')}")
 except Exception as e:
     print(f"False|{e}")
 PY
