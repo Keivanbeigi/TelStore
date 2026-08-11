@@ -6,5 +6,5 @@ report.txt
 subscribers.json
 pending_payments.json
 products.json
-menu_config.json*.log
+menu_config.json
 *.log
