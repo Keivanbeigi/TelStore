@@ -49,7 +49,23 @@ The script will:
 
 ---
 
-## Step 4 — Fill in your `.env`
+## Step 4 — Verify the install (optional but recommended)
+
+Run the built-in health check to confirm everything (token, NOWPayments,
+files, service) is set up correctly:
+
+```bash
+cd /root/crypto-quest-bot/scripts
+bash check_bot.sh
+```
+
+It prints `PASS`/`FAIL` for each item (Python, modules, token validity via
+Telegram `getMe`, NOWPayments API, write permissions, systemd service) and
+exits non-zero if anything is broken. Exit code `0` = healthy.
+
+---
+
+## Step 5 — Fill in your `.env`
 
 When the installer creates `.env`, edit it with **your** values:
 
@@ -63,10 +79,11 @@ Set at least:
 - `OWNER_CHAT_ID` — your Telegram id (gets the admin panel)
 
 Save (Ctrl+O, Enter, Ctrl+X), then press Enter in the installer to continue.
+After editing, re-run `bash check_bot.sh` to confirm the new values work.
 
 ---
 
-## Step 5 — Manage the bot (useful commands)
+## Step 6 — Manage the bot (useful commands)
 
 ```bash
 systemctl status crypto-quest-bot      # is it running?
