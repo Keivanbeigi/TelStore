@@ -206,3 +206,59 @@ def get_product(product_id):
 def get_default_product():
     """Return the first product (used when none specified)."""
     return PRODUCTS[0] if PRODUCTS else None
+
+
+# ------------------------------------------------------------
+#  Main-menu button visibility (owner can hide/show buttons)
+#  ------------------------------------------------------------
+#  Each main-menu button has a key. The owner can hide/show any of them from
+#  Telegram (Edit Menu). Hidden ones are stored here so they persist.
+MENU_FILE = os.path.join(_dir(), "menu_config.json")
+
+# All possible main-menu buttons, keyed by callback_data.
+MENU_ITEMS = {
+    "shop":          {"btn": "shop",          "label_key": "shop"},
+    "sub_free":      {"btn": "sub_free",      "label_key": "free_sub"},
+    "status":        {"btn": "status",        "label_key": "status"},
+    "help":          {"btn": "help",          "label_key": "help"},
+    "unsubscribe":   {"btn": "unsubscribe",   "label_key": "unsubscribe"},
+}
+
+# Buttons hidden by the owner (subset of MENU_ITEMS). Loaded from menu_config.json.
+HIDDEN_MENU = set()
+
+
+def _load_hidden_menu():
+    global HIDDEN_MENU
+    if os.path.exists(MENU_FILE):
+        try:
+            with open(MENU_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            hidden = data.get("hidden", []) if isinstance(data, dict) else []
+            HIDDEN_MENU = set(hidden)
+            return
+        except Exception:
+            pass
+    HIDDEN_MENU = set()
+
+
+def save_hidden_menu():
+    """Persist the hidden-menu set to menu_config.json (gitignored)."""
+    with open(MENU_FILE, "w", encoding="utf-8") as f:
+        json.dump({"hidden": sorted(HIDDEN_MENU)}, f, ensure_ascii=False, indent=2)
+
+
+def toggle_menu_item(key):
+    """Toggle a main-menu button's visibility. Returns True if now visible."""
+    global HIDDEN_MENU
+    if key in HIDDEN_MENU:
+        HIDDEN_MENU.discard(key)
+        save_hidden_menu()
+        return True
+    HIDDEN_MENU.add(key)
+    save_hidden_menu()
+    return False
+
+
+# Load hidden-menu state at import time.
+_load_hidden_menu()

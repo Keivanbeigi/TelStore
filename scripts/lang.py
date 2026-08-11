@@ -193,6 +193,10 @@ TXT = {
         "Remove a product:\n"
         "  /remove_product <id>"
     ),
+    "owner_edit_menu": "⚙️ Edit Menu",
+    "owner_edit_menu_title": "⚙️ Edit the main menu. Tap a button to toggle it:",
+    "owner_menu_updated": "✅ Menu updated.",
+    "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
 }
 
 
@@ -216,6 +220,7 @@ BTN = {
     "owner_add_product": "➕ Add Product",
     "owner_list_products": "🛒 List Products",
     "owner_howto_add": "❓ How to add",
+    "owner_edit_menu": "⚙️ Edit Menu",
     "back": "◀️ Back",
 }
 

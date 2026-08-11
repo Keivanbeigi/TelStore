@@ -291,14 +291,15 @@ def shop_keyboard():
 
 
 def main_menu_keyboard(chat_id=None):
-    """Main menu. If chat_id is the owner, an extra owner-only button appears."""
-    rows = [
-        [{"text": lang.BTN["shop"], "callback_data": "shop"}],
-        [{"text": lang.BTN["free_sub"], "callback_data": "sub_free"}],
-        [{"text": lang.BTN["status"], "callback_data": "status"}],
-        [{"text": lang.BTN["help"], "callback_data": "help"}],
-        [{"text": lang.BTN["unsubscribe"], "callback_data": "unsubscribe"}],
-    ]
+    """Main menu. Owner can hide/show buttons (via Edit Menu)."""
+    rows = []
+    # Build from MENU_ITEMS, skipping any the owner hid.
+    for key, item in config.MENU_ITEMS.items():
+        if key in config.HIDDEN_MENU:
+            continue
+        rows.append([
+            {"text": lang.BTN[item["label_key"]], "callback_data": item["btn"]}
+        ])
     # Owner-only management button (private to the owner).
     if chat_id is not None and admin.is_owner(chat_id):
         rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
@@ -306,15 +307,29 @@ def main_menu_keyboard(chat_id=None):
 
 
 def owner_keyboard():
-    """Owner menu: product management actions (owner only)."""
+    """Owner menu: product + menu management actions (owner only)."""
     return {
         "inline_keyboard": [
             [{"text": lang.BTN["owner_add_product"], "callback_data": "owner_add_product"}],
             [{"text": lang.BTN["owner_list_products"], "callback_data": "owner_list_products"}],
             [{"text": lang.BTN["owner_howto_add"], "callback_data": "owner_howto_add"}],
+            [{"text": lang.BTN["owner_edit_menu"], "callback_data": "owner_edit_menu"}],
             [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
         ]
     }
+
+
+def edit_menu_keyboard():
+    """Owner: list all main-menu buttons to hide/show (toggle each)."""
+    rows = []
+    for key, item in config.MENU_ITEMS.items():
+        label = lang.BTN[item["label_key"]]
+        if key in config.HIDDEN_MENU:
+            label = "⛔ " + label
+        rows.append([{"text": label, "callback_data": f"toggle_menu:{key}"}])
+    rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
 
 
 def pay_done_keyboard():
@@ -694,6 +709,15 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data == "owner_howto_add":
         if admin.is_owner(chat_id):
             edit_message(chat_id, message_id, lang.TXT["owner_howto_text"], owner_keyboard())
+    elif cb_data == "owner_edit_menu":
+        if admin.is_owner(chat_id):
+            edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
+    elif cb_data.startswith("toggle_menu:"):
+        if admin.is_owner(chat_id):
+            key = cb_data[len("toggle_menu:"):]
+            if key in config.MENU_ITEMS:
+                config.toggle_menu_item(key)
+                edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
     elif cb_data.startswith("prod_"):
