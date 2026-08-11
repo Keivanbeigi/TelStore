@@ -423,6 +423,39 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
 
+def _finalize_paid_payment(chat_id, payment_id, product_id=None):
+    """Deliver a confirmed NOWPayments payment and clear it from pending.
+
+    Returns the confirmation message, or None if nothing to do.
+    Shared by the manual "Check payment status" button AND the background
+    auto-poll, so a paid invoice is delivered exactly once.
+    """
+    pending = _load_pending().get(str(chat_id))
+    if not pending:
+        return None
+    pending_pid = pending.get("payment_id") if isinstance(pending, dict) else pending
+    # Only finalize if this is the current pending invoice, and caller agrees.
+    if product_id is None:
+        product_id = pending.get("product_id") if isinstance(pending, dict) else None
+
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        product = config.get_default_product() or {
+            "id": None, "name": "item", "days": config.PREMIUM_DAYS, "kind": "channel"}
+    days = product.get("days") or config.PREMIUM_DAYS
+    # load subscriber username (may be blank for auto-poll; acceptable)
+    data = load_subscribers()
+    sub = find_subscriber(data, chat_id)
+    username = (sub or {}).get("username", "")
+
+    msg, _ = _deliver_product(chat_id, username, product, "nowpayments")
+    _save_pending(chat_id, "")  # clear pending so we never double-deliver
+    if product.get("kind") == "channel":
+        msg = lang.TXT["np_payment_confirmed"].format(days=days) + \
+            ("\n" + msg if msg else "")
+    return msg
+
+
 def handle_check_payment(chat_id, username, message_id):
     """Check the status of the customer's pending NOWPayments invoice."""
     pending = _load_pending().get(str(chat_id))
@@ -437,16 +470,9 @@ def handle_check_payment(chat_id, username, message_id):
     state = status.get("payment_status", "unknown") if isinstance(status, dict) else "unknown"
 
     if state == "finished":
-        product = config.get_product(product_id) if product_id else config.get_default_product()
-        if product is None:
-            product = config.get_default_product() or {"id": None, "name": "item", "days": config.PREMIUM_DAYS, "kind": "channel"}
-            product_id = None
-        days = product.get("days") or config.PREMIUM_DAYS
-        msg, _ = _deliver_product(chat_id, username, product, "nowpayments")
-        _save_pending(chat_id, "")  # clear pending
-        if product.get("kind") == "channel":
-            msg = lang.TXT["np_payment_confirmed"].format(days=days) + \
-                ("\n" + msg if msg else "")
+        msg = _finalize_paid_payment(chat_id, payment_id, product_id)
+        if msg is None:
+            msg = lang.TXT["np_error"]
         return edit_message(chat_id, message_id, msg, back_menu_keyboard())
 
     if state in ("waiting", "confirming", "partially_paid", "expired"):
@@ -454,6 +480,37 @@ def handle_check_payment(chat_id, username, message_id):
         return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
 
     return edit_message(chat_id, message_id, lang.TXT["np_error"], pay_check_keyboard())
+
+
+def poll_pending_payments():
+    """Background auto-poll of pending NOWPayments invoices (like IPN, no server).
+
+    Called periodically from the main loop. For each pending payment it asks
+    NOWPayments for the current status; if a payment became ``finished`` it
+    delivers the product automatically and messages the customer — no manual
+    "Check payment status" tap needed.
+    """
+    pendings = _load_pending()
+    if not pendings:
+        return 0
+    delivered = 0
+    for chat_id, pending in list(pendings.items()):
+        if not pending or pending == "":
+            continue
+        payment_id = pending.get("payment_id") if isinstance(pending, dict) else pending
+        if not payment_id:
+            continue
+        status = nowpayments.get_payment_status(payment_id)
+        state = status.get("payment_status", "unknown") if isinstance(status, dict) else "unknown"
+        if state != "finished":
+            continue
+        product_id = pending.get("product_id") if isinstance(pending, dict) else None
+        msg = _finalize_paid_payment(chat_id, payment_id, product_id)
+        if msg:
+            send_message(chat_id, msg, back_menu_keyboard())
+            delivered += 1
+            print(f"   [auto] delivered paid invoice for chat {chat_id}")
+    return delivered
 
 
 def handle_status(chat_id, message_id=None):
@@ -673,17 +730,23 @@ def handle_command(chat_id, username, command):
 
 
 # ---------------------------------------------------------------------------
-#  Main polling loop
+# Main polling loop
 # ---------------------------------------------------------------------------
 _last_sweep = 0.0
+_last_payment_poll = 0.0
+_PAYMENT_POLL_INTERVAL = 20.0   # check pending payments every 20 seconds
 
 
 def main():
-    global _last_sweep
+    global _last_sweep, _last_payment_poll
     if not config.TOKEN:
         print("ERROR: TELEGRAM_BOT_TOKEN not set", file=sys.stderr)
         sys.exit(1)
-    print("✅ Bot running... (polling with inline menu)")
+    print("✅ Bot running... (polling with inline menu + auto payment-poll)")
+    if nowpayments.is_configured():
+        print(f"   Auto-delivery: checking pending NOWPayments every {_PAYMENT_POLL_INTERVAL:.0f}s")
+    else:
+        print("   Auto-delivery: OFF (NOWPayments not configured)")
 
     # Drain stale updates so we don't reply to expired callbacks (fixes 400).
     offset = 0
@@ -725,6 +788,15 @@ def main():
                 _last_sweep = time.time()
         except Exception as e:
             print("sweep error:", e)
+
+        # Auto-deliver confirmed payments (background "IPN"-like check).
+        try:
+            if nowpayments.is_configured() and \
+               time.time() - _last_payment_poll >= _PAYMENT_POLL_INTERVAL:
+                poll_pending_payments()
+                _last_payment_poll = time.time()
+        except Exception as e:
+            print("payment-poll error:", e)
         time.sleep(0.3)
 
 
