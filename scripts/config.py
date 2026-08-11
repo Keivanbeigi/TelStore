@@ -70,10 +70,9 @@ OWNER_CHAT_ID = _load_env_str("OWNER_CHAT_ID", "").strip()
 PRICE_USD = _load_env_float("PRICE_USD", 5.0)          # $/month for Premium
 
 # Payout wallet (EVM). Same address for BSC / Ethereum / Polygon.
-CRYPTO_ADDRESS = _load_env_str(
-    "CRYPTO_ADDRESS",
-    "0xB20c44e0C5deef5c7ba5293D6eBE4Af278B836cD",
-)
+# Leave empty in .env = the bot shows no wallet until the buyer sets theirs.
+# (A hard-coded default wallet here would wrongly send buyer funds to the author.)
+CRYPTO_ADDRESS = _load_env_str("CRYPTO_ADDRESS", "").strip()
 
 # NOWPayments gateway (optional). Empty = button hidden/disabled.
 NOWPAYMENTS_API_KEY = _load_env_str("NOWPAYMENTS_API_KEY", "").strip()

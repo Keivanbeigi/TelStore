@@ -153,6 +153,9 @@ def format_crypto_payment(network=None):
     ) if network.get("recommended") else lang.TXT["pay_network"].format(
         name=network["name"], standard=network["standard"],
     )
+    # If the owner hasn't set a wallet, show a warning and stop (no funds lost).
+    if not config.CRYPTO_ADDRESS:
+        return lang.TXT["pay_wallet_missing"]
     lines = [
         lang.TXT["pay_price"].format(price=config.PRICE_USD),
         "",

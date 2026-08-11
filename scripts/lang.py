@@ -94,6 +94,10 @@ TXT = {
     "pay_network_recommended": "🌐 Network: ⭐ Recommended - {name} ({standard})",
     "pay_token": "   Token: {currency}",
     "pay_wallet_label": "🏦 Wallet address (all networks):",
+    "pay_wallet_missing": (
+        "⚠️ The owner has not set a wallet yet. Payment is paused.\n"
+        "Contact the owner to configure CRYPTO_ADDRESS in `.env`."
+    ),
     "pay_amount": "📤 Send exactly ${price} worth (plus network fee).",
     "pay_after": "✅ After paying, tap \"I paid\" and send the transaction hash.",
 
