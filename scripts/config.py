@@ -155,7 +155,7 @@ DEFAULT_PRODUCTS = [
         "price_usd": 5.0,
         "days": 30,
         "kind": "channel",
-        "description": "Monthly access to our private VIP channel with daily reports.",
+        "description": "Monthly access to our private VIP channel with exclusive updates.",
     },
 ]
 

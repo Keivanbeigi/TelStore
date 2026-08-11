@@ -20,7 +20,8 @@ TXT = {
     # --- main menu / welcome ---
     "welcome": (
         "👋 Welcome to Crypto Quest!\n\n"
-        "Get daily reports on XP farming missions and badges.\n"
+        "Access our private VIP channel, buy digital products and more — "
+        "pay with crypto, delivered instantly.\n"
         "Choose an option below to get started 👇"
     ),
 
@@ -28,8 +29,8 @@ TXT = {
     "already_subscribed": "✅ You are already subscribed! Check your status below 👇",
     "free_activated": (
         "🆓 Free subscription activated!\n"
-        "You'll receive a weekly missions report.\n\n"
-        "💎 Check the shop for Premium access and products."
+        "You'll get updates from the shop.\n\n"
+        "💎 Check the shop for VIP access and products."
     ),
 
     # --- products / shop ---
@@ -108,7 +109,7 @@ TXT = {
     "help": (
         "❓ Help:\n\n"
         "🛒 Shop - browse and buy products (VIP access, digital items)\n"
-        "🆓 Free subscription - weekly report\n"
+        "🆓 Free subscription - shop updates\n"
         "📊 Status - your access info\n"
         "🚫 Unsubscribe - cancel membership\n\n"
         "To pay with crypto, pick a product, then a network, and send the amount "

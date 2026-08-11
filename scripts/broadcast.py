@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Broadcast a report to all channel subscribers
+Broadcast a message to all channel subscribers
 ===============================================
-Sends a report to subscribers:
-- Premium subscribers -> daily report (every 6 hours)
-- Free subscribers -> only on Sundays (optional)
+Sends a message (e.g. a shop announcement) to subscribers.
+- Premium subscribers -> sent always
+- Free subscribers -> optional (--free)
 
 Configured via scripts/config.py (reads the project `.env`).
 

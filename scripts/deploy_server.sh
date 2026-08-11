@@ -66,6 +66,18 @@ else
   read -r -p "Press Enter after you have filled in .env... " _
 fi
 
+# --- 3.5 sudo helper -------------------------------------------------------
+SUDO=""
+run_root() {
+  if [ "$(id -u)" = "0" ]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    err "Need root to $1. Run as root or install sudo."
+  fi
+}
+
 # --- 4. systemd service ----------------------------------------------------
 SERVICE_NAME="crypto-quest-bot"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
@@ -97,16 +109,16 @@ EnvironmentFile=$ENV_FILE
 WantedBy=multi-user.target
 EOF
 
-sudo cp /tmp/crypto-quest-bot.service "$SERVICE_FILE"
+run_root cp /tmp/crypto-quest-bot.service "$SERVICE_FILE"
 rm -f /tmp/crypto-quest-bot.service
 
-sudo systemctl daemon-reload
-sudo systemctl enable "$SERVICE_NAME" >/dev/null 2>&1
-sudo systemctl restart "$SERVICE_NAME"
+run_root systemctl daemon-reload
+run_root systemctl enable "$SERVICE_NAME" >/dev/null 2>&1
+run_root systemctl restart "$SERVICE_NAME"
 
 # --- 5. report -------------------------------------------------------------
 sleep 3
-if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
+if run_root systemctl is-active --quiet "$SERVICE_NAME"; then
   say "✅ Bot service is RUNNING."
   say "   Status : systemctl status $SERVICE_NAME"
   say "   Logs   : journalctl -u $SERVICE_NAME -f"
