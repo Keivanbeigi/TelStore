@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Quest Bot — Buy</title>
+<style>
+  :root { --bg:#0f1117; --card:#1a1d27; --accent:#ffd600; --text:#e8e8ea; --muted:#9aa0ae; }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; padding:20px; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-size:1.7rem; margin-bottom:4px; }
+  .sub { color:var(--muted); margin-bottom:24px; }
+  .card { background:var(--card); border-radius:14px; padding:22px; margin-bottom:18px; border:1px solid #2a2d3a; }
+  .prod { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #2a2d3a; padding:12px 0; }
+  .prod:last-child{border-bottom:none;}
+  .prod .name { font-weight:600; }
+  .prod .price { color:var(--accent); font-weight:700; }
+  .btn { display:inline-block; background:var(--accent); color:#000; font-weight:700; padding:10px 18px; border-radius:8px; text-decoration:none; margin-top:10px; }
+  .btn.small { padding:6px 12px; font-size:.9rem; margin:0; }
+  .btn.tg { background:#229ed9; color:#fff; }
+  .note { color:var(--muted); font-size:.92rem; }
+  .steps { margin:8px 0 0 18px; }
+  .steps li { margin:6px 0; }
+  .tag { font-size:.75rem; background:#2a2d3a; padding:2px 8px; border-radius:20px; color:var(--muted); margin-left:8px; }
+  h2 { font-size:1.1rem; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 Crypto Quest Telegram Bot</h1>
+  <div class="sub">A ready-to-sell Telegram VIP subscription &amp; product bot. Pay once, deploy your own. Works from anywhere, no bank card needed to receive payments.</div>
+
+  <div class="card">
+    <h2>🛒 What's included (one-time license)</h2>
+    <div class="prod"><span class="name">Source code license</span><span class="price">$29</span></div>
+    <div class="note" style="margin-top:10px">
+      • Multi-product shop — each product its own price<br>
+      • Telegram subscription bot + VIP channel auto-membership<br>
+      • Crypto payments (manual wallet + NOWPayments)<br>
+      • Owner admin panel<br>
+      • English, clean, documented code (config / lang / bot separated)
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💳 Pay with crypto (no card needed)</h2>
+    <ol class="steps">
+      <li>Check the crypto checkout tool (CoinGate) for a payment link, <b>or</b></li>
+      <li>Contact the seller in Telegram and use the bot's crypto wallet.</li>
+    </ol>
+    <p style="margin-top:12px">
+      <a class="btn" href="PAYMENT_URL_HERE">➡️ Open crypto checkout</a>
+      <a class="btn tg small" href="https://t.me/ADNC_bot">✈️ Contact on Telegram</a>
+    </p>
+    <p class="note" style="margin-top:10px">After payment we email you the download link + a short setup walkthrough (or set it up together on a call).</p>
+  </div>
+
+  <div class="card">
+    <h2>📦 Deliverable</h2>
+    <div class="note">You receive <code>crypto-quest-bot/</code> (source + <code>INSTALL.md</code> + <code>.env.example</code>) — everything in English, ready to configure with your own token, wallet, and products.</div>
+  </div>
+
+  <div class="card">
+    <h2>❓ Questions?</h2>
+    <div class="note">Message the seller on Telegram — we usually reply within a day.</div>
+  </div>
+</div>
+</body>
+</html>
