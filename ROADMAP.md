@@ -48,7 +48,19 @@
 - `ARCHITECTURE.md` — human-friendly developer guide
 - Verified: all modules compile + functional smoke test + live `getMe` ✅
 
-## Phase 5 — Sales package (NEXT)
+## Phase 5 — Multi-product shop (DONE ✅)
+- **`config.PRODUCTS`** catalogue — owner defines any products, each with its
+  **own price** (no hard-coded single price).
+- Shop menu (`🛒 Shop / Products`) generated automatically from `PRODUCTS`.
+- Two delivery kinds: `channel` (auto VIP-channel access) and `digital`
+  (auto-send a link/message).
+- Per-product prices flow through manual crypto and NOWPayments.
+- `kind="digital"` added; `_deliver_product` replaces the old `_activate_premium`.
+- Owner `/products` command lists the configured catalogue.
+- Docs (`INSTALL.md`, `ARCHITECTURE.md`, `README`) updated with how to add/reprice.
+- Verified: 16-check functional suite + live `getMe` + shop keyboard ✅
+
+## Phase 6 — Sales package (NEXT)
 - **README install guide** (step-by-step for the buyer)
 - Deliverable: source + `.env.example` + install guide
 - Publish on: Fiverr, CodeCanyon, Sellix, Gumroad

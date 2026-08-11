@@ -66,7 +66,7 @@ def find_subscriber(data, chat_id):
 
 
 def _load_pending():
-    """Pending NOWPayments invoices: chat_id -> payment_id."""
+    """Pending NOWPayments invoices: chat_id -> {payment_id, product_id}."""
     if os.path.exists(config.PENDING_FILE):
         try:
             with open(config.PENDING_FILE, "r", encoding="utf-8") as f:
@@ -76,9 +76,13 @@ def _load_pending():
     return {}
 
 
-def _save_pending(chat_id, payment_id):
+def _save_pending(chat_id, value):
+    """Store a pending NOWPayments record (str payment_id OR dict with product_id)."""
     data = _load_pending()
-    data[str(chat_id)] = str(payment_id)
+    if value == "":
+        data.pop(str(chat_id), None)
+    else:
+        data[str(chat_id)] = value
     with open(config.PENDING_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -144,8 +148,11 @@ def get_recommended_network():
     return config.CRYPTO_NETWORKS[0]
 
 
-def format_crypto_payment(network=None):
-    """Build the full crypto payment guide for a given network (default: recommended)."""
+def format_crypto_payment(product, network=None):
+    """Build the full crypto payment guide for a product + network.
+
+    The price comes from the product, so every product can have its own amount.
+    """
     if network is None:
         network = get_recommended_network()
     network_line = lang.TXT["pay_network_recommended"].format(
@@ -156,8 +163,9 @@ def format_crypto_payment(network=None):
     # If the owner hasn't set a wallet, show a warning and stop (no funds lost).
     if not config.CRYPTO_ADDRESS:
         return lang.TXT["pay_wallet_missing"]
+    price = product.get("price_usd", 0.0)
     lines = [
-        lang.TXT["pay_price"].format(price=config.PRICE_USD),
+        lang.TXT["pay_price"].format(price=price),
         "",
         network_line,
         lang.TXT["pay_token"].format(currency=network["currency"]),
@@ -166,7 +174,7 @@ def format_crypto_payment(network=None):
         lang.TXT["pay_wallet_label"],
         f"`{config.CRYPTO_ADDRESS}`",
         "",
-        lang.TXT["pay_amount"].format(price=config.PRICE_USD),
+        lang.TXT["pay_amount"].format(price=price),
         "",
         lang.TXT["pay_after"],
         "",
@@ -188,16 +196,89 @@ def grant_channel_access(chat_id):
     return suffix
 
 
+def _deliver_product(chat_id, username, product, payment_method):
+    """Deliver a paid product: grant channel access OR send digital delivery.
+
+    Returns (completed_msg, ok) where ok=True means delivery succeeded.
+    Sets/updates the subscriber's paid access record for status tracking.
+    """
+    data = load_subscribers()
+    sub = find_subscriber(data, chat_id)
+    kind = product.get("kind", "channel")
+    days = product.get("days", 0)
+
+    # Update paid-access record on the subscriber (for /status + sweep).
+    if not sub:
+        data["subscribers"].append({
+            "chat_id": str(chat_id), "username": username or "",
+            "plan": "premium", "subscribed_at": datetime.datetime.now().isoformat(),
+            "premium_until": _expiry(days), "payment_method": payment_method,
+            "product_id": product.get("id"),
+        })
+    else:
+        sub["plan"] = "premium"
+        sub["premium_until"] = _expiry(days)
+        sub["payment_method"] = payment_method
+        sub["product_id"] = product.get("id")
+    save_subscribers(data)
+
+    if kind == "digital":
+        deliver_text = product.get("deliver") or product.get("description", product["name"])
+        return lang.TXT["pay_received_digital"].format(
+            tx="(nowpayments)" if payment_method == "nowpayments" else "(crypto)",
+            deliver=deliver_text,
+        ), True
+
+    # Channel delivery
+    msg = lang.TXT["pay_received_channel"].format(
+        tx="(nowpayments)" if payment_method == "nowpayments" else "(crypto)",
+        days=days if days else 0,
+    )
+    suffix = grant_channel_access(chat_id)
+    if suffix:
+        msg += suffix
+    else:
+        msg += lang.TXT["pay_awaiting_confirm"]
+    return msg, True
+
+
+def _expiry(days):
+    """ISO expiry for a grant of N days (0 days -> 1 year lifetime placeholder)."""
+    if days and days > 0:
+        return (datetime.datetime.now() + datetime.timedelta(days=days)).isoformat()
+    return (datetime.datetime.now() + datetime.timedelta(days=3650)).isoformat()
+
+
 # ---------------------------------------------------------------------------
 #  Keyboard builders (button labels all come from lang)
 # ---------------------------------------------------------------------------
-def network_keyboard():
+def network_keyboard(product_id=None):
+    """Payment network keyboard. If a product is being bought, back goes to the shop."""
     rows = []
     for n in config.CRYPTO_NETWORKS:
+        cb = lang.network_callback(n)
+        if product_id:
+            cb = f"{cb}:{product_id}"
         rows.append([
-            {"text": lang.network_button(n), "callback_data": lang.network_callback(n)}
+            {"text": lang.network_button(n), "callback_data": cb}
         ])
-    rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": "pay_nowpayments"}])
+    if product_id:
+        rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": f"pay_nowpayments:{product_id}"}])
+    else:
+        rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": "pay_nowpayments"}])
+    if product_id:
+        rows.append([{"text": lang.BTN["back_shop"], "callback_data": "shop"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
+
+
+def shop_keyboard():
+    """Main shop keyboard: one button per product in config.PRODUCTS."""
+    rows = []
+    for p in config.PRODUCTS:
+        rows.append([
+            {"text": lang.product_button(p), "callback_data": lang.product_callback(p)}
+        ])
     rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
     return {"inline_keyboard": rows}
 
@@ -205,7 +286,7 @@ def network_keyboard():
 def main_menu_keyboard():
     return {
         "inline_keyboard": [
-            [{"text": lang.BTN["buy_premium"].format(price=config.PRICE_USD), "callback_data": "premium"}],
+            [{"text": lang.BTN["shop"], "callback_data": "shop"}],
             [{"text": lang.BTN["free_sub"], "callback_data": "sub_free"}],
             [{"text": lang.BTN["status"], "callback_data": "status"}],
             [{"text": lang.BTN["help"], "callback_data": "help"}],
@@ -265,25 +346,48 @@ def handle_subscribe(chat_id, username, data):
     return send_message(chat_id, lang.TXT["free_activated"], back_menu_keyboard())
 
 
-def handle_premium(chat_id, message_id=None):
-    sub = find_subscriber(load_subscribers(), chat_id)
-    if sub and sub.get("plan") == "premium":
-        text = lang.TXT["premium_active_until"].format(until=sub.get("premium_until", "unknown"))
-    else:
-        text = lang.TXT["premium_offer"].format(price=config.PRICE_USD)
+def handle_shop(chat_id, message_id=None):
+    """Show the list of products (shop)."""
+    text = lang.TXT["shop_title"]
     if message_id is not None:
-        return edit_message(chat_id, message_id, text, network_keyboard())
-    return send_message(chat_id, text, network_keyboard())
+        return edit_message(chat_id, message_id, text, shop_keyboard())
+    return send_message(chat_id, text, shop_keyboard())
 
 
-def handle_pay_network(chat_id, message_id, network_name):
+def handle_product(chat_id, message_id, product_id):
+    """Show a product's payment page and the network keyboard."""
+    product = config.get_product(product_id)
+    if product is None:
+        return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
+    price = product.get("price_usd", 0.0)
+    text = lang.TXT["product_page"].format(
+        emoji=product.get("emoji", lang.TXT["emoji_default"]),
+        name=product["name"],
+        description=product.get("description", ""),
+        price=price,
+        duration=lang.product_duration(product),
+    )
+    return edit_message(chat_id, message_id, text, network_keyboard(product_id))
+
+
+def handle_premium(chat_id, message_id=None):
+    """Legacy guard: route straight into the shop (first product if only one)."""
+    handle_shop(chat_id, message_id)
+
+
+def handle_pay_network(chat_id, message_id, network_name, product_id=None):
     network = next(
         (n for n in config.CRYPTO_NETWORKS if n["name"].lower() == network_name),
         None,
     )
     if network is None:
         network = get_recommended_network()
-    text = format_crypto_payment(network)
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
+    text = format_crypto_payment(product, network)
+    # Remember which product is being paid so "I paid" + tx-hash delivers it.
+    _save_pending(chat_id, {"action": "pay", "product_id": product.get("id")})
     return edit_message(chat_id, message_id, text, pay_done_keyboard(), parse_mode="Markdown")
 
 
@@ -291,60 +395,59 @@ def handle_pay_done(chat_id, message_id):
     return edit_message(chat_id, message_id, lang.TXT["pay_howto"], back_menu_keyboard())
 
 
-def _activate_premium(chat_id, username, days, payment_method):
-    """Shared: create/upgrade the user to Premium and return the new expiry."""
-    data = load_subscribers()
-    sub = find_subscriber(data, chat_id)
-    until = (datetime.datetime.now() + datetime.timedelta(days=days)).isoformat()
-    if not sub:
-        data["subscribers"].append({
-            "chat_id": str(chat_id), "username": username or "",
-            "plan": "premium", "subscribed_at": datetime.datetime.now().isoformat(),
-            "premium_until": until, "payment_method": payment_method,
-        })
-    else:
-        sub["plan"] = "premium"
-        sub["premium_until"] = until
-        sub["payment_method"] = payment_method
-    save_subscribers(data)
-    return until
-
-
-def handle_nowpayments(chat_id, message_id):
+def handle_nowpayments(chat_id, message_id, product_id=None):
     """Create a NOWPayments invoice so the customer pays to the owner's account."""
     if not nowpayments.is_configured():
-        return edit_message(chat_id, message_id, lang.TXT["np_coming_soon"], network_keyboard())
+        kb = network_keyboard(product_id) if product_id else shop_keyboard()
+        return edit_message(chat_id, message_id, lang.TXT["np_coming_soon"], kb)
 
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
+
+    price = product.get("price_usd", 0.0)
     payment = nowpayments.create_payment(
-        price_usd=config.PRICE_USD,
+        price_usd=price,
         pay_currency=config.NOWPAYMENTS_DEFAULT_CURRENCY,
         order_id=f"cq-{chat_id}-{int(time.time())}",
-        description=f"Crypto Quest Premium - {config.PREMIUM_DAYS} days",
+        description=f"{product['name']} - {product.get('days', 0)} days",
     )
     text = nowpayments.format_payment_instructions(payment)
     if "Invoice" in text:
-        _save_pending(chat_id, payment.get("payment_id"))
+        # Store pending + which product it's for.
+        _save_pending(chat_id, {
+            "payment_id": payment.get("payment_id"),
+            "product_id": product.get("id"),
+        })
         return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
 
 def handle_check_payment(chat_id, username, message_id):
     """Check the status of the customer's pending NOWPayments invoice."""
-    payment_id = _load_pending().get(str(chat_id))
-    if not payment_id:
+    pending = _load_pending().get(str(chat_id))
+    if not pending:
         text = lang.TXT["np_no_pending"]
-        return edit_message(chat_id, message_id, text, back_menu_keyboard())
+        return edit_message(chat_id, message_id, text, shop_keyboard())
+
+    payment_id = pending.get("payment_id") if isinstance(pending, dict) else pending
+    product_id = pending.get("product_id") if isinstance(pending, dict) else None
 
     status = nowpayments.get_payment_status(payment_id)
     state = status.get("payment_status", "unknown") if isinstance(status, dict) else "unknown"
 
     if state == "finished":
-        # Payment confirmed -> activate premium for 30 days.
-        _activate_premium(chat_id, username, config.PREMIUM_DAYS, "nowpayments")
+        product = config.get_product(product_id) if product_id else config.get_default_product()
+        if product is None:
+            product = config.get_default_product() or {"id": None, "name": "item", "days": config.PREMIUM_DAYS, "kind": "channel"}
+            product_id = None
+        days = product.get("days") or config.PREMIUM_DAYS
+        msg, _ = _deliver_product(chat_id, username, product, "nowpayments")
         _save_pending(chat_id, "")  # clear pending
-        text = lang.TXT["np_payment_confirmed"].format(days=config.PREMIUM_DAYS)
-        text += grant_channel_access(chat_id)
-        return edit_message(chat_id, message_id, text, back_menu_keyboard())
+        if product.get("kind") == "channel":
+            msg = lang.TXT["np_payment_confirmed"].format(days=days) + \
+                ("\n" + msg if msg else "")
+        return edit_message(chat_id, message_id, msg, back_menu_keyboard())
 
     if state in ("waiting", "confirming", "partially_paid", "expired"):
         text = lang.TXT["np_waiting"].format(state=state)
@@ -358,9 +461,14 @@ def handle_status(chat_id, message_id=None):
     if not sub:
         text = lang.TXT["not_subscribed"]
     else:
+        # Show which product they have access to, if known.
+        product_name = ""
+        if sub.get("product_id"):
+            p = config.get_product(sub["product_id"])
+            product_name = (p or {}).get("name", sub["product_id"])
         plan = lang.TXT["plan_premium"] if sub.get("plan") == "premium" else lang.TXT["plan_free"]
         text = lang.TXT["status"].format(
-            plan=plan,
+            plan=(plan + (f" ({product_name})" if product_name else "")),
             since=sub.get("subscribed_at", "—")[:10],
             until=sub.get("premium_until", "—"),
         )
@@ -370,7 +478,7 @@ def handle_status(chat_id, message_id=None):
 
 
 def handle_help(chat_id, message_id=None):
-    text = lang.TXT["help"].format(price=config.PRICE_USD)
+    text = lang.TXT["help"]
     if message_id is not None:
         return edit_message(chat_id, message_id, text, back_menu_keyboard())
     return send_message(chat_id, text, back_menu_keyboard())
@@ -392,14 +500,18 @@ def handle_unsubscribe(chat_id, message_id=None):
 
 
 def handle_pay(chat_id, username, txhash):
-    """Manual /pay <txhash> handler: activate premium + grant channel."""
-    _activate_premium(chat_id, username, config.PREMIUM_DAYS, "crypto")
-    msg = lang.TXT["pay_received"].format(tx=txhash[:20] + "...", days=config.PREMIUM_DAYS)
-    suffix = grant_channel_access(chat_id)
-    if suffix:
-        msg += suffix
-    else:
-        msg += lang.TXT["pay_awaiting_confirm"]
+    """Manual /pay <txhash> handler.
+
+    Delivers the product the user selected in the shop (stored in pending),
+    or the default/first product if none was selected.
+    """
+    pending = _load_pending().get(str(chat_id))
+    product_id = pending.get("product_id") if isinstance(pending, dict) else None
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        return send_message(chat_id, lang.TXT["product_sold_out"], back_menu_keyboard())
+    msg, _ = _deliver_product(chat_id, username, product, "crypto")
+    msg = msg.replace("(crypto)", txhash[:20] + "...", 1)
     return send_message(chat_id, msg, back_menu_keyboard())
 
 
@@ -413,12 +525,26 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         show_main_menu(chat_id, message_id)
     elif cb_data == "sub_free":
         handle_subscribe(chat_id, username, load_subscribers())
+    elif cb_data == "shop":
+        handle_shop(chat_id, message_id)
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
-    elif cb_data in ("pay_bsc", "pay_ethereum", "pay_polygon"):
-        handle_pay_network(chat_id, message_id, cb_data.split("_", 1)[1])
-    elif cb_data == "pay_nowpayments":
-        handle_nowpayments(chat_id, message_id)
+    elif cb_data.startswith("prod_"):
+        # Select a product -> show its payment page + network keyboard.
+        handle_product(chat_id, message_id, cb_data[len("prod_"):])
+    elif cb_data.startswith("pay_"):
+        # Network selected for a product. Format: pay_bsc / pay_bsc:prod_id
+        payload = cb_data[len("pay_"):]
+        if ":" in payload:
+            network_name, product_id = payload.split(":", 1)
+        else:
+            network_name, product_id = payload, None
+        handle_pay_network(chat_id, message_id, network_name, product_id)
+    elif cb_data == "pay_nowpayments" or cb_data.startswith("pay_nowpayments:"):
+        product_id = None
+        if ":" in cb_data:
+            product_id = cb_data.split(":", 1)[1]
+        handle_nowpayments(chat_id, message_id, product_id)
     elif cb_data == "check_payment":
         handle_check_payment(chat_id, username, message_id)
     elif cb_data == "pay_done":
@@ -448,6 +574,17 @@ def handle_admin_command(chat_id, command):
             revenue=premium * config.PRICE_USD,
         )
         send_message(chat_id, text, back_menu_keyboard())
+        return True
+
+    elif cmd == "/products":
+        lines = [lang.TXT["products_title"], ""]
+        for p in config.PRODUCTS:
+            lines.append(lang.TXT["products_line"].format(
+                emoji=p.get("emoji", lang.TXT["emoji_default"]), name=p["name"],
+                price=p.get("price_usd", 0), duration=lang.product_duration(p),
+                kind=p.get("kind", "channel"),
+            ))
+        send_message(chat_id, "\n".join(lines), back_menu_keyboard())
         return True
 
     elif cmd == "/admin":
@@ -521,8 +658,8 @@ def handle_command(chat_id, username, command):
         show_main_menu(chat_id)
     elif command == "/subscribe":
         handle_subscribe(chat_id, username, data)
-    elif command == "/premium":
-        handle_premium(chat_id)
+    elif command in ("/shop", "/premium"):
+        handle_shop(chat_id) if command == "/shop" else handle_premium(chat_id)
     elif command.startswith("/pay "):
         handle_pay(chat_id, username, command.split(" ", 1)[1].strip())
     elif command == "/unsubscribe":

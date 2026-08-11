@@ -39,10 +39,20 @@ Key rules enforced:
 - Owner admin panel: `/stats`, `/broadcast`, `/add_member`, `/kick`, `/set_price`, `/admin`
 - Stale-update drain (fixes 400), fast polling (sleep 0.3)
 
+## Phase 5 — Multi-product shop ✅
+- `config.PRODUCTS` catalogue — owner defines any products, each with its
+  **own price** (no hard-coded single price).
+- Shop menu (`🛒 Shop / Products`) generated automatically from `PRODUCTS`.
+- Delivery kinds: `channel` (auto VIP-channel access) and `digital` (auto-send).
+- Per-product prices flow through manual crypto and NOWPayments.
+- Owner `/products` command lists the configured catalogue.
+- Docs updated (`INSTALL.md` Step 4b, `ARCHITECTURE.md`, `README`).
+- Verified: 16-check functional suite + live `getMe` + shop keyboard ✅
+
 ## Files (scripts/)
 ```
 bot.py            - main bot (imports config + lang; no hard-coded strings)
-config.py         - all settings from .env (single source of truth)
+config.py         - all settings + PRODUCTS catalogue (single source of truth)
 lang.py           - all customer-facing text + buttons
 admin.py          - owner admin panel (uses config)
 channel_access.py - VIP channel membership (uses config)
@@ -52,7 +62,7 @@ broadcast.py      - report broadcast script (uses config)
 .env              - real secrets (gitignored)
 ```
 
-## Next (Phase 4 — Sales package)
+## Next (Phase 6 — Sales package)
 - README install guide (step-by-step for buyer)
 - Package for Fiverr / CodeCanyon / Sellix / Gumroad
 - Set OWNER_CHAT_ID, test /stats /broadcast live

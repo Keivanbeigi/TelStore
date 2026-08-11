@@ -29,22 +29,41 @@ TXT = {
     "free_activated": (
         "🆓 Free subscription activated!\n"
         "You'll receive a weekly missions report.\n\n"
-        "💎 For the daily report (every 6 hours), tap \"Buy Premium\"."
+        "💎 Check the shop for Premium access and products."
+    ),
+
+    # --- products / shop ---
+    "shop_title": "🛒 Shop — choose a product to buy:",
+    "product_page": (
+        "{emoji} {name}\n\n"
+        "{description}\n\n"
+        "💰 Price: ${price:.2f}\n"
+        "⏳ Access: {duration}\n\n"
+        "Select a payment network:"
+    ),
+    "duration_days": "{days} days",
+    "duration_lifetime": "Lifetime",
+    "product_sold_out": "⚠️ This product is not available right now.",
+
+    # --- delivery (after payment) ---
+    "pay_received_channel": (
+        "✅ Crypto payment received! (tx: {tx})\n"
+        "Your access is active for {days} days."
+    ),
+    "pay_received_digital": (
+        "✅ Crypto payment received! (tx: {tx})\n"
+        "Here's what you bought:\n\n{deliver}"
     ),
 
     # --- premium / payment ---
-    "premium_active_until": "💎 You are Premium until {until}",
+    "premium_active_until": "💎 Your access is active until {until}",
     "premium_offer": (
-        "💎 Premium subscription - daily report every 6 hours\n"
-        "💰 Price: ${price}/month\n\n"
+        "💎 Payment — {name}\n"
+        "💰 Price: ${price:.2f}\n\n"
         "Select your payment network:"
     ),
     "pay_howto": "✅ Great! Send the amount to the wallet address above.\n\n"
                  "After the transaction, send the **tx hash** here to confirm.",
-    "pay_received": (
-        "✅ Crypto payment received! (tx: {tx})\n"
-        "Your Premium is active for {days} days."
-    ),
     "pay_awaiting_confirm": "\n\n(Awaiting final confirmation.)",
 
     # --- channel access ---
@@ -57,8 +76,8 @@ TXT = {
         "For now, use the manual wallet address from the network options "
         "below to pay directly."
     ),
-    "np_no_pending": "No pending payment found. Tap \"Buy Premium\" to start a new one.",
-    "np_payment_confirmed": "✅ Payment confirmed! 🎉\nYour Premium is now active for {days} days.",
+    "np_no_pending": "No pending payment found. Tap a product to start a new one.",
+    "np_payment_confirmed": "✅ Payment confirmed! 🎉\nYour access is now active for {days} days.",
     "np_waiting": "⏳ Payment status: **{state}**\n\n"
                   "Send the exact amount to the address above, then check again in a minute.",
     "np_error": "⚠️ Could not check payment status. Please try again in a moment.",
@@ -73,11 +92,12 @@ TXT = {
     # --- help ---
     "help": (
         "❓ Help:\n\n"
-        "💎 Buy Premium - daily report every 6 hours (${price}/month)\n"
+        "🛒 Shop - browse and buy products (VIP access, digital items)\n"
         "🆓 Free subscription - weekly report\n"
-        "📊 Status - your subscription info\n"
+        "📊 Status - your access info\n"
         "🚫 Unsubscribe - cancel membership\n\n"
-        "To pay with crypto, pick a network and send the amount to the wallet address."
+        "To pay with crypto, pick a product, then a network, and send the amount "
+        "to the wallet address."
     ),
 
     # --- unsubscribe ---
@@ -89,7 +109,7 @@ TXT = {
     "coming_soon": "🚧 Coming soon.",
 
     # --- payment format (crypto) ---
-    "pay_price": "💰 Price: ${price}/month",
+    "pay_price": "💰 Price: ${price:.2f}",
     "pay_network": "🌐 Network: {name} ({standard})",
     "pay_network_recommended": "🌐 Network: ⭐ Recommended - {name} ({standard})",
     "pay_token": "   Token: {currency}",
@@ -98,7 +118,7 @@ TXT = {
         "⚠️ The owner has not set a wallet yet. Payment is paused.\n"
         "Contact the owner to configure CRYPTO_ADDRESS in `.env`."
     ),
-    "pay_amount": "📤 Send exactly ${price} worth (plus network fee).",
+    "pay_amount": "📤 Send exactly ${price:.2f} worth (plus network fee).",
     "pay_after": "✅ After paying, tap \"I paid\" and send the transaction hash.",
 
     # --- status plan labels ---
@@ -108,15 +128,16 @@ TXT = {
     # --- owner admin panel ---
     "admin_stats": ("📊 Subscriber statistics:\n\n"
                     "👥 Total: {total}\n"
-                    "💎 Premium: {premium}\n"
+                    "💎 Premium/Paid: {premium}\n"
                     "🆓 Free: {free}\n\n"
-                    "💰 Est. monthly revenue: ${revenue:.2f}"),
+                    "💰 Est. revenue: ${revenue:.2f}"),
     "admin_help": ("🛠 Owner commands:\n\n"
-                   "📊 /stats - subscriber & revenue summary\n"
+                   "📊 /stats - member & revenue summary\n"
                    "📢 /broadcast <text> - message all subscribers\n"
-                   "➕ /add_member <user_id> - grant premium ({days} days)\n"
-                   "🚫 /kick <user_id> - remove a subscriber\n"
-                   "💰 /set_price <usd> - change monthly price"),
+                   "➕ /add_member <user_id> - grant paid access ({days} days)\n"
+                   "🚫 /kick <user_id> - remove a member\n"
+                   "🛒 /products - list configured products in config.py\n"
+                   "💰 /set_price <usd> - change the default price (current run)"),
     "broadcast_sent": "📢 Broadcast sent to {sent} subscriber(s).",
     "broadcast_partial": " ({failed} failed)",
     "broadcast_msg": "📢 {msg}",
@@ -126,8 +147,11 @@ TXT = {
     "member_removed": "🚫 Removed {uid}.",
     "member_not_found": "⚠️ {uid} was not a subscriber.",
     "invalid_price": "❌ Invalid price. Use /set_price 5.0",
-    "price_updated": "💰 Price updated to ${price:.2f}/month (for this run).",
+    "price_updated": "💰 Price updated to ${price:.2f} (current run).",
     "admin_denied": "⛔ You don't have permission to use owner commands.",
+    "products_title": "🛒 Configured products (edit config.py → PRODUCTS):",
+    "products_line": "  • {emoji} {name} — ${price:.2f} ({duration}, kind={kind})",
+    "emoji_default": "🛍️",
 }
 
 
@@ -135,17 +159,39 @@ TXT = {
 #  Button / keyboard labels
 # ---------------------------------------------------------------------------
 BTN = {
-    "buy_premium": "💎 Buy Premium - ${price}/month",
+    "shop": "🛒 Shop / Products",
     "free_sub": "🆓 Free Subscription",
-    "status": "📊 Subscription Status",
+    "status": "📊 My Status",
     "help": "❓ Help",
     "unsubscribe": "🚫 Unsubscribe",
     "back_menu": "◀️ Back to menu",
+    "back_shop": "◀️ Back to shop",
     "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",
     "pay_done": "✅ I paid",
     "check_payment": "🔎 Check payment status",
     "recommended_bsc": "⭐ {name} (Recommended)",
 }
+
+
+# ---------------------------------------------------------------------------
+#  Product helpers (button labels & callbacks, driven by config.PRODUCTS)
+# ---------------------------------------------------------------------------
+def product_button(p):
+    """Short button label for a product dict from config.PRODUCTS."""
+    return f"{p.get('emoji', TXT['emoji_default'])} {p['name']} — ${p['price_usd']:.2f}"
+
+
+def product_callback(p):
+    """Callback data to select a product (\"prod_<id>\")."""
+    return f"prod_{p['id']}"
+
+
+def product_duration(p):
+    """Human text for how long access lasts. 0 = lifetime."""
+    days = p.get("days", 0)
+    if days:
+        return TXT["duration_days"].format(days=days)
+    return TXT["duration_lifetime"]
 
 
 # ---------------------------------------------------------------------------
