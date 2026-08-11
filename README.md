@@ -90,6 +90,97 @@ Product / Remove Product). No code editing needed. They're stored in
 
 ---
 
+## 🛒 How to add a product
+
+Your shop is **fully managed from Telegram** — no code editing needed to add,
+reprice, or remove products. Open your bot, send `/admin` (you must be the
+`OWNER_CHAT_ID`), then use the commands below.
+
+### Add a product (from Telegram)
+
+Use the **Owner Menu → 🆕 Add product** button, or the slash command:
+
+```
+/add_product Name | price | days | kind
+```
+
+| Field | What it means | Examples |
+|-------|--------------|----------|
+| `Name` | Button/label the customer sees | `VIP Channel — 1 Month`, `E-book` |
+| `price` | What the customer pays (any amount) | `5`, `29`, `99.5` |
+| `days` | Access length. `0` = lifetime | `30`, `365`, `0` |
+| `kind` | How it's delivered | `channel` or `digital` |
+
+**Examples:**
+
+```
+/add_product VIP Channel — 1 Month | 5 | 30 | channel
+/add_product VIP Channel — Lifetime | 49 | 0 | channel
+/add_product Crypto Trading E-book | 29 | 0 | digital
+/add_product Private Mentorship Call | 99.5 | 0 | digital
+```
+
+- `kind=channel` → the buyer is auto-added to your **VIP channel** for `days`
+  (then auto-kicked when it expires).
+- `kind=digital` → the buyer receives a **message/link** after payment.
+
+### Set what a digital product delivers
+
+For `kind=digital` products, set the delivery message/link the buyer gets:
+
+```
+/set_deliver <id> <message or link>
+```
+
+Example:
+```
+/set_deliver crypto_trading_ebook https://gofile.io/d/AbCdEfG
+```
+
+### Remove a product
+
+Use the **Owner Menu → 🗑 Remove product** button, or:
+```
+/remove_product <id>
+```
+Example:
+```
+/remove_product vip_lifetime
+```
+
+### See your current products
+
+```
+/products
+```
+or `/list`. This shows every product id, name, price, and kind so you know the
+exact `id` to use with `/remove_product` and `/set_deliver`.
+
+### Products are stored in `products.json`
+
+All changes are saved to `products.json` (in the `scripts/` folder) and survive
+restarts. You can also edit that file directly — it's a plain JSON list:
+
+```json
+{
+  "products": [
+    {
+      "id": "vip_monthly",
+      "name": "VIP Channel — 1 Month",
+      "price_usd": 5.0,
+      "days": 30,
+      "kind": "channel",
+      "description": "Monthly access to our private VIP channel."
+    }
+  ]
+}
+```
+
+> The **id** is auto-created from the name (lowercase, spaces → `_`). It must
+> be unique. If you edit `products.json` by hand, keep the same field names.
+
+---
+
 ## 🛠 Owner commands
 
 `/stats` · `/products` · `/broadcast <text>` · `/add_member <id>` · `/kick <id>` · `/set_price <usd>` · `/admin`
