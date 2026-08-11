@@ -82,6 +82,21 @@ TXT = {
                   "Send the exact amount to the address above, then check again in a minute.",
     "np_error": "⚠️ Could not check payment status. Please try again in a moment.",
 
+    # --- CoinGate (web payment page) ---
+    "cg_coming_soon": (
+        "💳 Online crypto checkout coming soon!\n\n"
+        "For now, use NOWPayments or the manual wallet address below."
+    ),
+    "cg_no_pending": "No pending CoinGate payment found. Choose a product to start a new one.",
+    "cg_payment_url": "🔗 Open this payment page in your browser:\n{url}",
+    "cg_created": (
+        "💳 Pay online with crypto (CoinGate)\n\n"
+        "💰 Amount: {price} {currency}\n"
+        "{url_line}\n\n"
+        "Pay with BTC, ETH, USDT and 70+ coins. Once confirmed, the product "
+        "is delivered automatically."
+    ),
+
     # --- status ---
     "not_subscribed": "You are not subscribed. Tap \"Free Subscription\" to start.",
     "status": "📊 Subscription status:\n\n"
@@ -136,7 +151,10 @@ TXT = {
                    "📢 /broadcast <text> - message all subscribers\n"
                    "➕ /add_member <user_id> - grant paid access ({days} days)\n"
                    "🚫 /kick <user_id> - remove a member\n"
-                   "🛒 /products - list configured products in config.py\n"
+                   "🛒 /products - list products\n"
+                   "➕ /add_product Name|price|days|kind - add a product\n"
+                   "➖ /remove_product <id> - remove a product\n"
+                   "📦 /set_deliver <id> <text> - set digital delivery text\n"
                    "💰 /set_price <usd> - change the default price (current run)"),
     "broadcast_sent": "📢 Broadcast sent to {sent} subscriber(s).",
     "broadcast_partial": " ({failed} failed)",
@@ -152,6 +170,15 @@ TXT = {
     "products_title": "🛒 Configured products (edit config.py → PRODUCTS):",
     "products_line": "  • {emoji} {name} — ${price:.2f} ({duration}, kind={kind})",
     "emoji_default": "🛍️",
+    "prod_added": "✅ Product added: {name} (${price:.2f}, {days} days, {kind})",
+    "prod_removed": "🚫 Product removed: {name}",
+    "prod_not_found": "⚠️ No product with id: {id}",
+    "prod_usage_add": ("❌ Usage: /add_product <name> | <price> | <days> | <kind>\n"
+                       "  kind = channel (VIP access) or digital (send a link).\n"
+                       "  days = 0 for lifetime. Example:\n"
+                       "  /add_product VIP Year | 49.99 | 365 | channel"),
+    "prod_usage_remove": "❌ Usage: /remove_product <id>",
+    "prod_need_desc": "For a digital product, set its delivery text with /set_deliver <id> <text>.",
 }
 
 
@@ -167,6 +194,7 @@ BTN = {
     "back_menu": "◀️ Back to menu",
     "back_shop": "◀️ Back to shop",
     "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",
+    "pay_coingate": "🌐 Pay online (web page)",
     "pay_done": "✅ I paid",
     "check_payment": "🔎 Check payment status",
     "recommended_bsc": "⭐ {name} (Recommended)",

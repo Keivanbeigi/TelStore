@@ -11,6 +11,7 @@ should live in the handler logic.
 Sellable template: each buyer copies `.env.example` to `.env` and sets their
 own values here via the .env file. Everything is in English.
 """
+import json
 import os
 import re
 
@@ -78,6 +79,11 @@ NOWPAYMENTS_API_KEY = _load_env_str("NOWPAYMENTS_API_KEY", "").strip()
 # Default coin for NOWPayments invoices (USDT on TRON - low fees, widely used).
 NOWPAYMENTS_DEFAULT_CURRENCY = "usdttrc20"
 
+# CoinGate gateway (optional, 2nd payment option). Provides a hosted web
+# payment page (payment_url). Empty = the CoinGate button is hidden.
+# Get your Auth Token: https://coingate.com -> Settings -> API -> Create token.
+COINGATE_AUTH_TOKEN = _load_env_str("COINGATE_AUTH_TOKEN", "").strip()
+
 # Supported manual networks. Only the "recommended" one gets the badge.
 CRYPTO_NETWORKS = [
     {
@@ -124,9 +130,12 @@ PREMIUM_DAYS = 30                      # default grant length when days=0
 # ------------------------------------------------------------
 #  Product catalogue (what the owner sells)
 #  ------------------------------------------------------------
-#  Each entry is one thing the owner sells. The owner/buyer edits this list
-#  to set price and behaviour for EACH product. Prices are per-product, so the
-#  owner is free to set any amount (not tied to the old PRICE_USD).
+#  Products are loaded from ``products.json`` (runtime, editable from the bot
+#  by the owner with /add_product, /remove_product, /list). If that file is
+#  missing, the DEFAULT_PRODUCTS below are used as a starting catalogue.
+#
+#  Each entry is one thing the owner sells. Prices are per-product, so the
+#  owner is free to set any amount.
 #
 #  Fields:
 #    id          unique key used in button callbacks (lowercase, no spaces)
@@ -139,15 +148,7 @@ PREMIUM_DAYS = 30                      # default grant length when days=0
 #    deliver     (kind="digital") message or link sent to the buyer after payment
 #    description shown on the product's payment page
 #
-#  Examples:
-#    A single VIP-channel subscription:
-#      {"id": "vip", "name": "VIP Channel", "price_usd": 5.0, "days": 30,
-#       "kind": "channel", "description": "Monthly access to our private channel"}
-#    A digital item (e-book / course / invite link):
-#      {"id": "guide", "name": "Crypto Starter Guide", "price_usd": 9.99, "days": 0,
-#       "kind": "digital", "deliver": "Here is your file: https://...", ...}
-#
-PRODUCTS = [
+DEFAULT_PRODUCTS = [
     {
         "id": "vip_monthly",
         "name": "VIP Channel — 1 Month",
@@ -157,6 +158,34 @@ PRODUCTS = [
         "description": "Monthly access to our private VIP channel with daily reports.",
     },
 ]
+
+# Runtime products file (gitignored). The owner can add/remove products from
+# Telegram; edits here survive restarts.
+PRODUCTS_FILE = os.path.join(_dir(), "products.json")
+
+
+def _load_products():
+    """Load the product catalogue from products.json, or DEFAULT_PRODUCTS."""
+    if os.path.exists(PRODUCTS_FILE):
+        try:
+            with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            products = data.get("products", []) if isinstance(data, dict) else data
+            if products:
+                return products
+        except Exception:
+            pass
+    return list(DEFAULT_PRODUCTS)
+
+
+PRODUCTS = _load_products()
+
+
+def save_products():
+    """Persist the current PRODUCTS list to products.json (runtime, gitignored)."""
+    with open(PRODUCTS_FILE, "w", encoding="utf-8") as f:
+        json.dump({"products": PRODUCTS}, f, ensure_ascii=False, indent=2)
+
 
 # Legacy default price for backward compat (used only if PRODUCTS is empty).
 PRICE_USD = _load_env_float("PRICE_USD",

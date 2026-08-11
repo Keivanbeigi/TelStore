@@ -5,3 +5,4 @@ report.txt
 *.env
 subscribers.json
 pending_payments.json
+products.json

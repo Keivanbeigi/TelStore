@@ -99,49 +99,50 @@ NOWPAYMENTS_API_KEY=
 > To stop the bot: press `Ctrl+C`. To run it 24/7 on a server, use `screen`,
 > `tmux`, or a Windows service / systemd unit (see Troubleshooting).
 
-## Step 4b — Define YOUR products & prices (important)
+## Step 4b — Add & manage YOUR products (important)
 
-The bot ships with **one example product**. You define **your own** products and
-prices by editing the **`PRODUCTS`** list at the bottom of `config.py`. Each
-product can have **any price you want** — they are independent.
+The bot ships with **one example product**. As the **owner**, you add / change
+/ remove your products **right from Telegram** — no code editing needed. These
+owner commands are private to you (your `OWNER_CHAT_ID`).
 
-```python
-PRODUCTS = [
-    # A channel-access subscription (grants the buyer access to your VIP channel)
-    {
-        "id": "vip_monthly",
-        "name": "VIP Channel — 1 Month",      # shown to the customer
-        "emoji": "💎",
-        "price_usd": 5.0,                      # YOUR price, any amount
-        "days": 30,                            # how long access lasts (0 = lifetime)
-        "kind": "channel",                     # 'channel' = grant VIP channel access
-        "description": "Monthly access to our private VIP channel.",
-    },
+### Add a product (from Telegram)
+DM the bot:
+```
+/add_product VIP Year | 49.99 | 365 | channel
+```
+Format: `/add_product <Name> | <price> | <days> | <kind>`
+- `Name` — shown in the shop (e.g. "VIP Year").
+- `price` — what the customer pays, any amount (e.g. `49.99`).
+- `days` — how long access lasts. `0` = lifetime / not time-based.
+- `kind` — `channel` (grants access to your VIP channel) **or** `digital`
+  (sends the customer a link/message).
 
-    # A digital product (e-book / course / invite link / anything you sell)
-    {
-        "id": "course",
-        "name": "Crypto Starter Course",
-        "emoji": "📕",
-        "price_usd": 19.99,                    # another price you choose
-        "days": 0,                             # 0 = not time-based
-        "kind": "digital",                     # 'digital' = send the deliverable
-        "description": "Complete beginner video course.",
-        "deliver": "Here are your course access links: https://..."
-                   "\n\nPassword: YOURCOURSE123",   # what the buyer receives
-    },
-]
+### Examples
+```
+/add_product VIP Month | 5.00 | 30 | channel
+/add_product Crypto Course | 19.99 | 0 | digital
 ```
 
-**Rules:**
-- `id` must be unique, lowercase, no spaces (used internally).
-- `kind: "channel"` → after payment the customer is **auto-added** to your VIP
-  channel (needs `CHANNEL_ID`, see Step 5).
-- `kind: "digital"` → after payment the bot **sends `deliver`** to the customer.
-- `price_usd` is per-product — set any amount for each product.
-- After editing `config.py`, restart the bot. The shop menu updates automatically.
+### Digital products: set what the customer receives
+After adding a `digital` product, set its delivery text:
+```
+/set_deliver <id> <text>
+```
+Example:
+```
+/set_deliver crypto_course Here are your access links: https://... Password: ABC123
+```
 
-> One product = one button in the shop. Add as many as you like.
+### Other product commands (owner only)
+| Command | Action |
+|---------|--------|
+| `/products` | list all current products |
+| `/remove_product <id>` | remove a product |
+| `/add_product Name\|price\|days\|kind` | add a product |
+| `/set_deliver <id> <text>` | set a digital product's delivery message |
+
+Products are stored in `products.json` (created automatically) and **survive
+restarts** — no code changes needed. The shop menu updates instantly.
 
 ## Step 5 — (Optional) Set up your VIP channel
 1. Create your private channel. Add the bot as **Administrator** with the

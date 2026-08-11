@@ -35,6 +35,7 @@ import urllib.parse
 import config
 import lang
 import nowpayments   # crypto payment gateway (optional)
+import coingate      # web-payment gateway, optional 2nd option
 import channel_access  # VIP channel membership management (optional)
 import admin          # owner admin panel
 
@@ -262,12 +263,18 @@ def network_keyboard(product_id=None):
         rows.append([
             {"text": lang.network_button(n), "callback_data": cb}
         ])
+    # Payment gateways (only shown if configured)
     if product_id:
-        rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": f"pay_nowpayments:{product_id}"}])
-    else:
-        rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": "pay_nowpayments"}])
-    if product_id:
+        if config.NOWPAYMENTS_API_KEY:
+            rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": f"pay_nowpayments:{product_id}"}])
+        if coingate.is_configured():
+            rows.append([{"text": lang.BTN["pay_coingate"], "callback_data": f"pay_coingate:{product_id}"}])
         rows.append([{"text": lang.BTN["back_shop"], "callback_data": "shop"}])
+    else:
+        if config.NOWPAYMENTS_API_KEY:
+            rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": "pay_nowpayments"}])
+        if coingate.is_configured():
+            rows.append([{"text": lang.BTN["pay_coingate"], "callback_data": "pay_coingate"}])
     rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
     return {"inline_keyboard": rows}
 
@@ -482,13 +489,61 @@ def handle_check_payment(chat_id, username, message_id):
     return edit_message(chat_id, message_id, lang.TXT["np_error"], pay_check_keyboard())
 
 
-def poll_pending_payments():
-    """Background auto-poll of pending NOWPayments invoices (like IPN, no server).
+def handle_coingate(chat_id, message_id, product_id=None):
+    """Create a CoinGate order -> send the hosted web payment page link."""
+    if not coingate.is_configured():
+        kb = network_keyboard(product_id) if product_id else shop_keyboard()
+        return edit_message(chat_id, message_id, lang.TXT["cg_coming_soon"], kb)
 
-    Called periodically from the main loop. For each pending payment it asks
-    NOWPayments for the current status; if a payment became ``finished`` it
-    delivers the product automatically and messages the customer — no manual
-    "Check payment status" tap needed.
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
+
+    order = coingate.create_order(
+        price_usd=product.get("price_usd", 0),
+        title=product["name"],
+        description=product.get("description", ""),
+        order_id=f"cq-{chat_id}-{int(time.time())}",
+    )
+    if "error" in order or not order.get("payment_url"):
+        return edit_message(chat_id, message_id, lang.TXT["np_error"], back_menu_keyboard())
+
+    # Remember pending so auto-poll can deliver when paid.
+    _save_pending(chat_id, {
+        "gateway": "coingate",
+        "payment_id": order.get("id"),
+        "product_id": product.get("id"),
+    })
+    text = lang.TXT["cg_created"].format(
+        price=order.get("price_amount"), currency=order.get("price_currency", "USD"),
+        url_line=lang.TXT["cg_payment_url"].format(url=order.get("payment_url")),
+    )
+    return edit_message(chat_id, message_id, text, back_menu_keyboard())
+
+
+def _finalize_coingate_paid(chat_id, order_id, product_id=None):
+    """Deliver a confirmed CoinGate payment and clear pending (once)."""
+    pending = _load_pending().get(str(chat_id))
+    if not pending or pending.get("gateway") != "coingate":
+        return None
+    product = config.get_product(product_id) if product_id else config.get_default_product()
+    if product is None:
+        product = config.get_default_product() or {
+            "id": None, "name": "item", "days": config.PREMIUM_DAYS, "kind": "channel"}
+    data = load_subscribers()
+    sub = find_subscriber(data, chat_id)
+    username = (sub or {}).get("username", "")
+    msg, _ = _deliver_product(chat_id, username, product, "coingate")
+    _save_pending(chat_id, "")
+    return msg
+
+
+def poll_pending_payments():
+    """Background auto-poll of pending payments (NOWPayments + CoinGate).
+
+    Like IPN but no server needed. Asks each gateway for status; when a
+    payment is confirmed it delivers the product automatically and messages
+    the customer.
     """
     pendings = _load_pending()
     if not pendings:
@@ -497,9 +552,22 @@ def poll_pending_payments():
     for chat_id, pending in list(pendings.items()):
         if not pending or pending == "":
             continue
+        gateway = pending.get("gateway", "nowpayments")
         payment_id = pending.get("payment_id") if isinstance(pending, dict) else pending
         if not payment_id:
             continue
+        if gateway == "coingate":
+            order = coingate.get_order(payment_id)
+            state = order.get("status") if isinstance(order, dict) else "invalid"
+            if state == "paid":
+                product_id = pending.get("product_id")
+                msg = _finalize_coingate_paid(chat_id, payment_id, product_id)
+                if msg:
+                    send_message(chat_id, msg, back_menu_keyboard())
+                    delivered += 1
+                    print(f"   [auto] delivered CoinGate order {payment_id} for chat {chat_id}")
+            continue
+        # NOWPayments
         status = nowpayments.get_payment_status(payment_id)
         state = status.get("payment_status", "unknown") if isinstance(status, dict) else "unknown"
         if state != "finished":
@@ -604,6 +672,11 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         if ":" in cb_data:
             product_id = cb_data.split(":", 1)[1]
         handle_nowpayments(chat_id, message_id, product_id)
+    elif cb_data == "pay_coingate" or cb_data.startswith("pay_coingate:"):
+        product_id = None
+        if ":" in cb_data:
+            product_id = cb_data.split(":", 1)[1]
+        handle_coingate(chat_id, message_id, product_id)
     elif cb_data == "check_payment":
         handle_check_payment(chat_id, username, message_id)
     elif cb_data == "pay_done":
@@ -643,7 +716,67 @@ def handle_admin_command(chat_id, command):
                 price=p.get("price_usd", 0), duration=lang.product_duration(p),
                 kind=p.get("kind", "channel"),
             ))
+        lines.append("")
+        lines.append("Manage: /add_product, /remove_product <id>, /set_deliver <id> <text>")
         send_message(chat_id, "\n".join(lines), back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/add_product "):
+        # Format: /add_product Name | price | days | kind
+        spec = cmd[len("/add_product "):].strip()
+        parts = [s.strip() for s in spec.split("|")]
+        if len(parts) < 4 or not parts[0]:
+            send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
+            return True
+        try:
+            name, price, days, kind = parts[0], float(parts[1]), int(parts[2]), parts[3].lower()
+        except ValueError:
+            send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
+            return True
+        if kind not in ("channel", "digital"):
+            send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
+            return True
+        pid = name.lower().replace(" ", "_")[:20]
+        new_id = pid
+        n = 1
+        while config.get_product(new_id):
+            new_id = f"{pid}_{n}"; n += 1
+        product = {
+            "id": new_id, "name": name, "price_usd": price,
+            "days": days, "kind": kind,
+            "description": f"{name} — access to {name}.",
+            "deliver": "" if kind == "digital" else None,
+        }
+        config.PRODUCTS.append(product)
+        config.save_products()
+        send_message(chat_id, lang.TXT["prod_added"].format(
+            name=name, price=price, days=days, kind=kind), back_menu_keyboard())
+        if kind == "digital":
+            send_message(chat_id, lang.TXT["prod_need_desc"], back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/remove_product "):
+        pid = cmd[len("/remove_product "):].strip()
+        product = config.get_product(pid)
+        if product is None:
+            send_message(chat_id, lang.TXT["prod_not_found"].format(id=pid), back_menu_keyboard())
+            return True
+        config.PRODUCTS = [p for p in config.PRODUCTS if p.get("id") != pid]
+        config.save_products()
+        send_message(chat_id, lang.TXT["prod_removed"].format(name=product["name"]), back_menu_keyboard())
+        return True
+
+    elif cmd.startswith("/set_deliver "):
+        # Format: /set_deliver <id> <delivery text>
+        rest = cmd[len("/set_deliver "):].strip()
+        pid, _, deliver = rest.partition(" ")
+        product = config.get_product(pid)
+        if product is None:
+            send_message(chat_id, lang.TXT["prod_not_found"].format(id=pid), back_menu_keyboard())
+            return True
+        product["deliver"] = deliver.strip()
+        config.save_products()
+        send_message(chat_id, f"✅ Delivery text set for {product['name']}.", back_menu_keyboard())
         return True
 
     elif cmd == "/admin":
