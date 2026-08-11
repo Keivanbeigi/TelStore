@@ -5,8 +5,12 @@
 ## Current state (all DONE and verified ✅)
 
 - **Bot:** `@ADNC_bot` (token id 8913353892) — polling works, connects to Telegram API.
-- **Repo:** `github/` → github.com/Keivanbeigi/crypto-quest-report (master).
+- **Repo:** `github/` → github.com/Keivanbeigi/crypto-quest-report (master, HEAD c683bab).
 - **All code English** (customer-facing + comments). Bot token & settings in `scripts/.env` (gitignored).
+- **Sale package:** `E:\My Documents\Crypto Quest\Crypto-Quest-Bot-v2.0.zip` (18 files, ZERO seller secrets — verified by scan).
+- **Payments:** NOWPayments ACTIVE with real API key. Cloudflare fix applied (`nowpayments.py` sends browser User-Agent — api returns 403 error 1010 otherwise).
+- **Auto-delivery:** `poll_pending_payments()` every 20s — IPN-like delivery WITHOUT a server (verified live with real key).
+- **CoinGate:** REJECTED (requires Business verification) — docs/coingate.py kept as optional future option.
 
 ## Architecture refactor (Phase "Quality" — DONE ✅)
 
@@ -56,17 +60,22 @@ config.py         - all settings + PRODUCTS catalogue (single source of truth)
 lang.py           - all customer-facing text + buttons
 admin.py          - owner admin panel (uses config)
 channel_access.py - VIP channel membership (uses config)
-nowpayments.py    - NOWPayments gateway (uses config)
+nowpayments.py    - NOWPayments gateway (uses config, browser UA fix)
+coingate.py       - optional CoinGate web gateway (uses config)
 broadcast.py      - report broadcast script (uses config)
+deploy_server.sh  - one-shot Ubuntu VPS installer (systemd, sudo helper)
+check_bot.sh      - health check: 8 checks incl. live getMe + NOWPayments (WSL-verified 8/8)
+run_bot.sh        - python3 launcher used by systemd / tasks
 .env.example      - configuration template for buyers
 .env              - real secrets (gitignored)
 ```
 
-## Next (Phase 6 — Sales package)
-- README install guide (step-by-step for buyer)
-- Package for Fiverr / CodeCanyon / Sellix / Gumroad
-- Set OWNER_CHAT_ID, test /stats /broadcast live
-- Get a NOWPayments API key to activate the gateway button
+## Next (Phase 6 — Sales launch, PAUSED by owner)
+- Owner decided: **do NOT launch sales yet** — finish later.
+- Windows task `CryptoQuestBot` exists but is DISABLED; WSL service also disabled
+  (WSL idle-shuts-down, so production should use Windows Task or a VPS).
+- Planned price: **$29** (lowest competitive point for this feature set).
+- Deploy target when ready: **Ubuntu 24.04 LTS VPS** (deploy_server.sh one-shot).
 
 ## Verification
 - All modules compile (`py_compile`) ✅
