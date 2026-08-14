@@ -23,6 +23,16 @@ def _dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 def _env_file():
+    """Locate the .env file. Checks scripts/ first, then the project root
+    (parent of scripts/), so it works whether the user puts .env next to
+    the scripts or in the repo root (as deploy_server.sh does)."""
+    env = os.path.join(_dir(), ".env")
+    if os.path.exists(env):
+        return env
+    env = os.path.join(os.path.dirname(_dir()), ".env")
+    if os.path.exists(env):
+        return env
+    # fallback: scripts/.env (create later)
     return os.path.join(_dir(), ".env")
 
 # Runtime data files (gitignored). Kept next to the scripts.
