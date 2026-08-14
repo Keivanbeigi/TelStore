@@ -301,12 +301,21 @@ def network_keyboard(product_id=None):
 
 
 def shop_keyboard():
-    """Main shop keyboard: one button per product in config.PRODUCTS."""
+    """Shop keyboard: products grouped by category (kind) so the menu stays
+    clean even as the catalogue grows. Zero extra dependencies, light."""
     rows = []
+    # Group by kind, preserving catalogue order. 'channel' and 'digital' get a
+    # header; any other kind falls under a generic header.
+    groups = {}  # kind -> [products]
     for p in config.PRODUCTS:
-        rows.append([
-            {"text": lang.product_button(p), "callback_data": lang.product_callback(p)}
-        ])
+        groups.setdefault(p.get("kind", "other"), []).append(p)
+    for kind, prods in groups.items():
+        header_key = {"channel": "cat_channel", "digital": "cat_digital"}.get(kind, "cat_other")
+        rows.append([{"text": lang.TXT[header_key], "callback_data": "noop"}])
+        for p in prods:
+            rows.append([
+                {"text": lang.product_button(p), "callback_data": lang.product_callback(p)}
+            ])
     rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
     return {"inline_keyboard": rows}
 
@@ -909,7 +918,7 @@ def handle_admin_command(chat_id, command):
             return True
         product["deliver"] = deliver.strip()
         config.save_products()
-        send_message(chat_id, f"✅ Delivery text set for {product['name']}.", back_menu_keyboard())
+        send_message(chat_id, lang.TXT["delivery_set"].format(name=product["name"]), back_menu_keyboard())
         return True
 
     elif cmd == "/admin":
@@ -941,7 +950,7 @@ def handle_admin_command(chat_id, command):
             return True
         err = admin.add_premium_member(config.SUBSCRIBERS_FILE, user_id, days=config.PREMIUM_DAYS)
         if err:
-            send_message(chat_id, f"❌ {err}", back_menu_keyboard())
+            send_message(chat_id, lang.TXT["err_format"].format(msg=err), back_menu_keyboard())
         else:
             suffix = grant_channel_access(user_id)
             text = lang.TXT["member_granted"].format(uid=user_id, days=config.PREMIUM_DAYS)

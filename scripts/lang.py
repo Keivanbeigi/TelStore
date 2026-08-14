@@ -46,6 +46,11 @@ TXT = {
     "duration_lifetime": "Lifetime",
     "product_sold_out": "⚠️ This product is not available right now.",
 
+    # --- shop category headers (products are grouped by kind) ---
+    "cat_channel": "📺 Channel Access",
+    "cat_digital": "📦 Digital Products",
+    "cat_other": "🛍️ Products",
+
     # --- delivery (after payment) ---
     "pay_received_channel": (
         "✅ Crypto payment received! (tx: {tx})\n"
@@ -200,6 +205,8 @@ TXT = {
     "owner_confirm_remove": "⚠️ Remove \"{name}\"?",
     "owner_menu_updated": "✅ Menu updated.",
     "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
+    "delivery_set": "✅ Delivery text set for {name}.",
+    "err_format": "❌ {msg}",
     "sale_notification": "🛎️ NEW SALE!\n\n🛒 Product: {name}\n💰 Price: ${price:.2f}\n👤 Buyer: {user}\n💳 Method: {method}\n🕐 {time}",
 }
 

@@ -29,6 +29,12 @@ API_URL = "https://api.nowpayments.io/v1"
 
 API_KEY = config.NOWPAYMENTS_API_KEY
 
+# NOWPayments rejects USDT-TRC20 invoices below ~12 USD (AMOUNT_MINIMAL_ERROR).
+# We check this BEFORE calling the API so the customer gets a friendly message
+# instead of a raw gateway error. Measured empirically: 11.96 USD still rejected,
+# 11.97 USD accepted. Different coins may have different minimums.
+MIN_PAYMENT_USD = 12.0
+
 # Cloudflare in front of api.nowpayments.io returns 403 (error 1010) for
 # Python-urllib's default User-Agent. Send a normal browser User-Agent so the
 # request isn't blocked (curl works by default; Python urllib does not).
@@ -79,12 +85,28 @@ def _get(path, params=None):
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
+def validate_price(price_usd):
+    """
+    Return an error string if the price is too low for NOWPayments, else None.
+    Minimal is measured for USDT-TRC20; some coins allow less, but we use a
+    conservative floor so invoices don't fail at checkout.
+    """
+    if float(price_usd) <= 0:
+        return "Price must be greater than 0."
+    if float(price_usd) < MIN_PAYMENT_USD:
+        return f"Amount must be at least ${MIN_PAYMENT_USD:.2f} for crypto checkout."
+    return None
+
 def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="Crypto Quest Premium"):
     """
     Create a crypto payment invoice.
     Returns dict with 'payment_id', 'pay_address', 'pay_amount', 'payment_status',
-    or an error dict.
+    or an error dict (including a friendly message for too-low amounts).
     """
+    err = validate_price(price_usd)
+    if err:
+        return {"ok": False, "status": False, "code": "AMOUNT_MINIMAL_ERROR",
+                "message": err}
     payload = {
         "price_amount": float(price_usd),
         "price_currency": "usd",
@@ -106,9 +128,18 @@ def get_supported_currencies():
 def format_payment_instructions(payment):
     """
     Build a customer-facing message with the deposit address/amount.
-    `payment` is the dict from create_payment().
+    If the invoice couldn't be created (e.g. amount too low), show a friendly,
+    actionable message instead of a raw gateway error.
     """
     if not payment or payment.get("status") is False:
+        code = (payment or {}).get("code", "")
+        msg = (payment or {}).get("message", "")
+        if code == "AMOUNT_MINIMAL_ERROR" or "minimal" in str(msg).lower():
+            clean = msg if msg.startswith("Amount") else "Amount too low for crypto checkout."
+            return (f"⚠️ {clean}\n\n"
+                    "The product price you selected is below the minimum for "
+                    "crypto payment. Please choose a higher-priced product, or "
+                    "the owner can raise this product's price in the settings.")
         return ("Payment service temporarily unavailable. Please try again later, "
                 "or use the manual wallet address from the menu.")
     pay_address = payment.get("pay_address", "")

@@ -152,7 +152,7 @@ DEFAULT_PRODUCTS = [
     {
         "id": "vip_monthly",
         "name": "VIP Channel — 1 Month",
-        "price_usd": 5.0,
+        "price_usd": 12.0,  # >= $12 so NOWPayments (USDT-TRC20) accepts it
         "days": 30,
         "kind": "channel",
         "description": "Monthly access to our private VIP channel with exclusive updates.",
