@@ -39,9 +39,11 @@ TXT = {
         "{emoji} {name}\n\n"
         "{description}\n\n"
         "💰 Price: ${price:.2f}\n"
+        "{discount_note}"
         "⏳ Access: {duration}\n\n"
         "Select a payment network:"
     ),
+    "discount_note_off": "🏷️ {discount:.0f}% OFF — was ${orig:.2f}\n",
     "duration_days": "{days} days",
     "duration_lifetime": "Lifetime",
     "product_sold_out": "⚠️ This product is not available right now.",
@@ -115,15 +117,10 @@ TXT = {
         "❓ Help:\n\n"
         "🛒 Shop - browse and buy products (VIP access, digital items)\n"
         "🆓 Free subscription - shop updates\n"
-        "📊 Status - your access info\n"
-        "🚫 Unsubscribe - cancel membership\n\n"
+        "📊 Status - your access info\n\n"
         "To pay with crypto, pick a product, then a network, and send the amount "
         "to the wallet address."
     ),
-
-    # --- unsubscribe ---
-    "unsubscribed": "🚫 Your subscription has been cancelled.",
-    "not_subscribed_2": "You are not subscribed.",
 
     # --- unknown / generic ---
     "unknown_command": "❓ Unknown command. Choose from the menu.",
@@ -176,15 +173,42 @@ TXT = {
     "products_title": "🛒 Configured products (edit config.py → PRODUCTS):",
     "products_line": "  • {emoji} {name} — ${price:.2f} ({duration}, kind={kind})",
     "emoji_default": "🛍️",
-    "prod_added": "✅ Product added: {name} (${price:.2f}, {days} days, {kind})",
+    "prod_added": "✅ Product added: {name} (${price:.2f}, {days} days, {kind}){disc}",
     "prod_removed": "🚫 Product removed: {name}",
     "prod_not_found": "⚠️ No product with id: {id}",
-    "prod_usage_add": ("❌ Usage: /add_product <name> | <price> | <days> | <kind>\n"
-                       "  kind = channel (VIP access) or digital (send a link).\n"
-                       "  days = 0 for lifetime. Example:\n"
-                       "  /add_product VIP Year | 49.99 | 365 | channel"),
+    "prod_usage_add": ("❌ Usage: /add_product <name> | <price> [| <days> [| <kind> [| <discount%>]]]\n"
+                       "  Only name and price are required.\n"
+                       "  kind = channel (VIP) or digital (send link) — default: channel\n"
+                       "  days = access length, 0 for lifetime — default: 30\n"
+                       "  discount = percent off the price, 0 or empty for none\n"
+                       "  Example:\n"
+                       "     /add_product VIP Year | 49.99 | 365 | channel\n"
+                       "     /add_product Course | 19.99 | 0 | digital | 20"),
     "prod_usage_remove": "❌ Usage: /remove_product <id>",
     "prod_need_desc": "For a digital product, set its delivery text with /set_deliver <id> <text>.",
+
+    # --- add-product wizard (step by step) ---
+    "wiz_name": ("📝 New product — step 1/5\n\n"
+                 "Send the product NAME (or tap Skip if you'd rather not — "
+                 "but a name is needed to finish)."),
+    "wiz_price": ("💰 Step 2/5 — price\n\n"
+                  "Send the PRICE in USD (e.g. 29.99). This field is required."),
+    "wiz_days": ("⏳ Step 3/5 — access length (optional)\n\n"
+                 "Send the number of DAYS, or 0 for lifetime.\n"
+                 "Leave empty / tap Skip for the default (30 days)."),
+    "wiz_kind": ("🧩 Step 4/5 — type (optional)\n\n"
+                 "Send 'channel' (VIP access) or 'digital' (sends a link/text).\n"
+                 "Leave empty / tap Skip for the default (channel)."),
+    "wiz_discount": ("🏷️ Step 5/5 — discount % (optional)\n\n"
+                     "Send a percent off the price, e.g. 20 for 20% off.\n"
+                     "Leave empty / tap Skip for no discount."),
+    "wiz_invalid_price": "❌ \"{hint}\" is not a valid price. Send a number like 29.99.",
+    "wiz_invalid_days": "❌ \"{hint}\" is not a valid day count. Send 0, 30, 365, ...",
+    "wiz_invalid_kind": "❌ \"{hint}\" is not valid. Send 'channel' or 'digital'.",
+    "wiz_invalid_discount": "❌ \"{hint}\" is not a valid discount. Send a percent 0-99.",
+    "wiz_incomplete": "⚠️ Product not added — missing a name or price. Start again with Add Product.",
+    "wizard_cancelled": "Add product cancelled.",
+    "wizard_skipped": "Skipped (using defaults).",
     "owner_menu_title": "⚙️ Owner Menu — manage your products & shop.",
     "owner_howto_text": (
         "How to add a product (type this to the bot):\n\n"
@@ -199,8 +223,6 @@ TXT = {
         "Remove a product:\n"
         "  /remove_product <id>"
     ),
-    "owner_edit_menu": "⚙️ Edit Menu",
-    "owner_edit_menu_title": "⚙️ Edit the main menu. Tap a button to toggle it:",
     "owner_remove_title": "🗑️ Tap a product to remove it:",
     "owner_confirm_remove": "⚠️ Remove \"{name}\"?",
     "owner_menu_updated": "✅ Menu updated.",
@@ -219,7 +241,6 @@ BTN = {
     "free_sub": "🆓 Free Subscription",
     "status": "📊 My Status",
     "help": "❓ Help",
-    "unsubscribe": "🚫 Unsubscribe",
     "back_menu": "◀️ Back to menu",
     "back_shop": "◀️ Back to shop",
     "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",
@@ -231,10 +252,11 @@ BTN = {
     "owner_add_product": "➕ Add Product",
     "owner_list_products": "🛒 List Products",
     "owner_howto_add": "❓ How to add",
-    "owner_edit_menu": "⚙️ Edit Menu",
     "owner_remove_product": "🗑️ Remove Product",
     "owner_confirm_yes": "✅ Yes, remove",
     "owner_confirm_no": "❌ Cancel",
+    "wizard_cancel": "❌ Cancel",
+    "wizard_skip": "⏭️ Skip",
     "back": "◀️ Back",
 }
 
@@ -243,8 +265,11 @@ BTN = {
 #  Product helpers (button labels & callbacks, driven by config.PRODUCTS)
 # ---------------------------------------------------------------------------
 def product_button(p):
-    """Short button label for a product dict from config.PRODUCTS."""
-    return f"{p.get('emoji', TXT['emoji_default'])} {p['name']} — ${p['price_usd']:.2f}"
+    """Short button label for a product dict from config.PRODUCTS.
+    Shows the effective (post-discount) price if a discount is set."""
+    import config  # local import to avoid lang<->config cycle
+    price = config.effective_price(p)
+    return f"{p.get('emoji', TXT['emoji_default'])} {p['name']} — ${price:.2f}"
 
 
 def product_callback(p):

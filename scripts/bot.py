@@ -12,7 +12,6 @@ Commands:
   /subscribe    - free plan
   /premium      - premium plan (crypto payment)
   /pay <txhash> - confirm crypto payment with transaction hash
-  /unsubscribe  - cancel subscription
   /status       - subscription status
   /help         - help
 
@@ -86,6 +85,169 @@ def _save_pending(chat_id, value):
         data[str(chat_id)] = value
     with open(config.PENDING_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+#  Add-product wizard (step-by-step, owner only)
+#  ---------------------------------------------------------------------------
+#  Instead of a long one-line command, the owner taps "Add Product" and the
+#  bot asks one field at a time: name, price, days, kind, discount. The owner
+#  may skip any field by sending an empty/blank reply — that field is simply
+#  not set (or gets a sensible default). Field values fail validation, the
+#  step is repeated; on "cancel" the whole thing is abandoned.
+_WIZARD_STEPS = ["name", "price", "days", "kind", "discount"]
+
+def _load_wizard():
+    try:
+        if os.path.exists(config.WIZARD_FILE):
+            with open(config.WIZARD_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def _save_wizard_state(chat_id, state):
+    data = _load_wizard()
+    if state is None:
+        data.pop(str(chat_id), None)
+    else:
+        data[str(chat_id)] = state
+    with open(config.WIZARD_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return state
+
+def wizard_step_message(chat_id=None):
+    """Return (text, ok) for the current wizard step, or (None, False) if idle."""
+    st = _load_wizard().get(str(chat_id)) if chat_id is not None else None
+    if not st or not st.get("active"):
+        return None, False
+    step = st.get("step")
+    if step == "name":
+        return lang.TXT["wiz_name"], True
+    if step == "price":
+        return lang.TXT["wiz_price"], True
+    if step == "days":
+        return lang.TXT["wiz_days"], True
+    if step == "kind":
+        return lang.TXT["wiz_kind"], True
+    if step == "discount":
+        return lang.TXT["wiz_discount"], True
+    return None, False
+
+def start_add_product_wizard(chat_id, message_id=None):
+    """Begin the stepped add-product flow: ask for the product name."""
+    _save_wizard_state(chat_id, {"active": True, "step": "name", "data": {}})
+    text, _ = wizard_step_message(chat_id)
+    if message_id is not None:
+        return edit_message(chat_id, message_id, text, wizard_keyboard())
+    return send_message(chat_id, text, wizard_keyboard())
+
+def wizard_keyboard():
+    return {
+        "inline_keyboard": [
+            [{"text": lang.BTN["wizard_cancel"], "callback_data": "wizard_cancel"},
+             {"text": lang.BTN["wizard_skip"], "callback_data": "wizard_skip"}],
+        ]
+    }
+
+def _finish_wizard_product(chat_id):
+    """Build + save the product from accumulated wizard data, then confirm."""
+    st = _load_wizard().get(str(chat_id), {})
+    d = st.get("data", {})
+    name = (d.get("name") or "").strip()
+    price = d.get("price")
+    if not name or price is None:
+        return send_message(chat_id, lang.TXT["wiz_incomplete"], main_menu_keyboard(chat_id))
+    pid = name.lower().replace(" ", "_")[:20]
+    new_id = pid
+    n = 1
+    while config.get_product(new_id):
+        new_id = f"{pid}_{n}"; n += 1
+    days = d.get("days")
+    kind = (d.get("kind") or "channel").lower()
+    if kind not in ("channel", "digital"):
+        kind = "channel"
+    discount = d.get("discount", 0) or 0
+    product = {
+        "id": new_id, "name": name, "price_usd": price,
+        "days": days if days is not None else config.PREMIUM_DAYS,
+        "kind": kind,
+        "description": f"{name} — access to {name}.",
+    }
+    if discount:
+        product["discount"] = discount
+    if kind == "digital":
+        product["deliver"] = ""
+    config.PRODUCTS.append(product)
+    config.save_products()
+    _save_wizard_state(chat_id, None)  # clear wizard
+    disc_note = f" (-{discount:.0f}%)" if discount else ""
+    return send_message(
+        chat_id,
+        lang.TXT["prod_added"].format(name=name, price=config.effective_price(product),
+                                       days=product["days"], kind=kind, disc=disc_note),
+        owner_keyboard())
+
+def _advance_wizard(chat_id, value):
+    """Process one wizard reply (value may be '' to skip). Returns (text, done)."""
+    st = _load_wizard().get(str(chat_id))
+    if not st or not st.get("active"):
+        return None, False
+    step = st.get("step")
+    d = st.get("data", {})
+    val = value.strip()
+
+    if step == "name":
+        if val:
+            d["name"] = val
+    elif step == "price":
+        if val:
+            try:
+                p = float(val)
+                if p <= 0:
+                    return lang.TXT["wiz_invalid_price"].format(hint=val), False
+                d["price"] = p
+            except ValueError:
+                return lang.TXT["wiz_invalid_price"].format(hint=val), False
+        # price is required to finish; if skipped, remain on this step
+        if "price" not in d:
+            return lang.TXT["wiz_price"], False
+    elif step == "days":
+        if val:
+            try:
+                d["days"] = max(int(float(val)), 0)
+            except ValueError:
+                return lang.TXT["wiz_invalid_days"].format(hint=val), False
+    elif step == "kind":
+        if val:
+            k = val.lower()
+            if k not in ("channel", "digital"):
+                return lang.TXT["wiz_invalid_kind"].format(hint=val), False
+            d["kind"] = k
+    elif step == "discount":
+        if val:
+            try:
+                disc = float(val)
+                if disc < 0 or disc >= 100:
+                    return lang.TXT["wiz_invalid_discount"].format(hint=val), False
+                d["discount"] = disc
+            except ValueError:
+                return lang.TXT["wiz_invalid_discount"].format(hint=val), False
+
+    # advance
+    idx = _WIZARD_STEPS.index(step)
+    if idx + 1 < len(_WIZARD_STEPS):
+        next_step = _WIZARD_STEPS[idx + 1]
+        st["step"] = next_step
+        st["data"] = d
+        _save_wizard_state(chat_id, st)
+        text, _ = wizard_step_message(chat_id)
+        return text, False
+    # all steps done -> persist the final data, then finalize
+    st["data"] = d
+    _save_wizard_state(chat_id, st)
+    _finish_wizard_product(chat_id)
+    return None, True
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +326,7 @@ def format_crypto_payment(product, network=None):
     # If the owner hasn't set a wallet, show a warning and stop (no funds lost).
     if not config.CRYPTO_ADDRESS:
         return lang.TXT["pay_wallet_missing"]
-    price = product.get("price_usd", 0.0)
+    price = config.effective_price(product)
     lines = [
         lang.TXT["pay_price"].format(price=price),
         "",
@@ -206,7 +368,7 @@ def _notify_owner_sale(chat_id, username, product, payment_method):
     method = payment_method if payment_method else "crypto"
     text = lang.TXT["sale_notification"].format(
         name=product.get("name", "item"),
-        price=product.get("price_usd", 0),
+        price=config.effective_price(product),
         user=buyer,
         method=method,
         time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -321,12 +483,9 @@ def shop_keyboard():
 
 
 def main_menu_keyboard(chat_id=None):
-    """Main menu. Owner can hide/show buttons (via Edit Menu)."""
+    """Main menu. Built from config.MENU_ITEMS (all buttons shown)."""
     rows = []
-    # Build from MENU_ITEMS, skipping any the owner hid.
     for key, item in config.MENU_ITEMS.items():
-        if key in config.HIDDEN_MENU:
-            continue
         rows.append([
             {"text": lang.BTN[item["label_key"]], "callback_data": item["btn"]}
         ])
@@ -337,14 +496,13 @@ def main_menu_keyboard(chat_id=None):
 
 
 def owner_keyboard():
-    """Owner menu: product + menu management actions (owner only)."""
+    """Owner menu: product management actions (owner only)."""
     return {
         "inline_keyboard": [
             [{"text": lang.BTN["owner_add_product"], "callback_data": "owner_add_product"}],
             [{"text": lang.BTN["owner_remove_product"], "callback_data": "owner_remove_product"}],
             [{"text": lang.BTN["owner_list_products"], "callback_data": "owner_list_products"}],
             [{"text": lang.BTN["owner_howto_add"], "callback_data": "owner_howto_add"}],
-            [{"text": lang.BTN["owner_edit_menu"], "callback_data": "owner_edit_menu"}],
             [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
         ]
     }
@@ -355,7 +513,7 @@ def remove_product_keyboard():
     rows = []
     for p in config.PRODUCTS:
         rows.append([
-            {"text": f"{p.get('emoji', lang.TXT['emoji_default'])} {p['name']} — ${p.get('price_usd',0):.2f}",
+            {"text": f"{p.get('emoji', lang.TXT['emoji_default'])} {p['name']} — ${config.effective_price(p):.2f}",
              "callback_data": f"rm_prod:{p['id']}"}
         ])
     rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
@@ -371,19 +529,6 @@ def confirm_remove_keyboard(product_id):
             [{"text": lang.BTN["owner_confirm_no"], "callback_data": "owner_remove_product"}],
         ]
     }
-
-
-def edit_menu_keyboard():
-    """Owner: list all main-menu buttons to hide/show (toggle each)."""
-    rows = []
-    for key, item in config.MENU_ITEMS.items():
-        label = lang.BTN[item["label_key"]]
-        if key in config.HIDDEN_MENU:
-            label = "⛔ " + label
-        rows.append([{"text": label, "callback_data": f"toggle_menu:{key}"}])
-    rows.append([{"text": lang.BTN["owner_manage"], "callback_data": "owner_manage"}])
-    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
-    return {"inline_keyboard": rows}
 
 
 def pay_done_keyboard():
@@ -449,7 +594,7 @@ def _owner_list(chat_id, message_id):
     for p in config.PRODUCTS:
         lines.append(lang.TXT["products_line"].format(
             emoji=p.get("emoji", lang.TXT["emoji_default"]), name=p["name"],
-            price=p.get("price_usd", 0), duration=lang.product_duration(p),
+            price=config.effective_price(p), duration=lang.product_duration(p),
             kind=p.get("kind", "channel"),
         ))
     lines.append("")
@@ -462,12 +607,18 @@ def handle_product(chat_id, message_id, product_id):
     product = config.get_product(product_id)
     if product is None:
         return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
-    price = product.get("price_usd", 0.0)
+    price = config.effective_price(product)
+    disc = product.get("discount", 0) or 0
+    discount_note = ""
+    if disc:
+        discount_note = lang.TXT["discount_note_off"].format(
+            discount=disc, orig=float(product.get("price_usd", price)))
     text = lang.TXT["product_page"].format(
         emoji=product.get("emoji", lang.TXT["emoji_default"]),
         name=product["name"],
         description=product.get("description", ""),
         price=price,
+        discount_note=discount_note,
         duration=lang.product_duration(product),
     )
     return edit_message(chat_id, message_id, text, network_keyboard(product_id))
@@ -508,7 +659,7 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
     if product is None:
         return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
 
-    price = product.get("price_usd", 0.0)
+    price = config.effective_price(product)
     payment = nowpayments.create_payment(
         price_usd=price,
         pay_currency=config.NOWPAYMENTS_DEFAULT_CURRENCY,
@@ -596,7 +747,7 @@ def handle_coingate(chat_id, message_id, product_id=None):
         return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
 
     order = coingate.create_order(
-        price_usd=product.get("price_usd", 0),
+        price_usd=config.effective_price(product),
         title=product["name"],
         description=product.get("description", ""),
         order_id=f"cq-{chat_id}-{int(time.time())}",
@@ -705,21 +856,6 @@ def handle_help(chat_id, message_id=None):
     return send_message(chat_id, text, back_menu_keyboard())
 
 
-def handle_unsubscribe(chat_id, message_id=None):
-    data = load_subscribers()
-    sub = find_subscriber(data, chat_id)
-    if sub:
-        data["subscribers"] = [s for s in data["subscribers"] if str(s.get("chat_id")) != str(chat_id)]
-        save_subscribers(data)
-        channel_access.revoke_access(chat_id)  # remove from VIP channel if configured
-        text = lang.TXT["unsubscribed"]
-    else:
-        text = lang.TXT["not_subscribed_2"]
-    if message_id is not None:
-        return edit_message(chat_id, message_id, text, back_menu_keyboard())
-    return send_message(chat_id, text, back_menu_keyboard())
-
-
 def handle_pay(chat_id, username, txhash):
     """Manual /pay <txhash> handler (or free-text hash after "I paid").
 
@@ -756,16 +892,24 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
             edit_message(chat_id, message_id, lang.TXT["owner_menu_title"], owner_keyboard())
     elif cb_data == "owner_add_product":
         if admin.is_owner(chat_id):
-            edit_message(chat_id, message_id, lang.TXT["prod_usage_add"], owner_keyboard())
+            start_add_product_wizard(chat_id, message_id)
+    elif cb_data == "wizard_cancel":
+        if admin.is_owner(chat_id):
+            _save_wizard_state(chat_id, None)
+            edit_message(chat_id, message_id, lang.TXT["wizard_cancelled"], owner_keyboard())
+    elif cb_data == "wizard_skip":
+        if admin.is_owner(chat_id):
+            # Skipping a step = an empty value for the current step.
+            text, done = _advance_wizard(chat_id, "")
+            if done:
+                return
+            edit_message(chat_id, message_id, text, wizard_keyboard())
     elif cb_data == "owner_list_products":
         if admin.is_owner(chat_id):
             _owner_list(chat_id, message_id)
     elif cb_data == "owner_howto_add":
         if admin.is_owner(chat_id):
             edit_message(chat_id, message_id, lang.TXT["owner_howto_text"], owner_keyboard())
-    elif cb_data == "owner_edit_menu":
-        if admin.is_owner(chat_id):
-            edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
     elif cb_data == "owner_remove_product":
         if admin.is_owner(chat_id):
             edit_message(chat_id, message_id, lang.TXT["owner_remove_title"], remove_product_keyboard())
@@ -787,15 +931,6 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
                 edit_message(chat_id, message_id,
                              lang.TXT["prod_removed"].format(name=p["name"]),
                              owner_keyboard())
-    elif cb_data.startswith("toggle_menu:"):
-        if admin.is_owner(chat_id):
-            key = cb_data[len("toggle_menu:"):]
-            if key in config.MENU_ITEMS:
-                now_visible = config.toggle_menu_item(key)
-                # Message the owner to confirm what happened, then refresh the editor.
-                state = "shown" if now_visible else "hidden"
-                answer_callback(callback_id, text=f"Menu button {state}.")
-                edit_message(chat_id, message_id, lang.TXT["owner_edit_menu_title"], edit_menu_keyboard())
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
     elif cb_data.startswith("prod_"):
@@ -827,8 +962,6 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         handle_status(chat_id, message_id)
     elif cb_data == "help":
         handle_help(chat_id, message_id)
-    elif cb_data == "unsubscribe":
-        handle_unsubscribe(chat_id, message_id)
 
 
 def handle_admin_command(chat_id, command):
@@ -855,7 +988,7 @@ def handle_admin_command(chat_id, command):
         for p in config.PRODUCTS:
             lines.append(lang.TXT["products_line"].format(
                 emoji=p.get("emoji", lang.TXT["emoji_default"]), name=p["name"],
-                price=p.get("price_usd", 0), duration=lang.product_duration(p),
+                price=config.effective_price(p), duration=lang.product_duration(p),
                 kind=p.get("kind", "channel"),
             ))
         lines.append("")
@@ -864,20 +997,27 @@ def handle_admin_command(chat_id, command):
         return True
 
     elif cmd.startswith("/add_product "):
-        # Format: /add_product Name | price | days | kind
+        # Format: /add_product Name | price [| days [| kind]]
+        # Only name and price are required. days defaults to PREMIUM_DAYS,
+        # kind defaults to "channel". The owner only needs to give the
+        # essentials (e.g. just name and price).
         spec = cmd[len("/add_product "):].strip()
         parts = [s.strip() for s in spec.split("|")]
-        if len(parts) < 4 or not parts[0]:
+        # require at least name and price
+        if len(parts) < 2 or not parts[0] or not parts[1]:
             send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
             return True
         try:
-            name, price, days, kind = parts[0], float(parts[1]), int(parts[2]), parts[3].lower()
+            name = parts[0]
+            price = float(parts[1])
         except ValueError:
             send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
             return True
+        # optional: days (default) and kind (default channel)
+        days = int(parts[2]) if len(parts) >= 3 and parts[2] else config.PREMIUM_DAYS
+        kind = parts[3].lower() if len(parts) >= 4 and parts[3] else "channel"
         if kind not in ("channel", "digital"):
-            send_message(chat_id, lang.TXT["prod_usage_add"], back_menu_keyboard())
-            return True
+            kind = "channel"
         pid = name.lower().replace(" ", "_")[:20]
         new_id = pid
         n = 1
@@ -892,7 +1032,7 @@ def handle_admin_command(chat_id, command):
         config.PRODUCTS.append(product)
         config.save_products()
         send_message(chat_id, lang.TXT["prod_added"].format(
-            name=name, price=price, days=days, kind=kind), back_menu_keyboard())
+            name=name, price=price, days=days, kind=kind, disc=""), back_menu_keyboard())
         if kind == "digital":
             send_message(chat_id, lang.TXT["prod_need_desc"], back_menu_keyboard())
         return True
@@ -996,15 +1136,21 @@ def handle_command(chat_id, username, command):
         handle_shop(chat_id) if command == "/shop" else handle_premium(chat_id)
     elif command.startswith("/pay "):
         handle_pay(chat_id, username, command.split(" ", 1)[1].strip())
-    elif command == "/unsubscribe":
-        handle_unsubscribe(chat_id)
     elif command == "/status":
         handle_status(chat_id)
     elif command == "/help":
         handle_help(chat_id)
     elif not command.startswith("/"):
-        # Not a slash command -> if the user is mid-payment (selected a network
-        # and tapped "I paid"), treat this free-text as a transaction hash.
+        # Free text. Priority 1: the owner is mid add-product wizard.
+        if admin.is_owner(chat_id) and _load_wizard().get(str(chat_id), {}).get("active"):
+            text, done = _advance_wizard(chat_id, command)
+            if done:
+                return
+            if text:
+                send_message(chat_id, text, wizard_keyboard())
+            return
+        # Priority 2: user is mid-payment (selected network + tapped "I paid"),
+        # so free text is a transaction hash.
         pending = _load_pending().get(str(chat_id))
         if isinstance(pending, dict) and pending.get("product_id") and command.strip():
             handle_pay(chat_id, username, command.strip())
