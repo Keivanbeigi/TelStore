@@ -719,9 +719,12 @@ def handle_product(chat_id, message_id, product_id):
             orig=float(product.get("price_usd", price)), discount=disc, price=price)
     else:
         price_line = lang.TXT["price_normal"].format(price=price)
+    model = (product.get("model") or "").strip()
+    model_line = lang.TXT["model_line"].format(model=model) if model else lang.TXT["model_line_empty"]
     text = lang.TXT["product_page"].format(
         emoji=product.get("emoji", lang.TXT["emoji_default"]),
         name=product["name"],
+        model_line=model_line,
         description=product.get("description", ""),
         price_line=price_line,
         duration=lang.product_duration(product),

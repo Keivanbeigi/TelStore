@@ -36,13 +36,16 @@ TXT = {
     # --- products / shop ---
     "shop_title": "🛒 Shop — choose a product to buy:",
     "product_page": (
-        "{emoji} {name}\n\n"
-        "{description}\n\n"
-        "{price_line}"
-        "⏳ Access: {duration}\n\n"
-        "Select a payment network:"
-    ),
-    "price_normal": "💰 Price: ${price:.2f}\n",
+            "{emoji} {name}\n\n"
+            "{model_line}"
+            "{description}\n\n"
+            "{price_line}"
+            "⏳ Access: {duration}\n\n"
+            "Select a payment network:"
+        ),
+        "model_line": "🏷️ Model: {model}\n",
+        "model_line_empty": "",
+        "price_normal": "💰 Price: ${price:.2f}\n",
     "price_discounted": "💰 Price: ${orig:.2f} ({discount:.0f}% off) = ${price:.2f}\n",
     "duration_days": "{days} days",
     "duration_lifetime": "Lifetime",
