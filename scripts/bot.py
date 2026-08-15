@@ -180,18 +180,29 @@ def _finish_wizard_product(chat_id):
     while config.get_product(new_id):
         new_id = f"{pid}_{n}"; n += 1
     days = d.get("days")
+
+    # category: the shop group (shoes, channel, digital, course, ...).
     category = (d.get("category") or "channel").lower()
+    # model: a variant label (Men, Women, Basic, Pro, ...) — display only.
+    model = (d.get("model") or "").strip()
+    # kind: HOW the product is delivered. Derived from category when the
+    # category is one of the delivery kinds, else defaults to "channel"
+    # (grant VIP channel access). This fixes custom categories like "shoes"
+    # being wrongly treated as a delivery kind.
+    kind = "digital" if category == "digital" else "channel"
     discount = d.get("discount", 0) or 0
     product = {
         "id": new_id, "name": name, "price_usd": price,
         "days": days if days is not None else config.PREMIUM_DAYS,
-        "kind": d.get("model", ""),
+        "kind": kind,
         "category": category,
         "description": f"{name} — access to {name}.",
     }
+    if model:
+        product["model"] = model
     if discount:
         product["discount"] = discount
-    if d.get("model", "") == "digital":
+    if kind == "digital":
         product["deliver"] = ""
     config.PRODUCTS.append(product)
     config.save_products()
@@ -200,7 +211,7 @@ def _finish_wizard_product(chat_id):
     return send_message(
         chat_id,
         lang.TXT["prod_added"].format(name=name, price=config.effective_price(product),
-                                       days=product["days"], kind=category, disc=disc_note),
+                                       days=product["days"], kind=kind, disc=disc_note),
         owner_keyboard())
 
 def _advance_wizard(chat_id, value):
@@ -483,25 +494,33 @@ def _expiry(days):
 #  Keyboard builders (button labels all come from lang)
 # ---------------------------------------------------------------------------
 def network_keyboard(product_id=None):
-    """Payment network keyboard. If a product is being bought, back goes to the shop."""
+    """Payment keyboard for a product's payment page.
+
+    NOWPayments is shown FIRST as the recommended (card/crypto, auto-delivery)
+    option when it is configured. Manual networks follow, then CoinGate.
+    If no product_id, only the gateway buttons appear (no per-network list).
+    """
     rows = []
-    for n in config.CRYPTO_NETWORKS:
-        cb = lang.network_callback(n)
-        if product_id:
-            cb = f"{cb}:{product_id}"
-        rows.append([
-            {"text": lang.network_button(n), "callback_data": cb}
-        ])
-    # Payment gateways (only shown if configured)
+    # 1) NOWPayments -- recommended, auto-delivery card/crypto checkout.
     if product_id:
         if config.NOWPAYMENTS_API_KEY:
             rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": f"pay_nowpayments:{product_id}"}])
+        # Manual networks (BSC, Ethereum, Polygon) for direct wallet payment.
+        for n in config.CRYPTO_NETWORKS:
+            cb = lang.network_callback(n)
+            if product_id:
+                cb = f"{cb}:{product_id}"
+            rows.append([
+                {"text": lang.network_button(n), "callback_data": cb}
+            ])
         if coingate.is_configured():
             rows.append([{"text": lang.BTN["pay_coingate"], "callback_data": f"pay_coingate:{product_id}"}])
         rows.append([{"text": lang.BTN["back_shop"], "callback_data": "shop"}])
     else:
         if config.NOWPAYMENTS_API_KEY:
             rows.append([{"text": lang.BTN["pay_nowpayments"], "callback_data": "pay_nowpayments"}])
+        for n in config.CRYPTO_NETWORKS:
+            rows.append([{"text": lang.network_button(n), "callback_data": lang.network_callback(n)}])
         if coingate.is_configured():
             rows.append([{"text": lang.BTN["pay_coingate"], "callback_data": "pay_coingate"}])
     rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
@@ -511,19 +530,35 @@ def network_keyboard(product_id=None):
 def shop_keyboard():
     """Shop keyboard: show category buttons first, then products per category.
     This keeps the menu clean even as the catalogue grows into dozens of items.
+
+    Built-in kinds (channel / digital) get the friendly labels from lang.py.
+    Any OTHER category a product declares (e.g. ``category="shoes"``) is shown
+    with its own name, capitalized, so custom categories are never hidden or
+    lumped into a generic "Products" button.
     """
-    # Collect unique categories from all products
     cats = {}
     for p in config.PRODUCTS:
         cat = p.get("category") or p.get("kind", "other")
-        if cat not in cats:
-            header_key = {"channel": "cat_channel", "digital": "cat_digital"}.get(cat, "cat_other")
-            cats[cat] = lang.TXT[header_key]
+        if cat in cats:
+            continue
+        label = cat_label(cat)
+        cats[cat] = label
     rows = []
     for cat, label in cats.items():
         rows.append([{"text": label, "callback_data": f"cat_{cat}"}])
     rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
     return {"inline_keyboard": rows}
+
+
+def cat_label(cat):
+    """Human label for a product category / kind. Built-in kinds map to the
+    friendly lang strings; any other category uses its own name, capitalized,
+    with a generic bag emoji (env-friendly — no hard-coded UI text)."""
+    mapped = {"channel": lang.TXT["cat_channel"], "digital": lang.TXT["cat_digital"]}.get(cat)
+    if mapped:
+        return mapped
+    # Custom category (e.g. "shoes") -> show its name, capitalized.
+    return f"🛍️ {cat.capitalize()}"
 
 
 def category_keyboard(category):
@@ -657,11 +692,15 @@ def _owner_list(chat_id, message_id):
     """Owner-only: show all products with ids (to manage them)."""
     lines = [lang.TXT["products_title"], ""]
     for p in config.PRODUCTS:
+        cat = p.get("category") or p.get("kind", "channel")
+        details = f" ➜ category={cat}"
+        if p.get("kind") == "digital" and p.get("deliver"):
+            details += ", deliver=✓"
         lines.append(lang.TXT["products_line"].format(
             emoji=p.get("emoji", lang.TXT["emoji_default"]), name=p["name"],
             price=config.effective_price(p), duration=lang.product_duration(p),
             kind=p.get("kind", "channel"),
-        ))
+        ) + details)
     lines.append("")
     lines.append("Use /remove_product <id> to delete one.")
     edit_message(chat_id, message_id, "\n".join(lines), owner_keyboard())
@@ -754,7 +793,7 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
             "payment_id": invoice.get("id"),
             "product_id": product.get("id"),
         })
-        return edit_message(chat_id, message_id, text, pay_check_keyboard(invoice_url))
+        return send_message(chat_id, text, pay_check_keyboard(invoice_url))
     # Fallback: old-style payment (address/amount)
     payment = nowpayments.create_payment(
         price_usd=price,
@@ -768,7 +807,7 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
             "payment_id": payment.get("payment_id"),
             "product_id": product.get("id"),
         })
-        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
+        return send_message(chat_id, text, pay_check_keyboard())
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
 
@@ -810,7 +849,7 @@ def handle_check_payment(chat_id, username, message_id):
     pending = _load_pending().get(str(chat_id))
     if not pending:
         text = lang.TXT["np_no_pending"]
-        return edit_message(chat_id, message_id, text, shop_keyboard())
+        return send_message(chat_id, text, shop_keyboard())
 
     payment_id = pending.get("payment_id") if isinstance(pending, dict) else pending
     product_id = pending.get("product_id") if isinstance(pending, dict) else None
@@ -822,13 +861,13 @@ def handle_check_payment(chat_id, username, message_id):
         msg = _finalize_paid_payment(chat_id, payment_id, product_id)
         if msg is None:
             msg = lang.TXT["np_error"]
-        return edit_message(chat_id, message_id, msg, back_menu_keyboard())
+        return send_message(chat_id, msg, back_menu_keyboard())
 
     if state in ("waiting", "confirming", "partially_paid", "expired"):
         text = lang.TXT["np_waiting"].format(state=state)
-        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
+        return send_message(chat_id, text, pay_check_keyboard())
 
-    return edit_message(chat_id, message_id, lang.TXT["np_error"], pay_check_keyboard())
+    return send_message(chat_id, lang.TXT["np_error"], pay_check_keyboard())
 
 
 def handle_coingate(chat_id, message_id, product_id=None):
@@ -1238,6 +1277,36 @@ def handle_admin_command(chat_id, command):
             return True
         config.PRICE_USD = new_price  # in-memory for this run
         send_message(chat_id, lang.TXT["price_updated"].format(price=new_price), back_menu_keyboard())
+        return True
+
+    elif cmd == "/settings":
+        # Show current store settings (channel, website, support).
+        send_message(chat_id, lang.TXT["settings_title"].format(
+            channel_id=config.CHANNEL_ID or "(not set)",
+            channel_link=config.CHANNEL_LINK or "(not set)",
+            website=config.WEBSITE_URL or "(not set)",
+            support=config.SUPPORT_URL or "(not set)",
+        ), back_menu_keyboard())
+        return True
+
+    elif cmd == "/set_setting" or cmd.startswith("/set_setting "):
+        rest = cmd[len("/set_setting"):].strip()
+        if not rest or " " not in rest:
+            send_message(chat_id, lang.TXT["settings_usage"], back_menu_keyboard())
+            return True
+        key, _, value = rest.partition(" ")
+        key = key.strip().upper()
+        value = value.strip()
+        if key not in ("CHANNEL_ID", "CHANNEL_LINK", "WEBSITE_URL", "SUPPORT_URL"):
+            send_message(chat_id, lang.TXT["settings_bad_key"].format(key=key), back_menu_keyboard())
+            return True
+        if not value:
+            # Empty value => clear the setting (set it back to "").
+            config.save_settings({key: ""})
+            send_message(chat_id, lang.TXT["settings_cleared"].format(key=key), back_menu_keyboard())
+            return True
+        config.save_settings({key: value})
+        send_message(chat_id, lang.TXT["settings_updated"].format(key=key, value=value), back_menu_keyboard())
         return True
 
     return False

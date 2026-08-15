@@ -39,6 +39,7 @@ def _env_file():
 SUBSCRIBERS_FILE = os.path.join(_dir(), "subscribers.json")
 PENDING_FILE = os.path.join(_dir(), "pending_payments.json")
 WIZARD_FILE = os.path.join(_dir(), "wizard.json")   # add-product step wizard state
+SETTINGS_FILE = os.path.join(_dir(), "settings.json")  # owner-editable runtime settings
 
 
 # ------------------------------------------------------------
@@ -124,12 +125,55 @@ CRYPTO_NETWORKS = [
 # ------------------------------------------------------------
 #  VIP channel membership (optional)
 # ------------------------------------------------------------
-CHANNEL_ID = _load_env_str("CHANNEL_ID", "").strip()        # e.g. -1001234567890
-CHANNEL_LINK = _load_env_str("CHANNEL_LINK", "").strip()    # optional public link
+# These are read from .env first, but can be overridden at runtime by the
+# owner from Telegram (/set_setting). Runtime values live in settings.json.
+def _load_settings():
+    """Load owner-editable runtime settings (settings.json -> dict)."""
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                return d if isinstance(d, dict) else {}
+        except Exception:
+            pass
+    return {}
 
-# Owner website & support contact (shown to customers)
-WEBSITE_URL = _load_env_str("WEBSITE_URL", "").strip()       # e.g. https://site.com
-SUPPORT_URL = _load_env_str("SUPPORT_URL", "").strip()      # e.g. https://t.me/owner  (DM link)
+
+def _get_setting(key):
+    """Value: settings.json override if present, else the .env value."""
+    s = _load_settings()
+    if key in s and s[key] not in (None, ""):
+        return str(s[key])
+    return _load_env_str(key, "").strip()
+
+
+CHANNEL_ID = _get_setting("CHANNEL_ID").strip()        # e.g. -1001234567890
+CHANNEL_LINK = _get_setting("CHANNEL_LINK").strip()    # optional public link
+
+# Owner website & support contact (shown to customers). Runtime-editable.
+WEBSITE_URL = _get_setting("WEBSITE_URL").strip()      # e.g. https://site.com
+SUPPORT_URL = _get_setting("SUPPORT_URL").strip()      # e.g. https://t.me/owner  (DM link)
+
+
+def save_settings(overrides):
+    """Merge overrides into settings.json (persists runtime changes) and
+    update the in-memory module values so the running bot sees them at once."""
+    s = _load_settings()
+    s.update(overrides)
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(s, f, ensure_ascii=False, indent=2)
+    # Refresh in-memory module-level values immediately.
+    global CHANNEL_ID, CHANNEL_LINK, WEBSITE_URL, SUPPORT_URL
+    for k, v in overrides.items():
+        v = str(v) if v is not None else ""
+        if k == "CHANNEL_ID":
+            CHANNEL_ID = v
+        elif k == "CHANNEL_LINK":
+            CHANNEL_LINK = v
+        elif k == "WEBSITE_URL":
+            WEBSITE_URL = v
+        elif k == "SUPPORT_URL":
+            SUPPORT_URL = v
 
 
 # ------------------------------------------------------------

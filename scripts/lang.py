@@ -144,11 +144,26 @@ TXT = {
     "plan_free": "🆓 Free",
 
     # --- owner admin panel ---
-    "admin_stats": ("📊 Subscriber statistics:\n\n"
-                    "👥 Total: {total}\n"
-                    "💎 Premium/Paid: {premium}\n"
+    "admin_stats": ("📊 Store stats:\n"
+                    "👥 Total members: {total}\n"
+                    "💎 Premium: {premium}\n"
                     "🆓 Free: {free}\n\n"
                     "💰 Est. revenue: ${revenue:.2f}"),
+    "settings_title": ("⚙️ Store settings (current values):\n\n"
+                       "🏦 CHANNEL_ID: {channel_id}\n"
+                       "🔗 CHANNEL_LINK: {channel_link}\n"
+                       "🌐 WEBSITE_URL: {website}\n"
+                       "💬 SUPPORT_URL: {support}\n\n"
+                       "Change with:\n"
+                       "🔧 /set_setting CHANNEL_LINK https://t.me/yourchannel\n"
+                       "🔧 /set_setting WEBSITE_URL https://your-site.com\n"
+                       "🔧 /set_setting SUPPORT_URL https://t.me/you\n\n"
+                       "Send an empty value to clear a setting.\n"
+                       "Changes are saved immediately (no .env edit needed)."),
+    "settings_updated": "✅ Updated {key} → {value}",
+    "settings_cleared": "✅ Cleared {key}",
+    "settings_usage": "❌ Usage: /set_setting <key> <value>\nKeys: CHANNEL_ID, CHANNEL_LINK, WEBSITE_URL, SUPPORT_URL\nSend an empty value to clear a setting.",
+    "settings_bad_key": "❌ Unknown setting: {key}. Use /settings to see valid keys.",
     "admin_help": ("🛠 Owner commands:\n\n"
                    "📊 /stats - member & revenue summary\n"
                    "📢 /broadcast <text> - message all subscribers\n"
@@ -158,7 +173,9 @@ TXT = {
                    "➕ /add_product Name|price|days|kind - add a product\n"
                    "➖ /remove_product <id> - remove a product\n"
                    "📦 /set_deliver <id> <text> - set digital delivery text\n"
-                   "💰 /set_price <usd> - change the default price (current run)"),
+                   "💰 /set_price <usd> - change the default price (current run)\n"
+                   "⚙️ /settings - show store settings (channel, website, support)\n"
+                   "🔧 /set_setting <key> <value> - set a store setting (see /settings)"),
     "broadcast_sent": "📢 Broadcast sent to {sent} subscriber(s).",
     "broadcast_partial": " ({failed} failed)",
     "broadcast_msg": "📢 {msg}",
@@ -262,7 +279,7 @@ BTN = {
     "account": "👤 My Account",
     "back_menu": "◀️ Back to menu",
     "back_shop": "◀️ Back to shop",
-    "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",
+    "pay_nowpayments": "⭐ Recommended — Pay with Card / Crypto",
     "open_payment": "🔗 Open payment page",
     "pay_coingate": "🌐 Pay online (web page)",
     "pay_done": "✅ I paid",

@@ -38,14 +38,23 @@ echo ""
 # --- 1. python3 ------------------------------------------------------------
 echo "[1/8] Python"
 if command -v python3 >/dev/null 2>&1; then
+  PY="python3"
   PYVER=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)
-  if [ "${PYVER%%.*}" -ge 3 ] && [ "${PYVER#*.}" -ge 8 ]; then
-    PASS "python3 $PYVER (>= 3.8)"
-  else
-    FAIL "python3 $PYVER is too old (need 3.8+)"
-  fi
+elif command -v python >/dev/null 2>&1; then
+  PY="python"
+  PYVER=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)
 else
-  FAIL "python3 not found — run deploy_server.sh first"
+  FAIL "python3 / python not found — run deploy_server.sh first"
+  PY=""
+  PYVER=""
+fi
+if [ -n "${PY:-}" ] && [ -n "${PYVER:-}" ]; then
+  MAJOR="${PYVER%%.*}"; MINOR="${PYVER#*.}"
+  if [ "$MAJOR" -ge 3 ] && [ "$MINOR" -ge 8 ]; then
+    PASS "python ($PY) $PYVER (>= 3.8)"
+  else
+    FAIL "python $PYVER is too old (need 3.8+)"
+  fi
 fi
 echo ""
 
@@ -53,10 +62,10 @@ echo ""
 echo "[2/8] Modules import"
 cd "$SCRIPT_DIR"
 for mod in config lang admin channel_access nowpayments bot; do
-  if python3 -c "import $mod" 2>/dev/null; then
+  if "$PY" -c "import $mod" 2>/dev/null; then
     PASS "import $mod"
   else
-    FAIL "import $mod -> $(python3 -c "import $mod" 2>&1 | tail -1)"
+    FAIL "import $mod -> $("$PY" -c "import $mod" 2>&1 | tail -1)"
   fi
 done
 echo ""
@@ -89,7 +98,7 @@ echo ""
 # --- 4. Telegram getMe (live) ----------------------------------------------
 echo "[4/8] Telegram API (live)"
 if [ -n "${TOKEN:-}" ] && [ "$TOKEN" != "your_bot_token_here" ]; then
-  GME=$(python3 - "$TOKEN" <<'PY'
+  GME=$("$PY" - "$TOKEN" <<'PY'
 import json, sys, urllib.request
 tok = sys.argv[1]
 try:
@@ -116,7 +125,7 @@ NP_KEY=$(grep -E '^NOWPAYMENTS_API_KEY=' "$ENV_FILE" 2>/dev/null | head -1 | cut
 if [ -z "$NP_KEY" ]; then
   NOTE "NOWPAYMENTS_API_KEY empty — the NOWPayments button is hidden (optional)"
 else
-  NPT=$(python3 - "$NP_KEY" <<'PY'
+  NPT=$("$PY" - "$NP_KEY" <<'PY'
 import json, sys, urllib.request
 key = sys.argv[1]
 try:

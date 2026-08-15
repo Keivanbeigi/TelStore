@@ -7,5 +7,6 @@ subscribers.json
 pending_payments.json
 products.json
 menu_config.json
+settings.json
 *.log
 wizard.json
