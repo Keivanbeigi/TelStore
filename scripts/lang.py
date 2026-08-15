@@ -167,6 +167,16 @@ TXT = {
     "settings_cleared": "✅ Cleared {key}",
     "settings_usage": "❌ Usage: /set_setting <key> <value>\nKeys: CHANNEL_ID, CHANNEL_LINK, WEBSITE_URL, SUPPORT_URL\nSend an empty value to clear a setting.",
     "settings_bad_key": "❌ Unknown setting: {key}. Use /settings to see valid keys.",
+    # --- owner link management (website / support / channel) ---
+    "link_menu_title": "🔗 {label} — current: {value}",
+    "link_menu_none": "🔗 {label} — not set yet.",
+    "link_set_btn": "✏️ Set / change link",
+    "link_open_btn": "🔗 Open link",
+    "link_clear_btn": "🗑️ Clear link",
+    "link_await_input": "✏️ Send the {label} link now (or /cancel to stop).",
+    "link_saved": "✅ {label} updated → {value}",
+    "link_cleared": "🗑️ {label} cleared.",
+    "link_cancelled": "↩️ Link setup cancelled.",
     "admin_help": ("🛠 Owner commands:\n\n"
                    "📊 /stats - member & revenue summary\n"
                    "📢 /broadcast <text> - message all subscribers\n"
@@ -299,12 +309,24 @@ BTN = {
     "wizard_skip": "⏭️ Skip",
     "wizard_back": "◀️ Back",
     "back": "◀️ Back",
+    "link_set": "✏️ Set / change link",
+    "link_open": "🔗 Open link",
+    "link_clear": "🗑️ Clear link",
 }
 
 
 # ---------------------------------------------------------------------------
 #  Product helpers (button labels & callbacks, driven by config.PRODUCTS)
 # ---------------------------------------------------------------------------
+def link_label(key):
+    """Human-friendly label for a link setting key (WEBSITE_URL / SUPPORT_URL / CHANNEL_LINK)."""
+    return {
+        "WEBSITE_URL": "Website",
+        "SUPPORT_URL": "Support contact",
+        "CHANNEL_LINK": "Channel",
+    }.get(key, key)
+
+
 def product_button(p):
     """Short button label for a product dict from config.PRODUCTS.
     Shows the effective (post-discount) price if a discount is set."""

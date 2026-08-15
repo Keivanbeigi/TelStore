@@ -1026,7 +1026,11 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     if cb_data == "menu":
         show_main_menu(chat_id, message_id)
     elif cb_data == "sub_free":
-        handle_subscribe(chat_id, username, load_subscribers())
+        # Owner sees the channel-link manage menu; customers see the subscribe flow.
+        if admin.is_owner(chat_id):
+            handle_link_menu(chat_id, message_id, "CHANNEL_LINK")
+        else:
+            handle_subscribe(chat_id, username, load_subscribers())
     elif cb_data == "shop":
         handle_shop(chat_id, message_id)
     elif cb_data == "owner_manage":
@@ -1116,12 +1120,17 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data == "status":
         handle_status(chat_id, message_id)
     elif cb_data == "website":
-        if config.WEBSITE_URL:
+        # Owner sees a manage menu; regular customers see the live link.
+        if admin.is_owner(chat_id):
+            handle_link_menu(chat_id, message_id, "WEBSITE_URL")
+        elif config.WEBSITE_URL:
             edit_message(chat_id, message_id, lang.TXT["website_open"].format(url=config.WEBSITE_URL))
         else:
             edit_message(chat_id, message_id, lang.TXT["website_missing"], back_menu_keyboard())
     elif cb_data == "support":
-        if config.SUPPORT_URL:
+        if admin.is_owner(chat_id):
+            handle_link_menu(chat_id, message_id, "SUPPORT_URL")
+        elif config.SUPPORT_URL:
             edit_message(chat_id, message_id, lang.TXT["support_open"].format(url=config.SUPPORT_URL))
         else:
             edit_message(chat_id, message_id, lang.TXT["support_missing"], back_menu_keyboard())
@@ -1129,6 +1138,56 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         handle_status(chat_id, message_id)
     elif cb_data == "help":
         handle_help(chat_id, message_id)
+    elif cb_data.startswith("link_open:"):
+        if admin.is_owner(chat_id):
+            key = cb_data.split(":", 1)[1]
+            val = getattr(config, key, "") or ""
+            if val:
+                edit_message(chat_id, message_id, f"🔗 {key}: {val}", back_menu_keyboard())
+            else:
+                handle_link_menu(chat_id, message_id, key)
+    elif cb_data.startswith("link_set:"):
+        if admin.is_owner(chat_id):
+            key = cb_data.split(":", 1)[1]
+            handle_link_set_await(chat_id, message_id, key)
+    elif cb_data.startswith("link_clear:"):
+        if admin.is_owner(chat_id):
+            key = cb_data.split(":", 1)[1]
+            config.save_settings({key: ""})
+            send_message(chat_id, lang.TXT["link_cleared"].format(label=lang.link_label(key)),
+                         back_menu_keyboard())
+            handle_link_menu(chat_id, message_id, key)
+
+
+def handle_link_menu(chat_id, message_id, link_key):
+    """Owner-only: show a manage menu for a link setting (website/support/channel).
+
+    Non-owner callers are not expected here (guard in handle_callback). The
+    menu lets the owner open the current link, set/change it, or clear it.
+    link_key is one of WEBSITE_URL / SUPPORT_URL / CHANNEL_LINK.
+    """
+    label = lang.link_label(link_key)
+    value = getattr(config, link_key, "") or ""
+    text = lang.TXT["link_menu_title"].format(label=label, value=value) if value \
+        else lang.TXT["link_menu_none"].format(label=label)
+    rows = []
+    if value:
+        rows.append([{"text": lang.BTN["link_open"], "callback_data": f"link_open:{link_key}"}])
+    rows.append([{"text": lang.BTN["link_set"], "callback_data": f"link_set:{link_key}"}])
+    if value:
+        rows.append([{"text": lang.BTN["link_clear"], "callback_data": f"link_clear:{link_key}"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    kb = {"inline_keyboard": rows}
+    if message_id is not None:
+        return edit_message(chat_id, message_id, text, kb)
+    return send_message(chat_id, text, kb)
+
+
+def handle_link_set_await(chat_id, message_id, link_key):
+    """Ask the owner to send the link text for a setting, then await input."""
+    _save_wizard_state(chat_id, {"setting_await": link_key})
+    label = lang.link_label(link_key)
+    return send_message(chat_id, lang.TXT["link_await_input"].format(label=label), back_menu_keyboard())
 
 
 def handle_admin_command(chat_id, command):
@@ -1338,7 +1397,19 @@ def handle_command(chat_id, username, command):
     elif command == "/help":
         handle_help(chat_id)
     elif not command.startswith("/"):
-        # Free text. Priority 1: the owner is mid add-product wizard.
+        # Free text. Priority 1: the owner is setting a link (website/support/channel).
+        if admin.is_owner(chat_id):
+            wiz = _load_wizard().get(str(chat_id), {})
+            if wiz.get("setting_await"):
+                key = wiz["setting_await"]
+                value = command.strip()
+                config.save_settings({key: value})
+                _save_wizard_state(chat_id, None)  # clear the await state
+                send_message(chat_id, lang.TXT["link_saved"].format(
+                    label=lang.link_label(key), value=value), back_menu_keyboard())
+                handle_link_menu(chat_id, None, key)
+                return
+        # Priority 2: the owner is mid add-product wizard.
         if admin.is_owner(chat_id) and _load_wizard().get(str(chat_id), {}).get("active"):
             text, done = _advance_wizard(chat_id, command)
             if done:
