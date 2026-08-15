@@ -332,7 +332,15 @@ def get_updates(offset):
             result = json.loads(resp.read().decode()).get("result", [])
             _dt = time.time() - _t0
             if result:
-                print(f"[updates] got {len(result)} in {_dt:.1f}s: " + ",".join(str(u.get('update_id')) for u in result))
+                detail = []
+                for u in result:
+                    cq = u.get('callback_query')
+                    if cq:
+                        detail.append(f"{u.get('update_id')}=cb:{cq.get('data','')[:25]}")
+                    else:
+                        m = u.get('message', {})
+                        detail.append(f"{u.get('update_id')}=msg:{m.get('text','(none)')[:20]}")
+                print(f"[updates] got {len(result)} in {_dt:.1f}s: " + ', '.join(detail))
             return result
     except Exception as e:
         print(f"getUpdates error after {time.time()-_t0:.1f}s:", e)
