@@ -158,7 +158,7 @@ def format_invoice_instructions(invoice, product=None):
         f"🧾 Payment page ready!\n\n"
         f"📦 {name}\n"
         f"💰 Price: ${price:.2f}\n\n"
-        f"🔗 [Open payment page]({url})\n\n"
+        f"🔗 Open payment page: {url}\n\n"
         "After paying, tap the button below to confirm and receive your product."
     )
 

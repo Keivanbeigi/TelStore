@@ -754,7 +754,7 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
             "payment_id": invoice.get("id"),
             "product_id": product.get("id"),
         })
-        return edit_message(chat_id, message_id, text, pay_check_keyboard(invoice_url), parse_mode="Markdown")
+        return edit_message(chat_id, message_id, text, pay_check_keyboard(invoice_url))
     # Fallback: old-style payment (address/amount)
     payment = nowpayments.create_payment(
         price_usd=price,
