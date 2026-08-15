@@ -1085,15 +1085,10 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data.startswith("prod_"):
         # Select a product -> show its payment page + network keyboard.
         handle_product(chat_id, message_id, cb_data[len("prod_"):])
-    elif cb_data.startswith("pay_"):
-        # Network selected for a product. Format: pay_bsc / pay_bsc:prod_id
-        payload = cb_data[len("pay_"):]
-        if ":" in payload:
-            network_name, product_id = payload.split(":", 1)
-        else:
-            network_name, product_id = payload, None
-        handle_pay_network(chat_id, message_id, network_name, product_id)
     elif cb_data == "pay_nowpayments" or cb_data.startswith("pay_nowpayments:"):
+        # MUST be checked BEFORE the generic "pay_" branch below, otherwise
+        # "pay_nowpayments:<id>" is caught by startswith("pay_") and routed to
+        # handle_pay_network (manual network), which shows "wallet missing".
         product_id = None
         if ":" in cb_data:
             product_id = cb_data.split(":", 1)[1]
@@ -1103,6 +1098,14 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         if ":" in cb_data:
             product_id = cb_data.split(":", 1)[1]
         handle_coingate(chat_id, message_id, product_id)
+    elif cb_data.startswith("pay_"):
+        # Network selected for a product. Format: pay_bsc / pay_bsc:prod_id
+        payload = cb_data[len("pay_"):]
+        if ":" in payload:
+            network_name, product_id = payload.split(":", 1)
+        else:
+            network_name, product_id = payload, None
+        handle_pay_network(chat_id, message_id, network_name, product_id)
     elif cb_data == "check_payment":
         handle_check_payment(chat_id, username, message_id)
     elif cb_data == "pay_done":
