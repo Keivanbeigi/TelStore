@@ -625,18 +625,24 @@ def show_main_menu(chat_id, message_id=None):
 
 
 def handle_subscribe(chat_id, username, data):
-    if find_subscriber(data, chat_id):
-        return send_message(chat_id, lang.TXT["already_subscribed"], back_menu_keyboard())
-    data["subscribers"].append({
-        "chat_id": str(chat_id),
-        "username": username or "",
-        "plan": "free",
-        "subscribed_at": datetime.datetime.now().isoformat(),
-        "premium_until": None,
-        "payment_method": None,
-    })
-    save_subscribers(data)
-    return send_message(chat_id, lang.TXT["free_activated"], back_menu_keyboard())
+    """Subscription: join the owner's channel (or contact support if unconfigured)."""
+    # Always record the membership so the account page shows a join date.
+    if not find_subscriber(data, chat_id):
+        data["subscribers"].append({
+            "chat_id": str(chat_id),
+            "username": username or "",
+            "plan": "free",
+            "subscribed_at": datetime.datetime.now().isoformat(),
+            "premium_until": None,
+            "payment_method": None,
+        })
+        save_subscribers(data)
+    # Send the owner's channel invite link, if one is configured.
+    if config.CHANNEL_LINK:
+        return send_message(chat_id, lang.TXT["subscription_join"].format(link=config.CHANNEL_LINK), back_menu_keyboard())
+    if config.SUPPORT_URL:
+        return send_message(chat_id, lang.TXT["subscription_contact_support"].format(link=config.SUPPORT_URL), back_menu_keyboard())
+    return send_message(chat_id, lang.TXT["subscription_not_ready"], back_menu_keyboard())
 
 
 def handle_shop(chat_id, message_id=None):
@@ -706,7 +712,19 @@ def handle_pay_network(chat_id, message_id, network_name, product_id=None):
 
 
 def handle_pay_done(chat_id, message_id):
-    return edit_message(chat_id, message_id, lang.TXT["pay_howto"], back_menu_keyboard())
+    """After the customer taps 'I paid' for a MANUAL crypto payment, ask them
+    to send the transaction hash (TXID). NOWPayments uses check_payment instead
+    so it never enters this free-text flow."""
+    # Determine payment type from pending.
+    pending = _load_pending().get(str(chat_id))
+    is_np = bool(pending) and isinstance(pending, dict) and pending.get("payment_id")
+    if is_np:
+        # NOWPayments: no free-text TXID needed — ask to check status.
+        return edit_message(chat_id, message_id, lang.TXT["np_check_status"], pay_check_keyboard())
+    # Manual crypto payment -> ask for the transaction hash.
+    _save_pending(chat_id, {"action": "await_txid", "product_id": pending.get("product_id") if isinstance(pending, dict) else None})
+    return edit_message(chat_id, message_id, lang.TXT["send_txid"] + "\n\n" + lang.TXT["send_txid_hint"], back_menu_keyboard())
+
 
 
 def handle_nowpayments(chat_id, message_id, product_id=None):
@@ -906,21 +924,25 @@ def poll_pending_payments():
 
 
 def handle_status(chat_id, message_id=None):
-    sub = find_subscriber(load_subscribers(), chat_id)
+    """Account page: membership date, ID, transaction count, total payments by coin."""
+    data = load_subscribers()
+    sub = find_subscriber(data, chat_id)
     if not sub:
         text = lang.TXT["not_subscribed"]
     else:
-        # Show which product they have access to, if known.
-        product_name = ""
-        if sub.get("product_id"):
-            p = config.get_product(sub["product_id"])
-            product_name = (p or {}).get("name", sub["product_id"])
-        plan = lang.TXT["plan_premium"] if sub.get("plan") == "premium" else lang.TXT["plan_free"]
-        text = lang.TXT["status"].format(
-            plan=(plan + (f" ({product_name})" if product_name else "")),
-            since=sub.get("subscribed_at", "—")[:10],
-            until=sub.get("premium_until", "—"),
-        )
+        uid = chat_id
+        since = sub.get("subscribed_at", "—")[:10]
+        # Compute transaction stats from stored tx history.
+        txns = sub.get("transactions", [])
+        txn_count = len(txns)
+        # Sum total payments by currency.
+        by_coin = {}
+        for t in txns:
+            cur = (t.get("currency") or "USDT").upper()
+            amt = float(t.get("amount") or 0)
+            by_coin[cur] = by_coin.get(cur, 0) + amt
+        payments_lines = "\n".join(f"- {cur}: {amt} {cur}" for cur, amt in by_coin.items()) if by_coin else "- No payments yet"
+        text = lang.TXT["account_title"].format(since=since, uid=uid, txn_count=txn_count, payments=payments_lines)
     if message_id is not None:
         return edit_message(chat_id, message_id, text, back_menu_keyboard())
     return send_message(chat_id, text, back_menu_keyboard())
@@ -1045,6 +1067,18 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
     elif cb_data == "pay_done":
         handle_pay_done(chat_id, message_id)
     elif cb_data == "status":
+        handle_status(chat_id, message_id)
+    elif cb_data == "website":
+        if config.WEBSITE_URL:
+            edit_message(chat_id, message_id, lang.TXT["website_open"].format(url=config.WEBSITE_URL))
+        else:
+            edit_message(chat_id, message_id, lang.TXT["website_missing"], back_menu_keyboard())
+    elif cb_data == "support":
+        if config.SUPPORT_URL:
+            edit_message(chat_id, message_id, lang.TXT["support_open"].format(url=config.SUPPORT_URL))
+        else:
+            edit_message(chat_id, message_id, lang.TXT["support_missing"], back_menu_keyboard())
+    elif cb_data == "account":
         handle_status(chat_id, message_id)
     elif cb_data == "help":
         handle_help(chat_id, message_id)

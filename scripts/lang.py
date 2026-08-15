@@ -232,6 +232,19 @@ TXT = {
     "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
     "delivery_set": "✅ Delivery text set for {name}.",
     "err_format": "❌ {msg}",
+    "send_txid": "Please send your transaction ID (TXID):",
+    "send_txid_hint": "Example: 0x4f2a8b... or f9a2...\n\nSend the hash from your wallet/explorer.",
+    "txt_received": "✅ TXID received! Our team will verify it shortly. For manual crypto payments you will be granted access after confirmation.",
+    "account_title": "👤 Your Account Information\n\n📅 Membership date: {since}\n🆔 Your ID: {uid}\n\n📊 Your transactions:\n\n📈 Total transactions: {txn_count}\n\n💰 Total payments:\n{payments}\n",
+
+    "subscription_join": "🔔 You joined! Join the official channel here:\n{link}\n\nIf the link does not open, contact support.",
+        "subscription_contact_support": "🔔 The channel link is not set yet. Contact support to get access:\n{link}",
+        "subscription_not_ready": "🔔 Subscription channel is not configured yet. Please check back later.",
+        "website_open": "🌐 Official website:\n{url}",
+        "website_missing": "🌐 The owner has not set a website yet.",
+        "support_open": "🎧 Contact support:\n{url}",
+        "support_missing": "🎧 The owner has not set a support contact yet.",
+    "np_check_status": "✅ Payment started with NOWPayments. Tap the button below to check it has been confirmed - no transaction hash is needed here.",
     "sale_notification": "🛎️ NEW SALE!\n\n🛒 Product: {name}\n💰 Price: ${price:.2f}\n👤 Buyer: {user}\n💳 Method: {method}\n🕐 {time}",
 }
 
@@ -241,9 +254,12 @@ TXT = {
 # ---------------------------------------------------------------------------
 BTN = {
     "shop": "🛒 Shop / Products",
-    "free_sub": "🆓 Free Subscription",
+    "free_sub": "🔔 Subscription",
     "status": "📊 My Status",
     "help": "❓ Help",
+    "website": "🌐 Official Website",
+    "support": "🎧 Support",
+    "account": "👤 My Account",
     "back_menu": "◀️ Back to menu",
     "back_shop": "◀️ Back to shop",
     "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",

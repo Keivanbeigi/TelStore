@@ -127,6 +127,10 @@ CRYPTO_NETWORKS = [
 CHANNEL_ID = _load_env_str("CHANNEL_ID", "").strip()        # e.g. -1001234567890
 CHANNEL_LINK = _load_env_str("CHANNEL_LINK", "").strip()    # optional public link
 
+# Owner website & support contact (shown to customers)
+WEBSITE_URL = _load_env_str("WEBSITE_URL", "").strip()       # e.g. https://site.com
+SUPPORT_URL = _load_env_str("SUPPORT_URL", "").strip()      # e.g. https://t.me/owner  (DM link)
+
 
 # ------------------------------------------------------------
 #  Behaviour
@@ -244,4 +248,7 @@ MENU_ITEMS = {
     "sub_free":      {"btn": "sub_free",      "label_key": "free_sub"},
     "status":        {"btn": "status",        "label_key": "status"},
     "help":          {"btn": "help",          "label_key": "help"},
+    "website":       {"btn": "website",       "label_key": "website"},
+    "support":       {"btn": "support",       "label_key": "support"},
+    "account":       {"btn": "account",       "label_key": "account"},
 }
