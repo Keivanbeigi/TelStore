@@ -747,7 +747,9 @@ def handle_pay_network(chat_id, message_id, network_name, product_id=None):
     text = format_crypto_payment(product, network)
     # Remember which product is being paid so "I paid" + tx-hash delivers it.
     _save_pending(chat_id, {"action": "pay", "product_id": product.get("id")})
-    return edit_message(chat_id, message_id, text, pay_done_keyboard(), parse_mode="Markdown")
+    # NO parse_mode here: the text contains emoji and a wallet address which
+    # Telegram's legacy Markdown rejects (HTTP 400). Plain text renders fine.
+    return edit_message(chat_id, message_id, text, pay_done_keyboard())
 
 
 def handle_pay_done(chat_id, message_id):
