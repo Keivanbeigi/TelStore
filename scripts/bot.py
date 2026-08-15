@@ -95,7 +95,7 @@ def _save_pending(chat_id, value):
 #  may skip any field by sending an empty/blank reply — that field is simply
 #  not set (or gets a sensible default). Field values fail validation, the
 #  step is repeated; on "cancel" the whole thing is abandoned.
-_WIZARD_STEPS = ["category", "name", "price", "days", "discount"]
+_WIZARD_STEPS = ["category", "name", "model", "price", "days", "discount"]
 
 def _load_wizard():
     try:
@@ -126,6 +126,8 @@ def wizard_step_message(chat_id=None):
         return lang.TXT["wiz_category"], True
     if step == "name":
         return lang.TXT["wiz_name"], True
+    if step == "model":
+        return lang.TXT["wiz_model"], True
     if step == "price":
         return lang.TXT["wiz_price"], True
     if step == "days":
@@ -170,13 +172,13 @@ def _finish_wizard_product(chat_id):
     product = {
         "id": new_id, "name": name, "price_usd": price,
         "days": days if days is not None else config.PREMIUM_DAYS,
-        "kind": category,
+        "kind": d.get("model", ""),
         "category": category,
         "description": f"{name} — access to {name}.",
     }
     if discount:
         product["discount"] = discount
-    if category == "digital":
+    if d.get("model", "") == "digital":
         product["deliver"] = ""
     config.PRODUCTS.append(product)
     config.save_products()
@@ -199,14 +201,13 @@ def _advance_wizard(chat_id, value):
 
     if step == "category":
         if val:
-            k = val.lower()
-            if k not in ("channel", "digital"):
-                return lang.TXT["wiz_invalid_kind"].format(hint=val), False
-            d["kind"] = k
-            d["category"] = k
+            d["category"] = val.strip()
     elif step == "name":
         if val:
             d["name"] = val
+    elif step == "model":
+        if val:
+            d["model"] = val.strip()
     elif step == "price":
         if val:
             try:

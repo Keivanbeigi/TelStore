@@ -192,14 +192,18 @@ TXT = {
                      "What category does this product belong to?\n"
                      "Examples: channel, digital, course, tool, ebook, ...\n"
                      "This groups similar products together in the shop."),
-    "wiz_name": ("📝 Step 2/5 — name\n\n"
+    "wiz_name": ("📝 Step 2/6 — name\n\n"
                  "Send the product NAME. This field is required."),
-    "wiz_price": ("💰 Step 3/5 — price\n\n"
+    "wiz_model": ("🏷️ Step 3/6 — model (optional)\n\n"
+                  "Send a model, variant, or type for this product.\n"
+                  "Examples: Men, Women, iPhone 17 Pro Max, Basic, Pro, ...\n"
+                  "Leave empty / tap Skip for no model."),
+    "wiz_price": ("💰 Step 4/6 — price\n\n"
                   "Send the PRICE in USD (e.g. 29.99). This field is required."),
-    "wiz_days": ("⏳ Step 4/5 — access length (optional)\n\n"
+    "wiz_days": ("⏳ Step 5/6 — access length (optional)\n\n"
                  "Send the number of DAYS, or 0 for lifetime.\n"
                  "Leave empty / tap Skip for the default (30 days)."),
-    "wiz_discount": ("🏷️ Step 5/5 — discount % (optional)\n\n"
+    "wiz_discount": ("🏷️ Step 6/6 — discount % (optional)\n\n"
                      "Send a percent off the price, e.g. 20 for 20% off.\n"
                      "Leave empty / tap Skip for no discount."),
     "wiz_invalid_price": "❌ \"{hint}\" is not a valid price. Send a number like 29.99.",
