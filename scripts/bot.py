@@ -290,7 +290,9 @@ def send_message(chat_id, text, reply_markup=None, parse_mode=None):
         params["reply_markup"] = json.dumps(reply_markup)
     if parse_mode:
         params["parse_mode"] = parse_mode
-    return api_call("sendMessage", **params)
+    res = api_call("sendMessage", **params)
+    print(f"[send] -> {chat_id}: {text[:50]} | ok={bool(res)}")
+    return res
 
 
 def edit_message(chat_id, message_id, text, reply_markup=None, parse_mode=None):
