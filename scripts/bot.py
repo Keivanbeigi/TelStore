@@ -26,6 +26,7 @@ Runs:
 import json
 import os
 import sys
+import threading
 import time
 import datetime
 import urllib.request
@@ -312,9 +313,11 @@ def answer_callback(callback_query_id, text=None):
 
 
 def get_updates(offset):
+    # timeout=25 long-poll (efficient); urlopen timeout must be > poll timeout
+    # so an idle poll returns empty without erroring. Use 28s (slightly above 25).
     url = f"https://api.telegram.org/bot{config.TOKEN}/getUpdates?timeout=25&offset={offset}"
     try:
-        with urllib.request.urlopen(url, timeout=30) as resp:
+        with urllib.request.urlopen(url, timeout=28) as resp:
             return json.loads(resp.read().decode()).get("result", [])
     except Exception as e:
         print("getUpdates error:", e)
@@ -1220,6 +1223,18 @@ def handle_command(chat_id, username, command):
 
 # ---------------------------------------------------------------------------
 # Main polling loop
+
+def _payment_poller_loop():
+    """Run payment polling in a background thread so it never blocks message
+    handling (a slow NOWPayments call would otherwise freeze the bot)."""
+    while True:
+        try:
+            if nowpayments.is_configured():
+                poll_pending_payments()
+        except Exception as e:
+            print("payment-poll error:", e)
+        time.sleep(8)  # poll every 8s in the background
+
 # ---------------------------------------------------------------------------
 _last_sweep = 0.0
 _last_payment_poll = 0.0
@@ -1236,6 +1251,10 @@ def main():
         print(f"   Auto-delivery: checking pending NOWPayments every {_PAYMENT_POLL_INTERVAL:.0f}s")
     else:
         print("   Auto-delivery: OFF (NOWPayments not configured)")
+    if nowpayments.is_configured():
+        t = threading.Thread(target=_payment_poller_loop, daemon=True)
+        t.start()
+        print("   Payment poller running in background thread")
 
     # Drain stale updates so we don't reply to expired callbacks (fixes 400).
     offset = 0
@@ -1278,16 +1297,7 @@ def main():
         except Exception as e:
             print("sweep error:", e)
 
-        # Auto-deliver confirmed payments (background "IPN"-like check).
-        try:
-            if nowpayments.is_configured() and \
-               time.time() - _last_payment_poll >= _PAYMENT_POLL_INTERVAL:
-                poll_pending_payments()
-                _last_payment_poll = time.time()
-        except Exception as e:
-            print("payment-poll error:", e)
         time.sleep(0.3)
-
 
 if __name__ == "__main__":
     main()

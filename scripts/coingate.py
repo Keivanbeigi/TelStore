@@ -55,7 +55,7 @@ def _request(method, path, payload=None):
     data = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(url, data=data, headers=_headers(), method=method)
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=8) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         try:

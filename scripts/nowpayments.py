@@ -56,7 +56,7 @@ def _post(path, payload):
     req.add_header("User-Agent", _UA)
     req.add_header("x-api-key", API_KEY)
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=8) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         try:
@@ -75,7 +75,7 @@ def _get(path, params=None):
     req.add_header("User-Agent", _UA)
     req.add_header("x-api-key", API_KEY)
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=8) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         try:
