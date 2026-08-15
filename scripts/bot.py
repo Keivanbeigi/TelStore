@@ -33,6 +33,18 @@ import urllib.request
 import urllib.parse
 
 import config
+# Force IPv4 for all outbound HTTP(S) to Telegram. This server's IPv6 route
+# to Telegram is slow/unstable; using IPv4 makes polling reliable and fast.
+import socket as _socket
+_orig_getaddrinfo = _socket.getaddrinfo
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0, **kw):
+    # Force IPv4 for all outbound connections (family=AF_INET).
+    if family == _socket.AF_UNSPEC:
+        family = _socket.AF_INET
+    return _orig_getaddrinfo(host, port, family, type, proto, flags, **kw)
+_socket.getaddrinfo = _ipv4_getaddrinfo
+
+
 import lang
 import nowpayments   # crypto payment gateway (optional)
 import coingate      # web-payment gateway, optional 2nd option
@@ -313,12 +325,13 @@ def answer_callback(callback_query_id, text=None):
 
 
 def get_updates(offset):
-    # timeout=25 long-poll (efficient); urlopen timeout must be > poll timeout
-    # so an idle poll returns empty without erroring. Use 28s (slightly above 25).
     url = f"https://api.telegram.org/bot{config.TOKEN}/getUpdates?timeout=25&offset={offset}"
     try:
         with urllib.request.urlopen(url, timeout=28) as resp:
-            return json.loads(resp.read().decode()).get("result", [])
+            result = json.loads(resp.read().decode()).get("result", [])
+            if result:
+                print(f"[updates] got {len(result)}: " + ",".join(str(u.get('update_id')) for u in result))
+            return result
     except Exception as e:
         print("getUpdates error:", e)
         return []
