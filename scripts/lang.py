@@ -247,6 +247,7 @@ BTN = {
     "back_menu": "◀️ Back to menu",
     "back_shop": "◀️ Back to shop",
     "pay_nowpayments": "💳 Pay with Card / Crypto (NOWPayments)",
+    "open_payment": "🔗 Open payment page",
     "pay_coingate": "🌐 Pay online (web page)",
     "pay_done": "✅ I paid",
     "check_payment": "🔎 Check payment status",

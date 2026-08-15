@@ -595,13 +595,15 @@ def back_menu_keyboard():
     }
 
 
-def pay_check_keyboard():
-    return {
-        "inline_keyboard": [
-            [{"text": lang.BTN["check_payment"], "callback_data": "check_payment"}],
-            [{"text": lang.BTN["back_menu"], "callback_data": "menu"}],
-        ]
-    }
+def pay_check_keyboard(invoice_url=None):
+    """Keyboard after an invoice is created. If we have a payment page URL,
+    show a button that opens it directly (inline URL), plus Check status."""
+    rows = []
+    if invoice_url:
+        rows.append([{"text": lang.BTN["open_payment"], "url": invoice_url}])
+    rows.append([{"text": lang.BTN["check_payment"], "callback_data": "check_payment"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
 
 
 # ---------------------------------------------------------------------------
@@ -726,7 +728,7 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
             "payment_id": invoice.get("id"),
             "product_id": product.get("id"),
         })
-        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
+        return edit_message(chat_id, message_id, text, pay_check_keyboard(invoice_url), parse_mode="Markdown")
     # Fallback: old-style payment (address/amount)
     payment = nowpayments.create_payment(
         price_usd=price,
