@@ -688,6 +688,24 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
         return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
 
     price = config.effective_price(product)
+    # Create a hosted invoice (payment page) so the customer gets a clickable
+    # link to pay with card or crypto — no manual address/amount entry needed.
+    invoice = nowpayments.create_invoice(
+        price_usd=price,
+        pay_currency=config.NOWPAYMENTS_DEFAULT_CURRENCY,
+        order_id=f"cq-{chat_id}-{int(time.time())}",
+        description=f"{product['name']} - {product.get('days', 0)} days",
+    )
+    invoice_url = invoice.get("invoice_url") if isinstance(invoice, dict) else None
+    if invoice_url:
+        # Customer opens the link to pay, then clicks "I paid" back here.
+        text = nowpayments.format_invoice_instructions(invoice, product)
+        _save_pending(chat_id, {
+            "payment_id": invoice.get("id"),
+            "product_id": product.get("id"),
+        })
+        return edit_message(chat_id, message_id, text, pay_check_keyboard(), parse_mode="Markdown")
+    # Fallback: old-style payment (address/amount)
     payment = nowpayments.create_payment(
         price_usd=price,
         pay_currency=config.NOWPAYMENTS_DEFAULT_CURRENCY,
@@ -696,7 +714,6 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
     )
     text = nowpayments.format_payment_instructions(payment)
     if "Invoice" in text:
-        # Store pending + which product it's for.
         _save_pending(chat_id, {
             "payment_id": payment.get("payment_id"),
             "product_id": product.get("id"),

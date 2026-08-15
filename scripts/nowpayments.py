@@ -99,7 +99,7 @@ def validate_price(price_usd):
 
 def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="Crypto Quest Premium"):
     """
-    Create a crypto payment invoice.
+    Create a crypto payment invoice (standard API).
     Returns dict with 'payment_id', 'pay_address', 'pay_amount', 'payment_status',
     or an error dict (including a friendly message for too-low amounts).
     """
@@ -117,6 +117,27 @@ def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, descr
         payload["order_id"] = order_id
     return _post("/payment", payload)
 
+
+def create_invoice(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="Crypto Quest Premium"):
+    """
+    Create a hosted payment page (invoice). The customer opens the invoice_url
+    in their browser to pay with card or crypto — no manual address/amount.
+    Returns dict with 'invoice_url', 'id', 'token_id' or an error dict.
+    """
+    err = validate_price(price_usd)
+    if err:
+        return {"ok": False, "status": False, "code": "AMOUNT_MINIMAL_ERROR",
+                "message": err}
+    payload = {
+        "price_amount": float(price_usd),
+        "price_currency": "usd",
+        "pay_currency": pay_currency,
+        "order_description": description,
+    }
+    if order_id:
+        payload["order_id"] = order_id
+    return _post("/invoice", payload)
+
 def get_payment_status(payment_id):
     """Check a payment's status."""
     return _get(f"/payment/{payment_id}")
@@ -124,6 +145,23 @@ def get_payment_status(payment_id):
 def get_supported_currencies():
     """List supported pay currencies (cached per call)."""
     return _get("/currencies")
+
+def format_invoice_instructions(invoice, product=None):
+    """
+    Build a customer-facing message with a clickable payment link.
+    The customer opens the link in their browser to pay with card or crypto.
+    """
+    url = invoice.get("invoice_url", "")
+    name = (product or {}).get("name", "Product")
+    price = (product or {}).get("price_usd", 0)
+    return (
+        f"🧾 Payment page ready!\n\n"
+        f"📦 {name}\n"
+        f"💰 Price: ${price:.2f}\n\n"
+        f"🔗 [Open payment page]({url})\n\n"
+        "After paying, tap the button below to confirm and receive your product."
+    )
+
 
 def format_payment_instructions(payment):
     """
