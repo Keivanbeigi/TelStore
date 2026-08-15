@@ -136,7 +136,7 @@ def wizard_step_message(chat_id=None):
 
 def start_add_product_wizard(chat_id, message_id=None):
     """Begin the stepped add-product flow: ask for the product name."""
-    _save_wizard_state(chat_id, {"active": True, "step": "name", "data": {}})
+    _save_wizard_state(chat_id, {"active": True, "step": "category", "data": {}})
     text, _ = wizard_step_message(chat_id)
     if message_id is not None:
         return edit_message(chat_id, message_id, text, wizard_keyboard())
@@ -197,7 +197,14 @@ def _advance_wizard(chat_id, value):
     d = st.get("data", {})
     val = value.strip()
 
-    if step == "name":
+    if step == "category":
+        if val:
+            k = val.lower()
+            if k not in ("channel", "digital"):
+                return lang.TXT["wiz_invalid_kind"].format(hint=val), False
+            d["kind"] = k
+            d["category"] = k
+    elif step == "name":
         if val:
             d["name"] = val
     elif step == "price":
@@ -218,12 +225,6 @@ def _advance_wizard(chat_id, value):
                 d["days"] = max(int(float(val)), 0)
             except ValueError:
                 return lang.TXT["wiz_invalid_days"].format(hint=val), False
-    elif step == "kind":
-        if val:
-            k = val.lower()
-            if k not in ("channel", "digital"):
-                return lang.TXT["wiz_invalid_kind"].format(hint=val), False
-            d["kind"] = k
     elif step == "discount":
         if val:
             try:
