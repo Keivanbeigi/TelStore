@@ -38,12 +38,12 @@ TXT = {
     "product_page": (
         "{emoji} {name}\n\n"
         "{description}\n\n"
-        "💰 Price: ${price:.2f}\n"
-        "{discount_note}"
+        "{price_line}"
         "⏳ Access: {duration}\n\n"
         "Select a payment network:"
     ),
-    "discount_note_off": "🏷️ {discount:.0f}% OFF — was ${orig:.2f}\n",
+    "price_normal": "💰 Price: ${price:.2f}\n",
+    "price_discounted": "💰 Price: ${orig:.2f} ({discount:.0f}% off) = ${price:.2f}\n",
     "duration_days": "{days} days",
     "duration_lifetime": "Lifetime",
     "product_sold_out": "⚠️ This product is not available right now.",
@@ -188,23 +188,22 @@ TXT = {
     "prod_need_desc": "For a digital product, set its delivery text with /set_deliver <id> <text>.",
 
     # --- add-product wizard (step by step) ---
-    "wiz_name": ("📝 New product — step 1/5\n\n"
-                 "Send the product NAME (or tap Skip if you'd rather not — "
-                 "but a name is needed to finish)."),
-    "wiz_price": ("💰 Step 2/5 — price\n\n"
+    "wiz_category": ("📂 Step 1/5 — category\n\n"
+                     "What category does this product belong to?\n"
+                     "Examples: channel, digital, course, tool, ebook, ...\n"
+                     "This groups similar products together in the shop."),
+    "wiz_name": ("📝 Step 2/5 — name\n\n"
+                 "Send the product NAME. This field is required."),
+    "wiz_price": ("💰 Step 3/5 — price\n\n"
                   "Send the PRICE in USD (e.g. 29.99). This field is required."),
-    "wiz_days": ("⏳ Step 3/5 — access length (optional)\n\n"
+    "wiz_days": ("⏳ Step 4/5 — access length (optional)\n\n"
                  "Send the number of DAYS, or 0 for lifetime.\n"
                  "Leave empty / tap Skip for the default (30 days)."),
-    "wiz_kind": ("🧩 Step 4/5 — type (optional)\n\n"
-                 "Send 'channel' (VIP access) or 'digital' (sends a link/text).\n"
-                 "Leave empty / tap Skip for the default (channel)."),
     "wiz_discount": ("🏷️ Step 5/5 — discount % (optional)\n\n"
                      "Send a percent off the price, e.g. 20 for 20% off.\n"
                      "Leave empty / tap Skip for no discount."),
     "wiz_invalid_price": "❌ \"{hint}\" is not a valid price. Send a number like 29.99.",
     "wiz_invalid_days": "❌ \"{hint}\" is not a valid day count. Send 0, 30, 365, ...",
-    "wiz_invalid_kind": "❌ \"{hint}\" is not valid. Send 'channel' or 'digital'.",
     "wiz_invalid_discount": "❌ \"{hint}\" is not a valid discount. Send a percent 0-99.",
     "wiz_incomplete": "⚠️ Product not added — missing a name or price. Start again with Add Product.",
     "wizard_cancelled": "Add product cancelled.",
@@ -257,6 +256,7 @@ BTN = {
     "owner_confirm_no": "❌ Cancel",
     "wizard_cancel": "❌ Cancel",
     "wizard_skip": "⏭️ Skip",
+    "wizard_back": "◀️ Back",
     "back": "◀️ Back",
 }
 

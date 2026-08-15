@@ -95,7 +95,7 @@ def _save_pending(chat_id, value):
 #  may skip any field by sending an empty/blank reply — that field is simply
 #  not set (or gets a sensible default). Field values fail validation, the
 #  step is repeated; on "cancel" the whole thing is abandoned.
-_WIZARD_STEPS = ["name", "price", "days", "kind", "discount"]
+_WIZARD_STEPS = ["category", "name", "price", "days", "discount"]
 
 def _load_wizard():
     try:
@@ -122,14 +122,14 @@ def wizard_step_message(chat_id=None):
     if not st or not st.get("active"):
         return None, False
     step = st.get("step")
+    if step == "category":
+        return lang.TXT["wiz_category"], True
     if step == "name":
         return lang.TXT["wiz_name"], True
     if step == "price":
         return lang.TXT["wiz_price"], True
     if step == "days":
         return lang.TXT["wiz_days"], True
-    if step == "kind":
-        return lang.TXT["wiz_kind"], True
     if step == "discount":
         return lang.TXT["wiz_discount"], True
     return None, False
@@ -145,8 +145,9 @@ def start_add_product_wizard(chat_id, message_id=None):
 def wizard_keyboard():
     return {
         "inline_keyboard": [
-            [{"text": lang.BTN["wizard_cancel"], "callback_data": "wizard_cancel"},
-             {"text": lang.BTN["wizard_skip"], "callback_data": "wizard_skip"}],
+            [{"text": lang.BTN["wizard_back"], "callback_data": "wizard_back"},
+             {"text": lang.BTN["wizard_skip"], "callback_data": "wizard_skip"},
+             {"text": lang.BTN["wizard_cancel"], "callback_data": "wizard_cancel"}],
         ]
     }
 
@@ -164,19 +165,18 @@ def _finish_wizard_product(chat_id):
     while config.get_product(new_id):
         new_id = f"{pid}_{n}"; n += 1
     days = d.get("days")
-    kind = (d.get("kind") or "channel").lower()
-    if kind not in ("channel", "digital"):
-        kind = "channel"
+    category = (d.get("category") or "channel").lower()
     discount = d.get("discount", 0) or 0
     product = {
         "id": new_id, "name": name, "price_usd": price,
         "days": days if days is not None else config.PREMIUM_DAYS,
-        "kind": kind,
+        "kind": category,
+        "category": category,
         "description": f"{name} — access to {name}.",
     }
     if discount:
         product["discount"] = discount
-    if kind == "digital":
+    if category == "digital":
         product["deliver"] = ""
     config.PRODUCTS.append(product)
     config.save_products()
@@ -185,7 +185,7 @@ def _finish_wizard_product(chat_id):
     return send_message(
         chat_id,
         lang.TXT["prod_added"].format(name=name, price=config.effective_price(product),
-                                       days=product["days"], kind=kind, disc=disc_note),
+                                       days=product["days"], kind=category, disc=disc_note),
         owner_keyboard())
 
 def _advance_wizard(chat_id, value):
@@ -248,6 +248,22 @@ def _advance_wizard(chat_id, value):
     _save_wizard_state(chat_id, st)
     _finish_wizard_product(chat_id)
     return None, True
+
+
+def _wizard_back(chat_id):
+    """Go back one step in the add-product wizard."""
+    st = _load_wizard().get(str(chat_id))
+    if not st or not st.get("active"):
+        return None, False
+    step = st.get("step")
+    idx = _WIZARD_STEPS.index(step)
+    if idx <= 0:
+        return None, False  # already at first step
+    prev_step = _WIZARD_STEPS[idx - 1]
+    st["step"] = prev_step
+    _save_wizard_state(chat_id, st)
+    text, _ = wizard_step_message(chat_id)
+    return text, True
 
 
 # ---------------------------------------------------------------------------
@@ -463,22 +479,33 @@ def network_keyboard(product_id=None):
 
 
 def shop_keyboard():
-    """Shop keyboard: products grouped by category (kind) so the menu stays
-    clean even as the catalogue grows. Zero extra dependencies, light."""
-    rows = []
-    # Group by kind, preserving catalogue order. 'channel' and 'digital' get a
-    # header; any other kind falls under a generic header.
-    groups = {}  # kind -> [products]
+    """Shop keyboard: show category buttons first, then products per category.
+    This keeps the menu clean even as the catalogue grows into dozens of items.
+    """
+    # Collect unique categories from all products
+    cats = {}
     for p in config.PRODUCTS:
-        groups.setdefault(p.get("kind", "other"), []).append(p)
-    for kind, prods in groups.items():
-        header_key = {"channel": "cat_channel", "digital": "cat_digital"}.get(kind, "cat_other")
-        rows.append([{"text": lang.TXT[header_key], "callback_data": "noop"}])
-        for p in prods:
+        cat = p.get("category") or p.get("kind", "other")
+        if cat not in cats:
+            header_key = {"channel": "cat_channel", "digital": "cat_digital"}.get(cat, "cat_other")
+            cats[cat] = lang.TXT[header_key]
+    rows = []
+    for cat, label in cats.items():
+        rows.append([{"text": label, "callback_data": f"cat_{cat}"}])
+    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
+
+
+def category_keyboard(category):
+    """Products within a single category."""
+    rows = []
+    for p in config.PRODUCTS:
+        pcat = p.get("category") or p.get("kind", "other")
+        if pcat == category:
             rows.append([
                 {"text": lang.product_button(p), "callback_data": lang.product_callback(p)}
             ])
-    rows.append([{"text": lang.BTN["back_menu"], "callback_data": "menu"}])
+    rows.append([{"text": lang.BTN["back_shop"], "callback_data": "shop"}])
     return {"inline_keyboard": rows}
 
 
@@ -609,16 +636,17 @@ def handle_product(chat_id, message_id, product_id):
         return edit_message(chat_id, message_id, lang.TXT["product_sold_out"], shop_keyboard())
     price = config.effective_price(product)
     disc = product.get("discount", 0) or 0
-    discount_note = ""
     if disc:
-        discount_note = lang.TXT["discount_note_off"].format(
-            discount=disc, orig=float(product.get("price_usd", price)))
+        # Original (discount% off) = discounted
+        price_line = lang.TXT["price_discounted"].format(
+            orig=float(product.get("price_usd", price)), discount=disc, price=price)
+    else:
+        price_line = lang.TXT["price_normal"].format(price=price)
     text = lang.TXT["product_page"].format(
         emoji=product.get("emoji", lang.TXT["emoji_default"]),
         name=product["name"],
         description=product.get("description", ""),
-        price=price,
-        discount_note=discount_note,
+        price_line=price_line,
         duration=lang.product_duration(product),
     )
     return edit_message(chat_id, message_id, text, network_keyboard(product_id))
@@ -931,6 +959,15 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
                 edit_message(chat_id, message_id,
                              lang.TXT["prod_removed"].format(name=p["name"]),
                              owner_keyboard())
+    elif cb_data.startswith("cat_"):
+        # Category selected in shop -> show products in that category.
+        category = cb_data[len("cat_"):]
+        edit_message(chat_id, message_id, lang.TXT["shop_title"], category_keyboard(category))
+    elif cb_data == "wizard_back":
+        if admin.is_owner(chat_id):
+            text, ok = _wizard_back(chat_id)
+            if ok:
+                edit_message(chat_id, message_id, text, wizard_keyboard())
     elif cb_data == "premium":
         handle_premium(chat_id, message_id)
     elif cb_data.startswith("prod_"):
