@@ -325,15 +325,17 @@ def answer_callback(callback_query_id, text=None):
 
 
 def get_updates(offset):
+    _t0 = time.time()
     url = f"https://api.telegram.org/bot{config.TOKEN}/getUpdates?timeout=25&offset={offset}"
     try:
         with urllib.request.urlopen(url, timeout=28) as resp:
             result = json.loads(resp.read().decode()).get("result", [])
+            _dt = time.time() - _t0
             if result:
-                print(f"[updates] got {len(result)}: " + ",".join(str(u.get('update_id')) for u in result))
+                print(f"[updates] got {len(result)} in {_dt:.1f}s: " + ",".join(str(u.get('update_id')) for u in result))
             return result
     except Exception as e:
-        print("getUpdates error:", e)
+        print(f"getUpdates error after {time.time()-_t0:.1f}s:", e)
         return []
 
 
