@@ -31,6 +31,24 @@ panel.
 
 ---
 
+## 📋 Requirements (نیازمندی‌ها)
+
+Before you can install and run this bot, you need:
+
+1. **A Telegram bot token** — from [@BotFather](https://t.me/BotFather) (`/newbot`).
+2. **A crypto wallet address (EVM)** — for manual payments (BSC / Ethereum /
+   Polygon). Any `0x...` wallet (e.g. MetaMask).
+3. **A NOWPayments API key** — register at https://nowpayments.io, add a payout
+   wallet in your dashboard, and get an API key from **Settings → API Keys**.
+   This powers the automatic card/crypto checkout.
+4. **A server** — any Ubuntu/Debian VPS (or WSL for testing) with Python 3.8+
+   and internet access, running 24/7 so the bot can accept payments.
+
+> Without the NOWPayments API key and your wallet address, crypto checkout and
+> manual payments will not work — the bot shows a setup notice instead.
+
+---
+
 ## 🚀 Quick start
 
 ```bash
