@@ -5,6 +5,9 @@ Premium memberships to your audience: customers pay in crypto, get Premium, and
 are **auto-added** to your private VIP channel. Includes a full owner admin
 panel.
 
+> 👀 **New buyer?** Start with **[`BUYER_GUIDE.md`](BUYER_GUIDE.md)** — it walks
+> you through buying the bot and activating it on your server step by step.
+
 ---
 
 ## ✨ Features
