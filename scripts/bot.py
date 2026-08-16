@@ -1167,9 +1167,11 @@ def handle_link_menu(chat_id, message_id, link_key):
     link_key is one of WEBSITE_URL / SUPPORT_URL / CHANNEL_LINK.
     """
     label = lang.link_label(link_key)
+    hint = lang.link_hint(link_key)
     value = getattr(config, link_key, "") or ""
-    text = lang.TXT["link_menu_title"].format(label=label, value=value) if value \
+    head = lang.TXT["link_menu_title"].format(label=label, value=value) if value \
         else lang.TXT["link_menu_none"].format(label=label)
+    text = f"{head}\n{hint}"
     rows = []
     if value:
         rows.append([{"text": lang.BTN["link_open"], "callback_data": f"link_open:{link_key}"}])

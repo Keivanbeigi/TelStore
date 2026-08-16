@@ -327,6 +327,15 @@ def link_label(key):
     }.get(key, key)
 
 
+def link_hint(key):
+    """Short guidance shown to the owner about what link to paste for a setting."""
+    return {
+        "WEBSITE_URL": "ℹ️ Enter your store/site URL, e.g. https://myshop.com",
+        "SUPPORT_URL": "ℹ️ Enter a support link, e.g. your Telegram DM: https://t.me/yourname",
+        "CHANNEL_LINK": "ℹ️ Enter your channel invite link, e.g. https://t.me/yourchannel",
+    }.get(key, "")
+
+
 def product_button(p):
     """Short button label for a product dict from config.PRODUCTS.
     Shows the effective (post-discount) price if a discount is set."""
