@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-CoinGate payment gateway for the Crypto Quest bot
+CoinGate payment gateway for the TelStore bot
 ==================================================
 Optional 2nd payment option. Creates a CoinGate order and returns a **hosted
 web payment page** (``payment_url``) the customer opens in their browser —

@@ -10,3 +10,5 @@ menu_config.json
 settings.json
 *.log
 wizard.json
+run_bot.bat
+PROJECT_STATUS.md

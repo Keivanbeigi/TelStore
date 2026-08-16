@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Crypto Quest Telegram bot - subscription manager with inline menu
+TelStore Telegram bot - subscription manager with inline menu
 ==================================================================
 Polling bot (raw Bot API via urllib - works from Iran, no python-telegram-bot).
 Interactive inline keyboard menu that routes customers straight to crypto payment.
@@ -416,7 +416,7 @@ def grant_channel_access(chat_id):
     return suffix
 
 
-def _notify_owner_sale(chat_id, username, product, payment_method):
+def _notify_owner_sale(chat_id, username, product, payment_method, txid=""):
     """Notify the owner (OWNER_CHAT_ID) when a product is sold & delivered."""
     owner = config.OWNER_CHAT_ID
     if not owner:
@@ -429,11 +429,12 @@ def _notify_owner_sale(chat_id, username, product, payment_method):
         user=buyer,
         method=method,
         time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        txid=txid or "-",
     )
     send_message(owner, text)
 
 
-def _deliver_product(chat_id, username, product, payment_method):
+def _deliver_product(chat_id, username, product, payment_method, txid=""):
     """Deliver a paid product: grant channel access OR send digital delivery.
 
     Returns (completed_msg, ok) where ok=True means delivery succeeded.
@@ -461,7 +462,7 @@ def _deliver_product(chat_id, username, product, payment_method):
     save_subscribers(data)
 
     # Notify the owner that a sale happened (only on confirmed delivery).
-    _notify_owner_sale(chat_id, username, product, payment_method)
+    _notify_owner_sale(chat_id, username, product, payment_method, txid)
 
     if kind == "digital":
         deliver_text = product.get("deliver") or product.get("description", product["name"])
@@ -653,7 +654,7 @@ def pay_check_keyboard(invoice_url=None):
 #  Handlers
 # ---------------------------------------------------------------------------
 def show_main_menu(chat_id, message_id=None):
-    text = lang.TXT["welcome"]
+    text = lang.TXT["welcome"].format(name=lang.TXT["bot_name"])
     if message_id is not None:
         return edit_message(chat_id, message_id, text, main_menu_keyboard(chat_id))
     return send_message(chat_id, text, main_menu_keyboard(chat_id))
@@ -820,6 +821,34 @@ def handle_nowpayments(chat_id, message_id, product_id=None):
     return edit_message(chat_id, message_id, text, back_menu_keyboard())
 
 
+def _extract_txid(status):
+    """Best-effort extraction of the on-chain transaction hash from a
+    NOWPayments payment-status dict. Returns '' if none is available yet.
+
+    NOWPayments exposes the settled on-chain hash in a few places depending on
+    the payment type (token vs. coin, invoice vs. standard). We check them in
+    order and use the first hit so the owner always sees a real TXID when one
+    exists, falling back to the payment_id (invoice number) otherwise.
+    """
+    if not isinstance(status, dict):
+        return ""
+    # Most common field for token/stablecoin payments (USDT etc.)
+    for key in ("outcome_payment_hash", "transaction_id", "txid", "hash"):
+        val = status.get(key)
+        if val:
+            return str(val)
+    # Some coin payments list per-currency transactions under "payments".
+    payments = status.get("payments")
+    if isinstance(payments, list) and payments:
+        last = payments[-1]
+        if isinstance(last, dict):
+            for key in ("txid", "transaction_id", "hash"):
+                val = last.get(key)
+                if val:
+                    return str(val)
+    return ""
+
+
 def _finalize_paid_payment(chat_id, payment_id, product_id=None):
     """Deliver a confirmed NOWPayments payment and clear it from pending.
 
@@ -845,7 +874,12 @@ def _finalize_paid_payment(chat_id, payment_id, product_id=None):
     sub = find_subscriber(data, chat_id)
     username = (sub or {}).get("username", "")
 
-    msg, _ = _deliver_product(chat_id, username, product, "nowpayments")
+    # Pull the on-chain TXID from the settled payment so the owner is notified
+    # with the real transaction hash.
+    status = nowpayments.get_payment_status(payment_id)
+    txid = _extract_txid(status)
+
+    msg, _ = _deliver_product(chat_id, username, product, "nowpayments", txid)
     _save_pending(chat_id, "")  # clear pending so we never double-deliver
     if product.get("kind") == "channel":
         msg = lang.TXT["np_payment_confirmed"].format(days=days) + \

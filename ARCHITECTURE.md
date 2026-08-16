@@ -1,4 +1,4 @@
-# Crypto Quest Bot — Architecture & Developer Guide
+# TelStore Bot — Architecture & Developer Guide
 
 > How the bot is structured and how to extend it. Written for a human developer
 > (or a future AI) who picks up this codebase.

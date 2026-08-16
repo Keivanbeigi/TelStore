@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Channel membership management for the Crypto Quest bot
+Channel membership management for the TelStore bot
 =======================================================
 Manages automatic VIP channel membership for paid subscribers.
 

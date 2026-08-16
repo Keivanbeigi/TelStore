@@ -23,7 +23,7 @@ With the `scripts/coingate.py` helper (already in the bot repo):
 export COINGATE_AUTH_TOKEN="YOUR_TOKEN_HERE"
 
 # Create a payment for the customer:
-python coingate.py create --price 29 --title "Crypto Quest Bot — license" \
+python coingate.py create --price 29 --title "TelStore Bot — license" \
     --desc "Source code, English, configurable" --currency USD
 
 # It prints an ORDER ID and a PAYMENT URL.

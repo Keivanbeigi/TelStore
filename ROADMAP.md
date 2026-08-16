@@ -1,4 +1,4 @@
-# Crypto Quest Bot — VIP Channel Bot (Roadmap)
+# TelStore Bot — VIP Channel Bot (Roadmap)
 
 > A sellable Telegram bot template: paid subscriptions + auto channel membership
 > + owner admin panel. Sold to VIP channel owners on freelance sites (Fiverr,

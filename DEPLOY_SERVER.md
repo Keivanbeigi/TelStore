@@ -25,9 +25,9 @@ service**. You do **not** need your computer to stay on.
 From your **local** computer (in a new terminal, NOT the SSH session):
 
 ```bash
-# where your downloaded crypto-quest-bot folder is
-cd /path/to/crypto-quest-bot
-scp -r . root@YOUR_SERVER_IP:/root/crypto-quest-bot
+# where your downloaded telstore folder is
+cd /path/to/telstore
+scp -r . root@YOUR_SERVER_IP:/root/telstore
 ```
 
 ---
@@ -37,7 +37,7 @@ scp -r . root@YOUR_SERVER_IP:/root/crypto-quest-bot
 Back on the **SSH session**:
 
 ```bash
-cd /root/crypto-quest-bot/scripts
+cd /root/telstore/scripts
 bash deploy_server.sh
 ```
 
@@ -55,7 +55,7 @@ Run the built-in health check to confirm everything (token, NOWPayments,
 files, service) is set up correctly:
 
 ```bash
-cd /root/crypto-quest-bot/scripts
+cd /root/telstore/scripts
 bash check_bot.sh
 ```
 
@@ -70,7 +70,7 @@ exits non-zero if anything is broken. Exit code `0` = healthy.
 When the installer creates `.env`, edit it with **your** values:
 
 ```bash
-nano /root/crypto-quest-bot/.env
+nano /root/telstore/.env
 ```
 
 Set at least:
@@ -86,10 +86,10 @@ After editing, re-run `bash check_bot.sh` to confirm the new values work.
 ## Step 6 — Manage the bot (useful commands)
 
 ```bash
-systemctl status crypto-quest-bot      # is it running?
-journalctl -u crypto-quest-bot -f      # live logs (Ctrl+C to exit)
-systemctl restart crypto-quest-bot     # restart the bot
-systemctl stop crypto-quest-bot        # stop it
+systemctl status telstore      # is it running?
+journalctl -u telstore -f      # live logs (Ctrl+C to exit)
+systemctl restart telstore     # restart the bot
+systemctl stop telstore        # stop it
 ```
 
 The bot **auto-starts on every reboot** — no need to do anything after a
@@ -121,7 +121,7 @@ See `README.md` → **How to add a product** for full details.
 
 | Problem | Fix |
 |---------|-----|
-| `systemctl status` shows `failed` | `journalctl -u crypto-quest-bot -n 50` to see the error |
+| `systemctl status` shows `failed` | `journalctl -u telstore -n 50` to see the error |
 | Bot token invalid | Check `TELEGRAM_BOT_TOKEN` in `.env` |
 | Bot says "ERROR: no token" | `.env` not created — run `bash deploy_server.sh` again |
-| Need to change settings | Edit `.env`, then `systemctl restart crypto-quest-bot` |
+| Need to change settings | Edit `.env`, then `systemctl restart telstore` |

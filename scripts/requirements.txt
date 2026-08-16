@@ -1,4 +1,4 @@
-# Crypto Quest Bot — Python dependencies
+# TelStore Telegram Bot — Python dependencies
 #
 # This bot uses ONLY Python's standard library (urllib) — it works out of the
 # box with a plain Python 3.8+ install, no packages required.

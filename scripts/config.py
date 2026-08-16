@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Central configuration for the Crypto Quest bot
+Central configuration for the TelStore bot
 ==============================================
 All settings live here, loaded from environment variables or the project `.env`
 file. This is the single place an owner/buyer edits to configure the bot

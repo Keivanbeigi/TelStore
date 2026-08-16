@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-NOWPayments integration for Crypto Quest bot
+NOWPayments integration for TelStore bot
 =============================================
 Creates crypto payment invoices so customers can pay with 230+ coins
 (USDT/BSC, USDT/TRC20, BTC, ETH, etc.) and the money settles to YOUR wallet.
@@ -97,7 +97,7 @@ def validate_price(price_usd):
         return f"Amount must be at least ${MIN_PAYMENT_USD:.2f} for crypto checkout."
     return None
 
-def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="Crypto Quest Premium"):
+def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="TelStore Premium"):
     """
     Create a crypto payment invoice (standard API).
     Returns dict with 'payment_id', 'pay_address', 'pay_amount', 'payment_status',
@@ -118,7 +118,7 @@ def create_payment(price_usd=5.0, pay_currency="usdttrc20", order_id=None, descr
     return _post("/payment", payload)
 
 
-def create_invoice(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="Crypto Quest Premium"):
+def create_invoice(price_usd=5.0, pay_currency="usdttrc20", order_id=None, description="TelStore Premium"):
     """
     Create a hosted payment page (invoice). The customer opens the invoice_url
     in their browser to pay with card or crypto — no manual address/amount.

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ============================================================
-#  Crypto Quest Telegram Bot — health check / self-test
+#  TelStore Telegram Bot — health check / self-test
 #  ------------------------------------------------------------
 #  Runs a full diagnostic on a server (or WSL) where the bot
 #  is deployed. Portable: works on any Ubuntu/Debian with
 #  Python 3.8+ and a completed deploy_server.sh install.
 #
 #  USAGE:
-#     cd crypto-quest-bot && bash scripts/check_bot.sh
+#     cd telstore && bash scripts/check_bot.sh
 #
 #  Checks (each prints PASS/FAIL):
 #     1. Python 3 available (3.8+)
@@ -31,7 +31,7 @@ FAILED=0
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
-echo "— Crypto Quest bot health check —"
+echo "— TelStore bot health check —"
 echo "  root: $ROOT"
 echo ""
 
@@ -176,10 +176,11 @@ echo ""
 # --- 8. systemd ------------------------------------------------------------
 echo "[8/8] Service"
 if command -v systemctl >/dev/null 2>&1; then
-  if systemctl is-active --quiet crypto-quest-bot 2>/dev/null; then
-    PASS "crypto-quest-bot service RUNNING"
+  if systemctl is-active --quiet telstore 2>/dev/null; then
+    PASS "telstore service RUNNING"
+    NOTE "  journalctl -u telstore -n 50 --no-pager"
   else
-    FAIL "crypto-quest-bot service NOT running (systemctl status crypto-quest-bot)"
+    FAIL "telstore service NOT running (systemctl status telstore)"
   fi
 else
   NOTE "systemd not present — run bot with: bash scripts/run_bot.sh (or nohup)"

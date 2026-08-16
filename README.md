@@ -1,4 +1,4 @@
-# 🤖 Crypto Quest Telegram Bot
+# 🤖 TelStore Telegram Bot
 
 A ready-to-sell **Telegram VIP subscription bot** for channel owners. Sell
 Premium memberships to your audience: customers pay in crypto, get Premium, and

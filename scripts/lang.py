@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-All user-facing strings for the Crypto Quest bot
+All user-facing strings for the TelStore bot
 ==================================================
 Every static message, button label, and callback label lives here in one
 place. This lets you translate or reword the whole bot without touching the
@@ -17,9 +17,14 @@ Usage inside bot.py:
 #  Text messages (the @-free, {placeholder} style uses str.format later)
 # ---------------------------------------------------------------------------
 TXT = {
+    # --- brand / identity ---
+    # Display name of the bot. Change this to rebrand the whole store without
+    # touching any handler logic.
+    "bot_name": "TelStore",
+
     # --- main menu / welcome ---
     "welcome": (
-        "👋 Welcome to Crypto Quest!\n\n"
+        "👋 Welcome to {name}!\n\n"
         "Access our private VIP channel, buy digital products and more — "
         "pay with crypto, delivered instantly.\n"
         "Choose an option below to get started 👇"
@@ -313,7 +318,7 @@ TXT = {
         "support_open": "🎧 Contact support:\n{url}",
         "support_missing": "🎧 The owner has not set a support contact yet.",
     "np_check_status": "✅ Payment started with NOWPayments. Tap the button below to check it has been confirmed - no transaction hash is needed here.",
-    "sale_notification": "🛎️ NEW SALE!\n\n🛒 Product: {name}\n💰 Price: ${price:.2f}\n👤 Buyer: {user}\n💳 Method: {method}\n🕐 {time}",
+    "sale_notification": "🛎️ NEW SALE!\n\n🛒 Product: {name}\n💰 Price: ${price:.2f}\n👤 Buyer: {user}\n💳 Method: {method}\n🕐 {time}\n🔗 TXID: {txid}",
 }
 
 

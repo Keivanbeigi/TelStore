@@ -1,4 +1,4 @@
-# Crypto Quest Bot — Install Guide for Buyers
+# TelStore Bot — Install Guide for Buyers
 
 > **A ready-to-sell Telegram subscription bot.** Sell Premium memberships to your
 > VIP Telegram channel: customers pay in crypto (manual wallet or NOWPayments),
@@ -56,7 +56,7 @@ scripts/
   to PATH"** during install). Verify with `python --version`.
 
 ## Step 3 — Configure the bot
-1. Put the `scripts/` folder anywhere (e.g. `C:\crypto-quest-bot\`).
+1. Put the `scripts/` folder anywhere (e.g. `C:\telstore\`).
 2. In the folder, **copy `.env.example` → name it `.env`**.
 3. Open `.env` in a text editor (Notepad is fine) and fill in YOUR values:
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Admin panel for the Crypto Quest bot owner
+Admin panel for the TelStore bot owner
 ==========================================
 Owner-only commands to manage subscribers, broadcast, and set prices.
 
