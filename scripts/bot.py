@@ -464,6 +464,11 @@ def _deliver_product(chat_id, username, product, payment_method, txid=""):
     # Notify the owner that a sale happened (only on confirmed delivery).
     _notify_owner_sale(chat_id, username, product, payment_method, txid)
 
+    # One-time products (e.g. the full TelStore source) are removed from the
+    # shop after their single sale, so they can only ever be bought once.
+    if product.get("one_time"):
+        _remove_one_time_product(product)
+
     if kind == "digital":
         deliver_text = product.get("deliver") or product.get("description", product["name"])
         return lang.TXT["pay_received_digital"].format(
@@ -482,6 +487,23 @@ def _deliver_product(chat_id, username, product, payment_method, txid=""):
     else:
         msg += lang.TXT["pay_awaiting_confirm"]
     return msg, True
+
+
+def _remove_one_time_product(product):
+    """Remove a one-time product from the live catalogue after it is sold.
+
+    Once the full-source product is bought, it disappears from the shop for
+    everyone so it can only ever be purchased a single time. The change is
+    persisted to products.json so it survives a restart.
+    """
+    pid = product.get("id")
+    if not pid:
+        return
+    before = len(config.PRODUCTS)
+    config.PRODUCTS[:] = [p for p in config.PRODUCTS if p.get("id") != pid]
+    if len(config.PRODUCTS) != before:
+        config.save_products()
+        print(f"   [one-time] product '{pid}' sold & removed from shop")
 
 
 def _expiry(days):
