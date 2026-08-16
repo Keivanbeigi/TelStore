@@ -207,30 +207,7 @@ PREMIUM_DAYS = 30                      # default grant length when days=0
 #    deliver     (kind="digital") message or link sent to the buyer after payment
 #    description shown on the product's payment page
 #
-DEFAULT_PRODUCTS = [
-    {
-        "id": "vip_monthly",
-        "name": "VIP Channel — 1 Month",
-        "price_usd": 12.0,  # >= $12 so NOWPayments (USDT-TRC20) accepts it
-        "days": 30,
-        "kind": "channel",
-        "description": "Monthly access to our private VIP channel with exclusive updates.",
-    },
-    {
-        "id": "telstore",
-        "name": "TelStore — Full Bot Source",
-        "price_usd": 99.0,  # set your own price; >= $12 for NOWPayments
-        "days": 0,
-        "kind": "digital",
-        # After the payment is auto-confirmed, the buyer receives this download
-        # link (set it to a real, hosted archive of the source). Keep it valid.
-        "deliver": "https://github.com/<your-account>/TelStore/archive/refs/heads/master.zip",
-        # one_time: once sold, the product disappears from the shop so the full
-        # source can only be bought once.
-        "one_time": True,
-        "description": "Buy the full TelStore bot source. After payment is confirmed you automatically receive the download link.",
-    },
-]
+DEFAULT_PRODUCTS = []
 
 # Runtime products file (gitignored). The owner can add/remove products from
 # Telegram; edits here survive restarts.

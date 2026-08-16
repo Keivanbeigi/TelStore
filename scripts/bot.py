@@ -1322,6 +1322,18 @@ def handle_admin_command(chat_id, command):
         kind = parts[3].lower() if len(parts) >= 4 and parts[3] else "channel"
         if kind not in ("channel", "digital"):
             kind = "channel"
+        # optional 5th field: discount % (e.g. "20" = 20% off). Empty = none.
+        discount = 0
+        if len(parts) >= 5 and parts[4]:
+            try:
+                discount = int(float(parts[4]))
+            except ValueError:
+                discount = 0
+        # optional 6th field: one_time = yes|no (default no)
+        # one-time products (e.g. a full-bot source) disappear from the shop
+        # after their single confirmed sale.
+        one_time_flag = parts[5].strip().lower() if len(parts) >= 6 and parts[5] else ""
+        one_time = one_time_flag in ("yes", "y", "1", "true", "one_time", "onetime", "ot")
         pid = name.lower().replace(" ", "_")[:20]
         new_id = pid
         n = 1
@@ -1333,10 +1345,15 @@ def handle_admin_command(chat_id, command):
             "description": f"{name} — access to {name}.",
             "deliver": "" if kind == "digital" else None,
         }
+        if discount and discount > 0:
+            product["discount"] = discount
+        if one_time:
+            product["one_time"] = True
         config.PRODUCTS.append(product)
         config.save_products()
+        disc_txt = f", {discount}% off" if discount else ""
         send_message(chat_id, lang.TXT["prod_added"].format(
-            name=name, price=price, days=days, kind=kind, disc=""), back_menu_keyboard())
+            name=name, price=price, days=days, kind=kind, disc=disc_txt), back_menu_keyboard())
         if kind == "digital":
             send_message(chat_id, lang.TXT["prod_need_desc"], back_menu_keyboard())
         return True

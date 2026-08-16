@@ -220,14 +220,16 @@ TXT = {
     "prod_added": "✅ Product added: {name} (${price:.2f}, {days} days, {kind}){disc}",
     "prod_removed": "🚫 Product removed: {name}",
     "prod_not_found": "⚠️ No product with id: {id}",
-    "prod_usage_add": ("❌ Usage: /add_product <name> | <price> [| <days> [| <kind> [| <discount%>]]]\n"
+    "prod_usage_add": ("❌ Usage: /add_product <name> | <price> [| <days> [| <kind> [| <discount%> [| one_time]]]]\n"
                        "  Only name and price are required.\n"
                        "  kind = channel (VIP) or digital (send link) — default: channel\n"
                        "  days = access length, 0 for lifetime — default: 30\n"
                        "  discount = percent off the price, 0 or empty for none\n"
+                       "  one_time = yes if the product should disappear after its single sale (e.g. a full-bot source)\n"
                        "  Example:\n"
                        "     /add_product VIP Year | 49.99 | 365 | channel\n"
-                       "     /add_product Course | 19.99 | 0 | digital | 20"),
+                       "     /add_product Course | 19.99 | 0 | digital | 20\n"
+                       "     /add_product TelStore Source | 99 | 0 | digital | 0 | yes"),
     "prod_usage_remove": "❌ Usage: /remove_product <id>",
     "prod_need_desc": "For a digital product, set its delivery text with /set_deliver <id> <text>.",
 
