@@ -35,7 +35,10 @@ if [ -z "${GITHUB_TOKEN:-}" ]; then
   err "GITHUB_TOKEN is not set. Export it first, e.g.  export GITHUB_TOKEN=ghp_..."
 fi
 if [ -z "${REPO_URL:-}" ]; then
-  REPO_URL="https://github.com/Keivanbeigi/TelStore.git"
+  echo -e "${YELLOW}[error]${NC} REPO_URL is not set."
+  echo -e "${YELLOW}       Ask the seller for the installation URL they emailed you, then run:${NC}"
+  echo -e "${YELLOW}         export REPO_URL=\"https://github.com/<seller-org>/TelStore.git\"${NC}"
+  exit 1
 else
   # strip trailing .git if present to keep URLs consistent
   REPO_URL="${REPO_URL%.git}.git"
@@ -46,7 +49,9 @@ fi
 
 # --- 1. clone the private repo (using token auth) --------------------------
 # Token goes in the URL for this one clone only; we never store it.
-AUTH_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/Keivanbeigi/TelStore.git"
+# Build the authenticated URL from the two exported vars, so no personal or
+# fixed account name is hard-coded into this file.
+AUTH_URL="https://x-access-token:${GITHUB_TOKEN}@${REPO_URL#https://}"
 DEST="/opt/telstore"
 
 say "Cloning private repo: ${REPO_URL}"
