@@ -1004,7 +1004,9 @@ def handle_pay(chat_id, username, txhash):
 
     Delivers the product the user selected in the shop (stored in pending),
     or the default/first product if none was selected. Clears the pending
-    "pay" marker so we don't re-deliver on a second message.
+    "pay" marker so we don't re-deliver on a second message. Also notifies
+    the owner (via their Support/owner chat) with the transaction hash so
+    they can verify the manual payment.
     """
     pending = _load_pending().get(str(chat_id))
     product_id = pending.get("product_id") if isinstance(pending, dict) else None
@@ -1014,6 +1016,16 @@ def handle_pay(chat_id, username, txhash):
     msg, _ = _deliver_product(chat_id, username, product, "crypto")
     msg = msg.replace("(crypto)", txhash[:20] + "...", 1)
     _save_pending(chat_id, "")  # clear the pending "pay" marker
+    # Send the TXID to the owner (their OWNER_CHAT_ID / support DM) for verification.
+    if config.OWNER_CHAT_ID:
+        notify = lang.TXT["txid_owner_notify"].format(
+            user=username or str(chat_id),
+            name=product.get("name", "item"),
+            price=config.effective_price(product),
+            time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            txid=txhash,
+        )
+        send_message(config.OWNER_CHAT_ID, notify)
     return send_message(chat_id, msg, back_menu_keyboard())
 
 
@@ -1464,6 +1476,21 @@ def main():
         t = threading.Thread(target=_payment_poller_loop, daemon=True)
         t.start()
         print("   Payment poller running in background thread")
+
+    # Startup reminder: manual crypto payments need the owner to receive the
+    # transaction hash. If the owner id or support link isn't set, tell them.
+    if config.OWNER_CHAT_ID:
+        if not config.SUPPORT_URL:
+            try:
+                send_message(
+                    config.OWNER_CHAT_ID,
+                    lang.TXT["support_required_reminder"],
+                    back_menu_keyboard(),
+                )
+            except Exception as e:
+                print("setup-reminder error:", e)
+    else:
+        print("WARNING: OWNER_CHAT_ID not set — manual payment TXIDs won't reach the owner.")
 
     # Drain stale updates so we don't reply to expired callbacks (fixes 400).
     offset = 0

@@ -177,6 +177,15 @@ TXT = {
     "link_saved": "✅ {label} updated → {value}",
     "link_cleared": "🗑️ {label} cleared.",
     "link_cancelled": "↩️ Link setup cancelled.",
+    "support_required_reminder": (
+        "⚠️ Setup notice (owner):\n\n"
+        "Your **Support link** is not set yet. Manual crypto payments send the "
+        "buyer's **Transaction Hash** to your Support/owner DM for verification. "
+        "Please set it:\n\n"
+        "   Tap 🎧 Support → ✏️ Set / change link\n"
+        "   then enter your Telegram DM link, e.g. https://t.me/yourname\n\n"
+        "Without it, the buyer's TXID won't reach you."
+    ),
     "admin_help": ("🛠 Owner commands:\n\n"
                    "📊 /stats - member & revenue summary\n"
                    "📢 /broadcast <text> - message all subscribers\n"
@@ -262,9 +271,31 @@ TXT = {
     "owner_menu_hidden_note": "(hidden buttons show dimmed below)",
     "delivery_set": "✅ Delivery text set for {name}.",
     "err_format": "❌ {msg}",
-    "send_txid": "Please send your transaction ID (TXID):",
-    "send_txid_hint": "Example: 0x4f2a8b... or f9a2...\n\nSend the hash from your wallet/explorer.",
+    "send_txid": (
+        "⏳ Almost done!\n\n"
+        "You paid via crypto. Now please send your "
+        "**Transaction Hash (TXID)** so we can verify the payment.\n\n"
+        "👉 Your transaction hash is the long ID you see in your wallet "
+        "or the blockchain explorer after sending the coins.\n"
+        "It usually looks like: 0x4f2a8b... or f9a2...\n\n"
+        "Please paste it below:"
+    ),
+    "send_txid_hint": (
+        "📎 Transaction Hash — how to find it:\n"
+        "1. Open your wallet (Trust / MetaMask / Exchange).\n"
+        "2. Open the transaction you just sent.\n"
+        "3. Copy the Transaction Hash / TxID.\n"
+        "4. Paste it here in the chat.\n\n"
+        "It is a long string like: 0x4f2a8b91c7e5... "
+    ),
     "txt_received": "✅ TXID received! Our team will verify it shortly. For manual crypto payments you will be granted access after confirmation.",
+    "txid_owner_notify": "🧾 New manual payment — please verify:\n\n"
+                         "👤 Buyer: {user}\n"
+                         "📦 Product: {name}\n"
+                         "💰 Amount: ${price:.2f}\n"
+                         "⏰ Time: {time}\n"
+                         "🔗 TXID: {txid}\n\n"
+                         "Verify on the blockchain, then grant access.",
     "account_title": "👤 Your Account Information\n\n📅 Membership date: {since}\n🆔 Your ID: {uid}\n\n📊 Your transactions:\n\n📈 Total transactions: {txn_count}\n\n💰 Total payments:\n{payments}\n",
 
     "subscription_join": "🔔 You joined! Join the official channel here:\n{link}\n\nIf the link does not open, contact support.",
@@ -338,10 +369,14 @@ def link_hint(key):
 
 def product_button(p):
     """Short button label for a product dict from config.PRODUCTS.
-    Shows the effective (post-discount) price if a discount is set."""
+    Shows name + model (if set) + effective (post-discount) price."""
     import config  # local import to avoid lang<->config cycle
     price = config.effective_price(p)
-    return f"{p.get('emoji', TXT['emoji_default'])} {p['name']} — ${price:.2f}"
+    model = (p.get("model") or "").strip()
+    name = p["name"]
+    if model:
+        name = f"{name} · {model}"
+    return f"{p.get('emoji', TXT['emoji_default'])} {name} — ${price:.2f}"
 
 
 def product_callback(p):
