@@ -758,16 +758,20 @@ def handle_pay_network(chat_id, message_id, network_name, product_id=None):
 def handle_pay_done(chat_id, message_id):
     """After the customer taps 'I paid' for a MANUAL crypto payment, ask them
     to send the transaction hash (TXID). NOWPayments uses check_payment instead
-    so it never enters this free-text flow."""
+    so it never enters this free-text flow.
+
+    Uses send_message (not edit) so the TXID request is a fresh message — the
+    original payment message may contain backticks that fail editMessageText.
+    """
     # Determine payment type from pending.
     pending = _load_pending().get(str(chat_id))
     is_np = bool(pending) and isinstance(pending, dict) and pending.get("payment_id")
     if is_np:
         # NOWPayments: no free-text TXID needed — ask to check status.
-        return edit_message(chat_id, message_id, lang.TXT["np_check_status"], pay_check_keyboard())
+        return send_message(chat_id, lang.TXT["np_check_status"], pay_check_keyboard())
     # Manual crypto payment -> ask for the transaction hash.
     _save_pending(chat_id, {"action": "await_txid", "product_id": pending.get("product_id") if isinstance(pending, dict) else None})
-    return edit_message(chat_id, message_id, lang.TXT["send_txid"] + "\n\n" + lang.TXT["send_txid_hint"], back_menu_keyboard())
+    return send_message(chat_id, lang.TXT["send_txid"] + "\n\n" + lang.TXT["send_txid_hint"], back_menu_keyboard())
 
 
 
