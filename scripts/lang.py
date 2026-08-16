@@ -281,12 +281,19 @@ TXT = {
         "Please paste it below:"
     ),
     "send_txid_hint": (
-        "📎 Transaction Hash — how to find it:\n"
-        "1. Open your wallet (Trust / MetaMask / Exchange).\n"
-        "2. Open the transaction you just sent.\n"
-        "3. Copy the Transaction Hash / TxID.\n"
-        "4. Paste it here in the chat.\n\n"
-        "It is a long string like: 0x4f2a8b91c7e5... "
+        "📎 How to find your Transaction Hash (TXID):\n\n"
+        "🔹 In a crypto wallet (Trust Wallet / MetaMask / Safepal):\n"
+        "   1. Open the app and tap the wallet you sent from.\n"
+        "   2. Tap HISTORY or ACTIVITY, then open the transaction.\n"
+        "   3. Tap 'TxID' / 'Hash' and copy it.\n\n"
+        "🔹 In an exchange (Binance / Bybit):\n"
+        "   1. Go to Withdraw > History.\n"
+        "   2. Open the withdrawal and copy the TXID.\n\n"
+        "🔹 On a block explorer (BscScan / Etherscan):\n"
+        "   1. Paste your wallet address and find the outgoing transaction.\n"
+        "   2. Copy its Transaction Hash (starts with 0x).\n\n"
+        "It looks like a long string: 0x4f2a8b91c7e5a1b2c3d4e5f6a7b8c9d0e1f2a3b4\n\n"
+        "👉 Paste it directly here in the chat."
     ),
     "txt_received": "✅ TXID received! Our team will verify it shortly. For manual crypto payments you will be granted access after confirmation.",
     "txid_owner_notify": "🧾 New manual payment — please verify:\n\n"

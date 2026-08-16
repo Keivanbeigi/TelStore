@@ -1121,6 +1121,12 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         if ":" in cb_data:
             product_id = cb_data.split(":", 1)[1]
         handle_coingate(chat_id, message_id, product_id)
+    elif cb_data == "pay_done":
+        # MUST be checked BEFORE the generic "pay_" branch below, otherwise
+        # "pay_done" is caught by startswith("pay_") and routed to
+        # handle_pay_network(..., "done", None), which falls back to the
+        # default product (wrong price) instead of asking for the TXID.
+        handle_pay_done(chat_id, message_id)
     elif cb_data.startswith("pay_"):
         # Network selected for a product. Format: pay_bsc / pay_bsc:prod_id
         payload = cb_data[len("pay_"):]
@@ -1131,8 +1137,6 @@ def handle_callback(chat_id, message_id, callback_id, username, cb_data):
         handle_pay_network(chat_id, message_id, network_name, product_id)
     elif cb_data == "check_payment":
         handle_check_payment(chat_id, username, message_id)
-    elif cb_data == "pay_done":
-        handle_pay_done(chat_id, message_id)
     elif cb_data == "status":
         handle_status(chat_id, message_id)
     elif cb_data == "website":
