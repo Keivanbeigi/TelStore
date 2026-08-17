@@ -44,7 +44,7 @@ instant checkout, pay with crypto or card:
 
 ---
 
-## 📋 Requirements (نیازمندی‌ها)
+## 📋 Requirements
 
 Before you can install and run this bot, you need:
 
