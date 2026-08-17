@@ -24,6 +24,11 @@
   .steps li { margin:6px 0; }
   .tag { font-size:.75rem; background:#2a2d3a; padding:2px 8px; border-radius:20px; color:var(--muted); margin-left:8px; }
   h2 { font-size:1.1rem; margin-bottom:8px; }
+  .shots { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
+  .shot { flex:1 1 200px; min-width:180px; }
+  .shot img { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; }
+  .cap { color:var(--muted); font-size:.85rem; text-align:center; margin-top:8px; }
+  .cap b { color:var(--text); }
 </style>
 </head>
 <body>
@@ -67,6 +72,25 @@
     <div class="note"><b>Single-site license.</b> You may use this bot for your own
     channel / shop / business. Reselling or redistributing the software (or any
     modified copy) to others is <b>not permitted</b>.</div>
+  </div>
+
+  <div class="card">
+    <h2>📱 How it works — from your customer's perspective</h2>
+    <div class="note" style="margin-bottom:12px">Everyone starts at the customer menu. After purchasing the source code, the <b>⚙️ Owner Menu</b> unlocks automatically in the buyer's menu — they instantly become the owner of their own bot.</div>
+    <div class="shots">
+      <div class="shot">
+        <img src="screenshots/customer-view-main-menu.png" alt="Customer menu before purchase">
+        <div class="cap"><b>1. Customer menu</b><br>(before purchase — no Owner Menu)</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/owner-view-main-menu.png" alt="Owner menu after purchase">
+        <div class="cap"><b>2. After purchase</b><br>⚙️ Owner Menu unlocked</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/owner-menu.png" alt="Owner management menu">
+        <div class="cap"><b>3. Owner Menu</b><br>manage your whole store</div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
