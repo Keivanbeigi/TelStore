@@ -8,6 +8,16 @@ panel.
 > 👀 **New buyer?** Start with **[`BUYER_GUIDE.md`](BUYER_GUIDE.md)** — it walks
 > you through buying the bot and activating it on your server step by step.
 
+## 🛍️ Buy
+
+Get the **source code license** ($29, single-site) from either online store —
+instant checkout, pay with crypto or card:
+
+- **SellApp** — https://telstore.sell.app/product/telstore-bot-source-code
+- **SellAuth** — https://telstore.mysellauth.com
+
+(You can also message the seller on Telegram: **https://t.me/ADNC_bot**)
+
 ---
 
 ## ✨ Features
