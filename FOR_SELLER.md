@@ -14,8 +14,8 @@ token**, so the buyer can install on their own server in a few commands.
 
 Two things, both of which you generate/choose and send to the buyer:
 
-1. **REPO_URL** — the https address of your private TelStore repo, e.g.
-   `https://github.com/<your-account>/TelStore.git`
+1. **REPO_URL** — the https address of your private TelStore source repo, e.g.
+   `https://github.com/<your-account>/TelStore-source.git`
 2. **GITHUB_TOKEN** — a read-only, single-repo GitHub Personal Access Token
    that can clone that repo, which you **revoke after the sale** so it does not
    become a permanent backdoor.
@@ -23,9 +23,9 @@ Two things, both of which you generate/choose and send to the buyer:
 Give the buyer this one command to run on their server:
 
 ```bash
-export REPO_URL="https://github.com/<your-account>/TelStore.git"
+export REPO_URL="https://github.com/<your-account>/TelStore-source.git"
 export GITHUB_TOKEN="<one-time-token>"
-curl -sL https://raw.githubusercontent.com/<your-account>/TelStore/master/scripts/install_from_github.sh | bash
+bash install_from_github.sh
 ```
 
 The script clones the repo, drops the `.git` history (so the token never ends
@@ -40,14 +40,14 @@ key and writes their `.env`.
 1. GitHub → **Settings → Developer settings → Fine-grained personal access
    tokens → Generate new token**.
 2. **Resource owner:** your account.
-3. **Repository access:** **Only select repositories** → tick **TelStore**.
+3. **Repository access:** **Only select repositories** → tick **TelStore-source**.
 4. **Permissions → Contents:** set to **Read-only**.
 5. **Expiration:** pick a short window (e.g. 1 day / 7 days).
 6. Generate and copy the token. Send it to the buyer along with the command
    above.
 
 > ⚠️ **Do not use your main account token.** Use a **fine-grained, read-only,
-> limited to the TelStore repo only** token. Revoke/expire it after the sale.
+> limited to the TelStore-source repo only** token. Revoke/expire it after the sale.
 
 ---
 
@@ -67,24 +67,33 @@ per-sale token is the practical equivalent.
 
 ## 4. Safety rules for the seller
 
-- The repo must stay **private**.
+- The source repo (`TelStore-source`) must stay **private**.
 - Never commit `.env`, `*.env`, `subscribers.json`, `products.json`,
   `pending_payments.json`, `settings.json`, or any `.log` — all already in
   `.gitignore`.
 - Never paste a live token into code, docs, or the repo.
 - Keep `PROJECT_STATUS.md`, local `.bat` launchers, and anything with your real
   chat_id / token id out of the repo (it is gitignored / excluded).
-- The sale package (`Desktop/TelStore` and the GitHub repo) must contain only
-  **buyer-clean** files.
+- The sale package must contain only **buyer-clean** files.
 
 ---
 
-## 5. Updating the bot later
+## 5. Repos overview
 
-When you improve the bot, commit + push on `master`, then tell buyers to re-run:
+| Repo | Visibility | Purpose |
+|------|-----------|---------|
+| `Keivanbeigi/TelStore` | **PUBLIC** | Sales page + screenshots + docs |
+| `Keivanbeigi/TelStore-source` | **PRIVATE** | Bot source code (delivered per-sale via token) |
+
+---
+
+## 6. Updating the bot later
+
+When you improve the bot, commit + push on `master` of the private
+`TelStore-source` repo, then tell existing buyers to re-run:
 
 ```bash
-export REPO_URL="https://github.com/<your-account>/TelStore.git"
+export REPO_URL="https://github.com/<your-account>/TelStore-source.git"
 export GITHUB_TOKEN="<fresh-token>"
 bash install_from_github.sh
 ```
@@ -94,12 +103,18 @@ interactive config (their `.env` is asked for again).
 
 ---
 
-## 6. Reference: files layout
+## 7. Reference: files layout
 
 ```
-/opt/telstore            (server, created by install_from_github.sh)
-  scripts/deploy_server.sh        interactive buyer config + systemd
-  scripts/install_from_github.sh  clones the private repo from GitHub
-  scripts/run_bot.sh              run entrypoint used by systemd
-  .env                            buyer's OWN values (never in git)
+Public repo (sales page) — Keivanbeigi/TelStore:
+  index.html / sales-page.html    sales page with screenshots
+  screenshots/                    before/after-purchase screenshots
+  SELLER_DESCRIPTION.md           marketplace description (copy-paste to Sellauth)
+
+Private repo (source) — Keivanbeigi/TelStore-source:
+  install_from_github.sh          buyer runs this on their server
+  scripts/                        bot source (admin.py, bot.py, config.py, lang.py, ...)
+  scripts/.env.example            template — buyer fills in their own values
+  scripts/deploy_server.sh        interactive installer + systemd service setup
+  scripts/run_bot.sh              entrypoint used by systemd
 ```
