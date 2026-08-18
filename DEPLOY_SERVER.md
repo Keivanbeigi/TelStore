@@ -1,127 +1,110 @@
-# 🖥 Deploy the bot on your own server (24/7)
+# DEPLOY_SERVER.md — Deploy the TelStore Bot to a 24/7 server
 
-This bot runs on plain Python and is designed to run as a **24/7 background
-service**. You do **not** need your computer to stay on.
+The bot is a plain Python 3 program that polls the Telegram Bot API. To sell
+around the clock it must run on an always-on server. This guide steps you
+through a full deployment to any Ubuntu/Debian VPS.
 
-> **What you need:** a small Linux VPS (Ubuntu/Debian recommended). Cheapest
-> options start around **$2–5/month** (Vultr, DigitalOcean, Contabo, Hostinger,
-> Racknerd, etc.). Many accept crypto payment.
-
----
-
-## Step 1 — Get a VPS & connect
-
-1. Buy a small VPS (1 CPU, 1 GB RAM is plenty).
-2. Choose **Ubuntu 22.04/24.04** (or Debian).
-3. Connect over SSH from your computer:
-   ```bash
-   ssh root@YOUR_SERVER_IP
-   ```
+> Two ways to run: **[A] the one-command installer** (recommended, ~1 minute)
+> or **[B] fully manual**. Both produce the same running bot; use A unless you
+> need to customise.
 
 ---
 
-## Step 2 — Copy the bot to the server
+## Part A — One-command installer (recommended)
 
-From your **local** computer (in a new terminal, NOT the SSH session):
+### A0. Copy the package to your server
+
+From your **own computer** (a terminal):
 
 ```bash
-# where your downloaded telstore folder is
-cd /path/to/telstore
-scp -r . root@YOUR_SERVER_IP:/root/telstore
+scp -r telstore root@YOUR_SERVER_IP:~/
 ```
 
----
+Replace `YOUR_SERVER_IP` with your server's public IP. (WinSCP / FileZilla:
+just drag the `telstore` folder into your home directory.)
 
-## Step 3 — Run the installer
-
-Back on the **SSH session**:
+### A1. Log in
 
 ```bash
-cd /root/telstore/scripts
-bash deploy_server.sh
+ssh root@YOUR_SERVER_IP
+cd ~/telstore
 ```
 
-The script will:
-- check/install `python3`
-- create a `.env` from `.env.example` (asks you to edit it)
-- install a **systemd service** so the bot runs 24/7 and auto-starts on boot
-- start the bot
-
----
-
-## Step 4 — Verify the install (optional but recommended)
-
-Run the built-in health check to confirm everything (token, NOWPayments,
-files, service) is set up correctly:
+### A2. Run the installer
 
 ```bash
-cd /root/telstore/scripts
-bash check_bot.sh
+bash scripts/deploy_server.sh
 ```
 
-It prints `PASS`/`FAIL` for each item (Python, modules, token validity via
-Telegram `getMe`, NOWPayments API, write permissions, systemd service) and
-exits non-zero if anything is broken. Exit code `0` = healthy.
+Answer the prompts with **your** values: bot token, owner chat_id, EVM wallet
+(optional), NOWPayments API key (optional).
 
----
+The script does everything:
 
-## Step 5 — Fill in your `.env`
+- checks/installs Python 3
+- writes a `.env` with your settings
+- installs a **systemd service** named `telstore-bot`
+- starts it now and enables it to start on every boot
 
-When the installer creates `.env`, edit it with **your** values:
+You should see: `✅ Bot service is RUNNING.`
+
+### A3. Verify
 
 ```bash
-nano /root/telstore/.env
+bash scripts/check_bot.sh
+systemctl status telstore-bot
 ```
 
-Set at least:
-- `TELEGRAM_BOT_TOKEN` — your bot token from @BotFather
-- `CRYPTO_ADDRESS` — your wallet (BSC/ETH/Polygon) where payments go
-- `OWNER_CHAT_ID` — your Telegram id (gets the admin panel)
-
-Save (Ctrl+O, Enter, Ctrl+X), then press Enter in the installer to continue.
-After editing, re-run `bash check_bot.sh` to confirm the new values work.
+Then open Telegram → send `/start` → your bot replies with the main menu.
 
 ---
 
-## Step 6 — Manage the bot (useful commands)
+## Part B — Manual deployment
+
+If you prefer to run it yourself (e.g. on WSL or a container):
 
 ```bash
-systemctl status telstore      # is it running?
-journalctl -u telstore -f      # live logs (Ctrl+C to exit)
-systemctl restart telstore     # restart the bot
-systemctl stop telstore        # stop it
+cd telstore
+cp scripts/.env.example .env
+nano .env                       # fill in your token, owner id, wallet, keys
+python3 -m pip install -r requirements.txt || true   # stdlib only, optional
+bash scripts/run_bot.sh         # foreground; Ctrl+C stops it
 ```
 
-The bot **auto-starts on every reboot** — no need to do anything after a
-server restart.
+For a persistent background process you can wrap `run_bot.sh` with your own
+`nohup`, Docker, or supervisor.
 
 ---
 
-## Adding / managing products
+## Day-to-day management
 
-From Telegram, as the owner (`OWNER_CHAT_ID`), send:
-```
-/admin
-```
-then use the **Add product / Remove product** buttons, or the slash commands:
-
-```
-/add_product Name | price | days | kind
-/add_product VIP Channel — 1 Month | 5 | 30 | channel
-/add_product Crypto Trading E-book | 29 | 0 | digital
-/products
-/remove_product <id>
-```
-
-See `README.md` → **How to add a product** for full details.
+| Task | Command |
+|------|---------|
+| Is it running? | `systemctl status telstore-bot` |
+| Live logs | `journalctl -u telstore-bot -f`  *(Ctrl+C to exit)* |
+| Restart after a `.env` edit | `systemctl restart telstore-bot` |
+| Auto-start on boot | done by the installer (`enable`) |
 
 ---
 
-## Troubleshooting
+## Editing settings later
 
-| Problem | Fix |
-|---------|-----|
-| `systemctl status` shows `failed` | `journalctl -u telstore -n 50` to see the error |
-| Bot token invalid | Check `TELEGRAM_BOT_TOKEN` in `.env` |
-| Bot says "ERROR: no token" | `.env` not created — run `bash deploy_server.sh` again |
-| Need to change settings | Edit `.env`, then `systemctl restart telstore` |
+All keys live in `.env` (created by the installer in the project root):
+
+- `TELEGRAM_BOT_TOKEN` — Telegram bot token
+- `CRYPTO_ADDRESS` — EVM wallet for manual BSC/ETH/Polygon payments
+- `NOWPAYMENTS_API_KEY` — automatic card/crypto checkout
+- `COINGATE_AUTH_TOKEN` — optional 2nd web-payment option
+- `OWNER_CHAT_ID` / `TELEGRAM_CHAT_ID` — your owner id (admin panel)
+- `CHANNEL_ID` / `CHANNEL_LINK` — optional VIP channel
+- `WEBSITE_URL` / `SUPPORT_URL` — shown to customers
+
+After editing: `systemctl restart telstore-bot`.
+
+---
+
+## Common issues
+
+- **`python3 not found`** → `apt-get update && apt-get install -y python3`
+- **Bot silent after `/start`** → re-check the token in `.env`, then `bash scripts/check_bot.sh`
+- **`systemctl restart` says unit not found** → you used `run_bot.sh`, not the installer; run Part A.
