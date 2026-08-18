@@ -8,7 +8,15 @@ A complete, ready-to-deploy **Telegram bot** you run on your own server. Set you
 
 **One-time price: $29** (single-site license)
 
+## ▶️ Buy now
+
+Instant download after payment — **get your copy at one of these stores**:
+
+- **SellApp** → https://telstore.sell.app/product/telstore-bot-source-code
+- **SellAuth** → https://telstore.sellauth.com/checkout/840291
+
 ---
+
 
 ## How it works (before → after purchase)
 
