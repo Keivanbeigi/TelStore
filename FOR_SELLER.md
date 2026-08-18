@@ -1,120 +1,67 @@
-# TelStore — Seller Distribution Guide
+# FOR_SELLER.md — Seller's brief (for the person distributing this package)
 
-This guide is for the **seller/owner** of TelStore. It explains how to deliver
-the bot to a buyer using a **private GitHub repo + a short-lived read-only
-token**, so the buyer can install on their own server in a few commands.
+This file is **for the seller** (the person who sells the TelStore bot). It is
+included in the delivery as part of the documentation set. The buyer-facing
+documents are `README.md`, `INSTALL.md`, `DEPLOY_SERVER.md`, `BUYER_GUIDE.md`,
+and `ARCHITECTURE.md`.
 
-> Keep this file out of anything you hand directly to buyers unless you want
-> them to see the exact workflow. It contains no secrets, but it is your ops
-> playbook.
+## What you are selling
 
----
+A complete Telegram bot that lets each buyer run their own crypto-paid shop:
+digital products + VIP channel subscriptions. The buyer installs it on their own
+server and plugs in **their own** Telegram token, wallet, and NOWPayments /
+CoinGate keys.
 
-## 1. What each buyer needs
+## What ships to each buyer
 
-Two things, both of which you generate/choose and send to the buyer:
+The `telstore/` folder contains:
 
-1. **REPO_URL** — the https address of your private TelStore source repo, e.g.
-   `https://github.com/<your-account>/TelStore-source.git`
-2. **GITHUB_TOKEN** — a read-only, single-repo GitHub Personal Access Token
-   that can clone that repo, which you **revoke after the sale** so it does not
-   become a permanent backdoor.
+- `README.md`, `INSTALL.md`, `DEPLOY_SERVER.md`, `ARCHITECTURE.md`,
+  `BUYER_GUIDE.md`, `FOR_SELLER.md` — the documentation set
+- `scripts/` — the full Python source (stdlib only)
+  - `bot.py` main bot, `config.py` settings, `lang.py` all UI text,
+    `admin.py`, `channel_access.py`, `nowpayments.py`, `coingate.py`,
+    `broadcast.py`
+  - `deploy_server.sh` one-shot installer (creates the `telstore-bot` systemd
+    service), `run_bot.sh`, `check_bot.sh`
+  - `.env.example` — template buyers fill with their own keys
+  - `requirements.txt` — optional dev deps only (stdlib needed at runtime)
 
-Give the buyer this one command to run on their server:
+## Branding & cleanliness rules (keep these true on every build)
 
-```bash
-export REPO_URL="https://github.com/<your-account>/TelStore-source.git"
-export GITHUB_TOKEN="<one-time-token>"
-bash install_from_github.sh
-```
+- **No personal/author keys or IDs anywhere** in the shipped package. All
+  secrets must be placeholder values (`your_bot_token_here`, etc.) or read from
+  `.env`.
+- **No "Crypto Quest", "ADN", "CQB", or other legacy brand names.** The package
+  is branded **TelStore**. Search the tree before shipping:
+  ```bash
+  grep -rin "crypto.quest\|ADN\|cqb" telstore/ 2>/dev/null && echo "found!" || echo "clean"
+  ```
+- **No Persian in the shipped package.** Everything buyer-facing is English.
+- **No runtime data files** (`subscribers.json`, `products.json`,
+  `settings.json`, `pending_payments.json`, `wizard.json`) and no `.env` in the
+  shipped zip. Those are created live per-buyer, never pre-shipped.
+- `deploy_server.sh` and `check_bot.sh` use the service name **`telstore-bot`**
+  — keep that consistent with the README when you rebuild.
 
-The script clones the repo, drops the `.git` history (so the token never ends
-up in any reflog or on disk), then runs the interactive `deploy_server.sh`
-which asks the buyer for **their own** Telegram token / wallet / NOWPayments
-key and writes their `.env`.
+## Versioning & rebuild checklist
 
----
+When you build a new sale zip:
 
-## 2. Creating a read-only token for a sale (2 minutes)
+1. Copy the working source into a clean build folder.
+2. Run the brand-grep above; fix any residue.
+3. Confirm only `.env.example` (no `.env`), no runtime JSON, no `__pycache__`.
+4. Zip the `telstore/` folder as the root of the archive.
+5. Re-verify the archive's contents before uploading.
 
-1. GitHub → **Settings → Developer settings → Fine-grained personal access
-   tokens → Generate new token**.
-2. **Resource owner:** your account.
-3. **Repository access:** **Only select repositories** → tick **TelStore-source**.
-4. **Permissions → Contents:** set to **Read-only**.
-5. **Expiration:** pick a short window (e.g. 1 day / 7 days).
-6. Generate and copy the token. Send it to the buyer along with the command
-   above.
+## Support expectations
 
-> ⚠️ **Do not use your main account token.** Use a **fine-grained, read-only,
-> limited to the TelStore-source repo only** token. Revoke/expire it after the sale.
+Buyers are typically not developers. Expect questions about: getting a bot
+token, the chat_id, why the bot isn't answering `/start` (almost always a wrong
+token), and how to add their first product. Point them to `BUYER_GUIDE.md` and
+`INSTALL.md` first — both are written to be followed without prior knowledge.
 
----
+## License you pass along
 
-## 3. Rotating / revoking after the sale
-
-- **Fine-grained token:** Settings → Developer settings → Fine-grained tokens
-  → find the token → **Revoke**. It stops working instantly.
-- **Classic token:** Settings → Developer settings → Personal access tokens →
-  delete/expire it.
-
-Recommended: **rotate per sale** — issue a fresh token for each buyer and revoke
-it as soon as they confirm the install worked. This is your "one-time link"
-mechanism; GitHub itself has no true single-use download URL, but a revoked
-per-sale token is the practical equivalent.
-
----
-
-## 4. Safety rules for the seller
-
-- The source repo (`TelStore-source`) must stay **private**.
-- Never commit `.env`, `*.env`, `subscribers.json`, `products.json`,
-  `pending_payments.json`, `settings.json`, or any `.log` — all already in
-  `.gitignore`.
-- Never paste a live token into code, docs, or the repo.
-- Keep `PROJECT_STATUS.md`, local `.bat` launchers, and anything with your real
-  chat_id / token id out of the repo (it is gitignored / excluded).
-- The sale package must contain only **buyer-clean** files.
-
----
-
-## 5. Repos overview
-
-| Repo | Visibility | Purpose |
-|------|-----------|---------|
-| `Keivanbeigi/TelStore` | **PUBLIC** | Sales page + screenshots + docs |
-| `Keivanbeigi/TelStore-source` | **PRIVATE** | Bot source code (delivered per-sale via token) |
-
----
-
-## 6. Updating the bot later
-
-When you improve the bot, commit + push on `master` of the private
-`TelStore-source` repo, then tell existing buyers to re-run:
-
-```bash
-export REPO_URL="https://github.com/<your-account>/TelStore-source.git"
-export GITHUB_TOKEN="<fresh-token>"
-bash install_from_github.sh
-```
-
-The script replaces `/opt/telstore` with the latest source and re-runs the
-interactive config (their `.env` is asked for again).
-
----
-
-## 7. Reference: files layout
-
-```
-Public repo (sales page) — Keivanbeigi/TelStore:
-  index.html / sales-page.html    sales page with screenshots
-  screenshots/                    before/after-purchase screenshots
-  SELLER_DESCRIPTION.md           marketplace description (copy-paste to Sellauth)
-
-Private repo (source) — Keivanbeigi/TelStore-source:
-  install_from_github.sh          buyer runs this on their server
-  scripts/                        bot source (admin.py, bot.py, config.py, lang.py, ...)
-  scripts/.env.example            template — buyer fills in their own values
-  scripts/deploy_server.sh        interactive installer + systemd service setup
-  scripts/run_bot.sh              entrypoint used by systemd
-```
+Single-site, non-resellable by the end buyer. Include that wording in the
+product description and in `BUYER_GUIDE.md` (already present).
