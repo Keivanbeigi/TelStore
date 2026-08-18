@@ -30,6 +30,16 @@ customers**.
 The values you set up during installation (bot token, wallet, API keys,
 prices) are **yours** — for the products *you* sell through the bot.
 
+## Where to buy
+
+You can purchase this bot at either store:
+
+- **SellApp** — https://telstore.sell.app/product/telstore-bot-source-code
+- **SellAuth** — https://telstore.sellauth.com/checkout/840291
+
+(You only need to buy it once, at whichever you prefer. The delivered package
+and this documentation are identical.)
+
 ---
 
 ## 2. What you need before you start
