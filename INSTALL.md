@@ -1,217 +1,53 @@
-# TelStore Bot — Install Guide for Buyers
+# INSTALL.md — Install the TelStore Bot (quick start)
 
-> **A ready-to-sell Telegram subscription bot.** Sell Premium memberships to your
-> VIP Telegram channel: customers pay in crypto (manual wallet or NOWPayments),
-> get Premium, and are auto-added to your private channel. Owner panel included.
+This is the shortest path to a running bot on a Ubuntu/Debian VPS or WSL.
+For the full server-deployment walkthrough (uploads, systemd service, day-to-day
+management), see **DEPLOY_SERVER.md**.
 
-This guide is written for a **non-technical buyer**. Follow the steps in order
-and you'll have a working bot in ~15 minutes.
+## What you need before you start
 
----
+| Requirement | Where to get it |
+|-------------|-----------------|
+| A server (Ubuntu/Debian VPS) or WSL on your PC | Any hosting / WSL (the Ubuntu app) |
+| Telegram bot token | [@BotFather](https://t.me/BotFather) → `/newbot` |
+| Your Telegram chat_id | [@userinfobot](https://t.me/userinfobot) |
+| An EVM wallet `0x...` *(optional)* | e.g. MetaMask |
+| NOWPayments API key *(optional)* | [nowpayments.io](https://nowpayments.io) → Settings → API Keys |
+| CoinGate API token *(optional)* | [coingate.com](https://coingate.com) → Settings → API |
 
-## Table of contents
-1. [What you get](#what-you-get)
-2. [Before you start (what you need)](#before-you-start)
-3. [Create your Telegram bot](#step-1-create-your-telegram-bot)
-4. [Install Python](#step-2-install-python)
-5. [Configure the bot](#step-3-configure-the-bot)
-6. [Run the bot](#step-4-run-the-bot)
-7. [(Optional) Auto VIP channel](#step-5-optional-setup-your-vip-channel)
-8. [(Optional) NOWPayments card/crypto gateway](#step-6-optional-enable-nowpayments)
-9. [Owner commands](#owner-commands)
-10. [Troubleshooting](#troubleshooting)
+## The one-command installer (recommended)
 
----
+On your server, in the `telstore/` folder:
 
-## What you get
-
-```
-scripts/
-  bot.py             the bot (runs with:  python bot.py)
-  config.py          all settings + PRODUCTS catalogue (edit this to configure)
-  lang.py            all messages & buttons (reword/translate here)
-  admin.py           owner commands
-  channel_access.py  auto VIP-channel membership
-  nowpayments.py     card/crypto payment gateway
-  broadcast.py       push reports/messages to subscribers
-  .env.example       template — copy to .env and fill your values
+```bash
+cd telstore
+bash scripts/deploy_server.sh
 ```
 
-## Before you start (what you need)
-- A computer that stays on (or a small VPS). The bot must keep running.
-- Python 3.8+ installed.
-- A Telegram account, a wallet address (BSC/ETH/Polygon), and (optional) a
-  Telegram channel.
+The installer asks you for your **own** values:
 
----
+1. Telegram bot token
+2. Your Telegram chat_id
+3. Your EVM wallet (optional — Enter to skip)
+4. NOWPayments API key (optional — Enter to skip)
 
-## Step 1 — Create your Telegram bot
-1. Open Telegram, search for **@BotFather**.
-2. Send `/newbot`, choose a name and a username (must end in `bot`).
-3. BotFather gives you a **token** like `123456:ABC-DEF...`. Copy it — you'll
-   need it in Step 3.
+When it finishes you see `✅ Bot service is RUNNING.` The bot is installed as a
+**systemd service** named `telstore-bot` and restarts automatically on boot.
 
-## Step 2 — Install Python
-- Download from https://www.python.org/downloads/ (Windows: tick **"Add python
-  to PATH"** during install). Verify with `python --version`.
+## Verify
 
-## Step 3 — Configure the bot
-1. Put the `scripts/` folder anywhere (e.g. `C:\telstore\`).
-2. In the folder, **copy `.env.example` → name it `.env`**.
-3. Open `.env` in a text editor (Notepad is fine) and fill in YOUR values:
-
-```ini
-# Your bot token from BotFather (required)
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
-
-# Your wallet where customers send crypto (required for manual payment)
-CRYPTO_ADDRESS=0xYourWalletAddressHere
-
-# Monthly price in USD (optional, default 5)
-PRICE_USD=5
-
-# YOUR Telegram chat_id — the owner (gets /stats, /broadcast, etc.)
-# Get it from @userinfobot. Leave empty to disable owner panel.
-OWNER_CHAT_ID=123456789
-
-# --- Optional: VIP channel auto-membership ---
-# Make the bot an ADMIN of your channel (Management > Add admin > your bot,
-# with "ban users" permission), then:
-CHANNEL_ID=-1001234567890
-CHANNEL_LINK=https://t.me/yourchannel
-
-# --- Optional: NOWPayments card/crypto gateway (see Step 6) ---
-NOWPAYMENTS_API_KEY=
+```bash
+bash scripts/check_bot.sh        # all-health check
 ```
 
-> ⚠️ Never share your `.env` file or your bot token with anyone.
+Then open Telegram and send `/start` to your bot.
 
-## Step 4 — Run the bot
-1. Open a terminal / PowerShell in the `scripts/` folder.
-2. Run:
-   ```bash
-   python bot.py
-   ```
-3. You'll see `✅ Bot running...`. Open Telegram, DM your bot, and tap
-   **Start**. The menu appears.
-4. Test **🛒 Shop / Products** → pick a product → it shows the payment page.
+## Manual (no installer)
 
-> To stop the bot: press `Ctrl+C`. To run it 24/7 on a server, use `screen`,
-> `tmux`, or a Windows service / systemd unit (see Troubleshooting).
-
-## Step 4b — Add & manage YOUR products (important)
-
-The bot ships with **one example product**. As the **owner**, you add / change
-/ remove your products **right from Telegram** — no code editing needed. These
-owner commands are private to you (your `OWNER_CHAT_ID`).
-
-### Add a product (from Telegram)
-DM the bot:
-```
-/add_product VIP Year | 49.99 | 365 | channel
-```
-Format: `/add_product <Name> | <price> | <days> | <kind>`
-- `Name` — shown in the shop (e.g. "VIP Year").
-- `price` — what the customer pays, any amount (e.g. `49.99`).
-- `days` — how long access lasts. `0` = lifetime / not time-based.
-- `kind` — `channel` (grants access to your VIP channel) **or** `digital`
-  (sends the customer a link/message).
-
-### Examples
-```
-/add_product VIP Month | 5.00 | 30 | channel
-/add_product Crypto Course | 19.99 | 0 | digital
+```bash
+cd telstore
+cp scripts/.env.example .env     # edit with YOUR token, owner id, wallet, keys
+bash scripts/run_bot.sh          # runs in the foreground (closing = bot stops)
 ```
 
-### Digital products: set what the customer receives
-After adding a `digital` product, set its delivery text:
-```
-/set_deliver <id> <text>
-```
-Example:
-```
-/set_deliver crypto_course Here are your access links: https://... Password: ABC123
-```
-
-### Other product commands (owner only)
-| Command | Action |
-|---------|--------|
-| `/products` | list all current products |
-| `/remove_product <id>` | remove a product |
-| `/add_product Name\|price\|days\|kind` | add a product |
-| `/set_deliver <id> <text>` | set a digital product's delivery message |
-
-Products are stored in `products.json` (created automatically) and **survive
-restarts** — no code changes needed. The shop menu updates instantly.
-
-## Step 5 — (Optional) Set up your VIP channel
-1. Create your private channel. Add the bot as **Administrator** with the
-   **"Ban users"** permission (so it can remove expired members).
-2. Put the channel id in `CHANNEL_ID` (negative number, e.g. `-100...`).
-   Find it via @username_to_id_bot or by forwarding a channel post to @getidsbot.
-3. Restart `bot.py`. Now paying customers are **auto-added** to the channel via
-   an invite link, and **auto-removed** when their subscription expires.
-
-## Step 6 — (Optional) Enable NOWPayments
-1. Register at https://nowpayments.io (supports many coins; no card needed for
-   payout to crypto).
-2. Get an **API key** from *Settings → API Keys*.
-3. Put it in `NOWPAYMENTS_API_KEY` in `.env`. Restart the bot.
-4. The **"Pay with Card / Crypto (NOWPayments)"** button now appears and creates
-   live invoices. Set a payout wallet in the dashboard so funds settle there.
-
-> 💡 **Auto-delivery (no server needed):** the bot automatically checks pending
-> NOWPayments invoices every ~20 seconds and delivers the product the moment a
-> payment is confirmed — the customer does **not** need to press anything.
-> A payment is delivered exactly once (safe against double-sends). This works
-> perfectly on a laptop or a VPS; a public webhook (IPN) is only needed if the
-> bot isn't running 24/7.
-
----
-
-## Owner commands
-DM these to the bot (only your `OWNER_CHAT_ID` can use them):
-
-| Command | Action |
-|---------|--------|
-| `/stats` | member count + estimated revenue |
-| `/products` | list the products configured in `config.py` |
-| `/broadcast <text>` | send a message to all subscribers |
-| `/add_member <user_id>` | grant paid access manually (uses default duration) |
-| `/kick <user_id>` | remove a member |
-| `/set_price <usd>` | change the default price (current run only) |
-| `/admin` | list all owner commands |
-
----
-
-## Troubleshooting
-
-**`ERROR: TELEGRAM_BOT_TOKEN not set`** — your `.env` is missing the token, or
-you ran the bot from the wrong folder. The `.env` file must be in the same
-folder as `bot.py`.
-
-**Bot doesn't reply** — make sure only ONE process is polling your bot. If you
-ran it twice, stop one. Telegram only allows one active poller.
-
-**`400 Bad Request`** — usually a stale update. Restart the bot; it auto-drains
-stale updates.
-
-**Channel invite not working** — the bot must be an *admin* of the channel with
-"ban users" permission, and `CHANNEL_ID` must be the numeric channel id.
-
-**Persian/Arabic text looks wrong** — the bot itself is fine; this is your
-terminal font. Use Windows Terminal with a font that supports ligatures
-(e.g. Cascadia Code, Vazirmatn) and the DirectWrite shaping engine.
-
-**Run 24/7 for free** — a small Linux VPS or always-on PC with `python bot.py`
-inside `screen`/`tmux`, or run as a Windows Scheduled Task.
-
----
-
-## Extending
-See `ARCHITECTURE.md`. The code is split into single-responsibility modules:
-change any message in `lang.py`, any setting in `config.py`, and add behaviour
-in `bot.py` — no hunting through one big file.
-
-*This is a template/source sale. Buyers configure their own token, wallet, and
-channel. All payments go directly to the buyer's own wallet.*
+For a 24/7 bot, run the installer above instead so it survives reboots.
