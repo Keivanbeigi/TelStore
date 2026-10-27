@@ -1,293 +1,244 @@
-# TelStore Bot v1.0 — Telegram Payment Bot
+# TelStore Bot v1.1 — Telegram Payment & VIP Subscription Bot
 
-A complete Telegram bot for selling your digital products / VIP channel
-access, with **crypto payments** (NOWPayments + CoinGate). It runs 24/7 on
-your own server and is 100% configurable from Telegram — no coding needed.
+A complete, production-hardened Telegram bot for selling digital products and VIP channel
+access with automated crypto payments (NOWPayments + CoinGate) and manual wallet verification.
+It runs 24/7 on your Linux server, survives restarts, and is fully configurable from Telegram.
 
-## Documentation
+## Documentation Index
 
-Everything you need ships in this folder:
+Everything you need ships directly in this package:
 
-- **`INSTALL.md`** — the 2-minute quick-start install
-- **`DEPLOY_SERVER.md`** — full 24/7 server deployment (for any buyer)
-- **`BUYER_GUIDE.md`** — welcome, first 15 minutes, and common questions
-- **`ARCHITECTURE.md`** — how the code is organised
-- **`FOR_SELLER.md`** — seller's brief (distribution & build checklist)
-- This **`README.md`** — reference index + owner tools
-
----
-
-## 1. What you just bought
-
-You bought the **bot software itself** (this package). You install it on a
-server of your own, connect it to **your** Telegram bot, **your** wallet and
-**your** payment accounts, and run it to sell **your own products** to **your
-customers**.
-
-> The price you paid to buy this bot is not something inside this package.
-> It only shows up on the seller's checkout page.
-
-The values you set up during installation (bot token, wallet, API keys,
-prices) are **yours** — for the products *you* sell through the bot.
-
-## Where to buy
-
-You can purchase this bot at either store:
-
-- **SellApp** — https://telstore.sell.app/product/telstore-bot-source-code
-- **SellAuth** — https://telstore.sellauth.com/checkout/840291
-
-(You only need to buy it once, at whichever you prefer. The delivered package
-and this documentation are identical.)
+- **`INSTALL.md`** — 2-minute quick-start installation guide
+- **`DEPLOY_SERVER.md`** — Comprehensive 24/7 server deployment, upgrades, backup, and uninstallation
+- **`BUYER_GUIDE.md`** — Welcome walkthrough, first 15 minutes, and admin administration
+- **`ARCHITECTURE.md`** — System architecture, storage engine, and security invariants
+- **`FOR_SELLER.md`** — Seller's distribution, build verification, and clean package checklist
+- **`README.fa.md`** — Persian documentation for Persian-speaking administrators
+- This **`README.md`** — Complete technical reference index and operational manual
 
 ---
 
-## 2. What you need before you start
+## 1. What You Received
 
-Have these ready before you install (all free):
+You received the **complete, self-hosted bot software**. You install it on your own server, connect your Telegram bot token, your crypto payout wallet, and your payment gateway credentials.
 
-| What | Where to get it |
-|------|-----------------|
-| **A VPS / server** | Any Ubuntu/Debian machine (or WSL on your PC for testing). It must stay on 24/7 for the bot to keep selling. |
-| **A Telegram bot token** | Message [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token. |
-| **Your Telegram chat_id** | Message [@userinfobot](https://t.me/userinfobot) — it replies with your number. |
-| **A crypto wallet (EVM)** | Any `0x...` wallet (e.g. MetaMask). Cards sent here for manual payments. *(Optional but recommended.)* |
-| **A NOWPayments API key** | [nowpayments.io](https://nowpayments.io) → add a payout wallet → **Settings → API Keys**. Powers automatic card/crypto checkout. *(Optional.)* |
-| **A CoinGate API token** *(optional — only if you want a 2nd payment page)* | [coingate.com](https://coingate.com) → **Settings → API → Create Auth Token**. The installer won't ask for it; add it to `.env` yourself if you want it. |
-
-> **NowPayments requires a verified payout wallet** in your dashboard for the
-> money to actually reach you. Without it, automatic checkout stays off.
-> CoinGate is optional — the ready-made installer only asks for the four
-> values above; you can add CoinGate to `.env` later.
+- **Zero Tracking:** The bot never phones home, uses third-party analytics, or communicates with any servers other than Telegram and your configured payment gateways.
+- **Direct Payouts:** 100% of customer payments go directly to your crypto wallet or gateway accounts.
+- **Pure Python:** Built exclusively on Python 3.8+ standard library. Zero external pip dependencies required.
 
 ---
 
-## 3. Step-by-step install (recommended way)
+## 2. Prerequisites
 
-This is the easy path. The installer asks you questions and does everything
-for you — it even sets the bot up to auto-start on every reboot.
+Prepare these values before deploying:
 
-### Step 1 — Unzip the package on your computer
+| Requirement | Where to get it | Notes |
+|-------------|-----------------|-------|
+| **Linux Server / VPS** | Any Ubuntu / Debian VPS | Python 3.8+ installed; runs 24/7 as systemd service |
+| **Telegram Bot Token** | [@BotFather](https://t.me/BotFather) → `/newbot` | **Required** for bot polling and messaging |
+| **Telegram Chat ID** | [@userinfobot](https://t.me/userinfobot) | **Required** to grant admin privileges and receive alerts |
+| **Crypto Wallet Address** | Any EVM address (`0x...` BSC/ETH/Polygon) | Optional — enables manual crypto payment flow |
+| **NOWPayments API Key** | [nowpayments.io](https://nowpayments.io) | Optional — enables automatic crypto checkout |
+| **CoinGate Auth Token** | [coingate.com](https://coingate.com) | Optional — enables hosted web checkout (requires KYC; button hidden until `COINGATE_ENABLED=1`) |
 
-Right-click the `.zip` you received → **Extract All**. You'll get a folder
-named `telstore`. Inside it there is a `scripts/` folder.
+---
 
-### Step 2 — Upload it to your server
+## 3. Installation Options
 
-Open a terminal on your **own computer** and run:
+### Method A: Interactive Installer (Recommended for Buyers)
 
-```bash
-scp -r telstore root@YOUR_SERVER_IP:~/
-```
-
-Replace `YOUR_SERVER_IP` with your server's IP address. (If you use WinSCP
-or FileZilla instead, just drag the whole folder into your home directory.)
-
-### Step 3 — Log in to your server
+The interactive installer guides you step-by-step through configuration, validates entries, sets secure permissions (`chmod 600 .env`), and sets up the systemd service:
 
 ```bash
-ssh root@YOUR_SERVER_IP
-```
-
-Then go into the folder:
-
-```bash
-cd ~/telstore
-```
-
-### Step 4 — Run the installer
-
-```bash
+cd telstore
 bash scripts/deploy_server.sh
 ```
 
-The installer now asks you a few questions. Answer with **your own** values:
+The installer prompts for your configuration values:
+1. **Telegram bot token**
+2. **Admin chat_id**
+3. **Crypto wallet address** (optional, press Enter to skip)
+4. **NOWPayments API key** (optional, press Enter to skip)
+5. **CoinGate Auth token** (optional, press Enter to skip)
+6. **CoinGate KYC verification status** (y/n — sets `COINGATE_ENABLED=1` only if approved)
 
-1. **Telegram bot token** — paste the token from @BotFather.
-2. **Your Telegram chat_id** — paste your number (from @userinfobot).
-3. **Your crypto wallet address** — paste your `0x...` wallet (just press
-   Enter to skip if you don't want manual payments).
-4. **NOWPayments API key** — paste it, or press Enter to skip.
+### Method B: Non-Interactive / Unattended Installer
 
-When it finishes it prints a green **✅ Bot service is RUNNING.**
+For automated or scripted VPS deployments, use `install_telstore.sh` with command-line flags:
 
-> The bot is now installed as a **systemd service** named `telstore-bot`.
-> It starts automatically, and it will start again every time the server
-> reboots. No extra steps needed.
+```bash
+bash scripts/install_telstore.sh --install-dir /opt/telstore --service-name telstore-bot --create-service -y
+```
+
+Flags supported:
+- `--install-dir <path>`: Target installation directory (default: current directory).
+- `--service-name <name>`: Systemd service name (default: `telstore-bot`).
+- `--create-service`: Installs and enables the systemd service unit.
+- `--dry-run`: Previews actions without modifying the filesystem or systemd.
+- `-y`, `--yes`: Non-interactive mode; auto-approves all prompts.
+
+### Safe Upgrade & Data Guarantees
+- **Existing Settings Preserved:** If re-running on an existing server, installers detect current settings and use them as defaults.
+- **Fail-Closed Backup:** Generates an atomic backup of `.env` (`.env.bak_YYYYMMDD_HHMMSS`) before writing updates. Halts immediately if backup fails.
+- **Zero Data Loss:** Customer subscriptions (`subscribers.json`) and orders (`pending_payments.json`) are never modified or reset by the installer.
+- **Systemd Autostart:** Automatically installs, enables, and starts the `telstore-bot` systemd service.
 
 ---
 
-## 4. Verify it's working
+## 4. Verification & Diagnostics
 
-Run the built-in health check (optional but recommended):
+Run the integrated health check:
 
 ```bash
 bash scripts/check_bot.sh
+systemctl status telstore-bot
 ```
 
-It prints **PASS** or **FAIL** for each check (Python, token validity,
-payments, files, service). When everything passes you see:
-
-```
-✅ RESULT: ALL CHECKS PASSED — the bot is healthy.
-```
-
-Then open Telegram and send `/start` to your bot. It should reply with the
-main menu.
+Open Telegram and send `/start` to your bot. As owner, you will see the **⚙️ Admin Menu** button.
 
 ---
 
-## 5. Manage the bot day to day
-
-All on the server:
+## 5. Day-to-Day Service Management
 
 ```bash
-systemctl status telstore-bot        # is it running?
-journalctl -u telstore-bot -f        # live logs (Ctrl+C to exit)
-systemctl restart telstore-bot       # restart after a config change
+systemctl status telstore-bot        # Check service status
+journalctl -u telstore-bot -f        # View live logs (Ctrl+C to exit)
+systemctl restart telstore-bot       # Restart service after editing .env
+systemctl stop telstore-bot          # Stop service
 ```
 
 ---
 
-## 6. Testing on your own PC (no server needed)
+## 6. Architecture & Data Safety Highlights
 
-If you don't have a server yet (or just want to try it before paying for a
-VPS), you can run it on **WSL** (the Ubuntu app on Windows). The bot runs in
-the foreground here, so close the window and it stops — that's why a real
-24/7 bot needs a server (Steps 2–5).
+Version 1.1 includes enterprise-grade resilience and data safety enhancements:
 
-1. Open **WSL** (Ubuntu) and go into the folder:
-   ```bash
-   cd ~/telstore
-   ```
-2. Create your `.env` from the template and fill in **your** values:
-   ```bash
-   cp scripts/.env.example scripts/.env
-   nano scripts/.env
-   ```
-   Set at least `TELEGRAM_BOT_TOKEN=` and `OWNER_CHAT_ID=` in that file.
-3. Start the bot:
-   ```bash
-   bash scripts/run_bot.sh
-   ```
-4. Send `/start` to your bot in Telegram — it should answer with the menu.
-
----
-
-## 7. Configure your own products & prices
-
-This is where **your** business comes in. The bot has no opinion about what
-you sell — you set it up as owner from Telegram, no code changes needed.
-
-> **Important:** the prices you set here are the prices **you** sell *your*
-> products at. They have nothing to do with the price you paid to buy the
-> bot. Your own checkout amounts are whatever you want.
-
-### The Owner Menu (your private admin panel)
-
-Open your bot in Telegram and send `/start`. Because you are the **owner**
-(user id set during install), the main menu shows an extra **⚙️ Owner Menu**
-button that normal visitors never see. Tap it to manage everything:
-
-- **➕ Add Product** — guided wizard (a few taps) to add a product
-- **🗑️ Remove Product** — pick one to delete
-- **🛒 List Products** — see your current catalogue
-- **How to add** — quick example of the command format
-
-### Command shortcuts (same tools, typed)
-
-If you prefer typing, these work in the owner chat:
-
-- `/products` — show your catalogue
-- `/add_product Name | price [| days [| kind]]` — add a product
-  e.g. `/add_product VIP Year | 49.99 | 365 | channel`
-- `/remove_product <id>` — delete one
-- `/set_deliver <id> <text>` — set what the buyer receives after paying
-
-> `kind`: `channel` = grant access to your VIP channel, `digital` = send the
-> buyer a message/link. `days`: how long access lasts (0 = lifetime).
-
-### Starting catalogue
-
-The package ships with one example product so the shop isn't empty:
-**VIP Channel — 1 Month** at **$12** *($12+ is the minimum the NOWPayments
-gateway accepts).* Add your own and remove this one.
-
-### Other owner tools
-
-- **🌐 Website / 🎧 Support / 🔔 Subscription** — tap these as owner to set
-  / open / clear links for your customers.
-- `/stats` — sales & subscriber numbers
-- `/broadcast <text>` — message all subscribers
-- `/set_setting <key> <value>` — set store settings (channel, website, ...)
-- `/set_price <usd>` — change the default price (current run)
+1. **Atomic Storage Engine (`scripts/storage.py`):**
+   - Eliminates data truncation or corruption during server reboots or crashes via atomic write-and-replace (`mkstemp`, `fsync`, `os.replace`).
+   - Strict corruption detection: raises `DatabaseCorruptedError` instead of wiping databases with empty defaults.
+2. **Crash-Safe Payment Idempotency:**
+   - Every confirmed payment is durably recorded in `processed_payments` inside `subscribers.json` in the same atomic transaction as the subscription renewal.
+   - Prevents double-crediting if a network timeout or crash occurs during order clearance.
+3. **Process Concurrency Lock (`SingleInstanceLock`):**
+   - Enforces single-instance execution via OS-level file locking (`msvcrt` on Windows, `fcntl` on Linux). Prevents dual-bot polling collisions.
+4. **Strict Gateway Isolation:**
+   - Enforces separate sandbox and production configurations (`NOWPAYMENTS_ENVIRONMENT`, `COINGATE_ENVIRONMENT`). Prevents credential cross-contamination.
+5. **Real File Delivery (`scripts/file_delivery.py`):**
+   - Delivers actual digital files (PDFs, videos, audio, documents, pictures) natively upon confirmed purchase using Telegram's native Bot API (`sendDocument`, `sendVideo`, `sendAudio`, `sendPhoto`).
+   - Admins attach files directly via Telegram using `/set_file <id>`.
+   - VIP channel memberships automatically skip file delivery and generate single-use invite links instead.
+6. **Automatic Blockchain Verification (`scripts/chaincheck.py`):**
+   - Direct on-chain verification for manual crypto payments across EVM blockchains (BSC, Ethereum, Polygon) using free public JSON-RPC endpoints.
+   - Verifies sender, merchant recipient address, $\ge 2$ block confirmations, and token transfer logs (including BSC USDT 18-decimal precision with 2% price tolerance).
+   - If confirmed on-chain, delivery is immediate and automatic; if unmined or pending, orders queue into manual review for admin approval.
+7. **Live Crypto Spot Rates (`scripts/prices.py`):**
+   - Fetches live cryptocurrency exchange rates via CoinGecko public API (cached 60 seconds) so customers know the exact token amount to transfer.
+   - Gracefully falls back to USD amounts if CoinGecko is unreachable.
+8. **CoinGate KYC Compliance (`COINGATE_ENABLED`):**
+   - CoinGate checkouts require merchant account KYC verification. The CoinGate checkout button is kept hidden unless `COINGATE_ENABLED=1` is explicitly set in `.env`.
 
 ---
 
-## 8. Setting up a VIP channel (optional)
+## 7. Configuring Products & Store Settings
 
-If you sell access to a private Telegram channel:
+All products and prices are managed directly from Telegram:
 
-1. Add your **bot as an admin** of the channel.
-2. Get the channel **ID** (a negative number like `-1001234567890`). You can
-   set it as owner from Telegram, or add `CHANNEL_ID=` in `.env`.
-3. Optional: add a public `CHANNEL_LINK=` so new customers see the invite.
+### Admin Menu (Interactive Wizard)
+Send `/start` to your bot from your owner account → tap **⚙️ Admin Menu**:
+- **➕ Add Product** — Step-by-step wizard (name, price, duration, delivery kind).
+- **🗑️ Remove Product** — Select a product to remove from catalogue.
+- **🛒 List Products** — View current active products.
 
-Paying customers get access automatically, and expired subscriptions are
-auto-removed.
+### Admin Command Shortcuts
+- `/products` — List active catalogue.
+- `/add_product Name | price [| days [| kind]]` — e.g., `/add_product VIP Month | 12.00 | 30 | channel`
+- `/remove_product <id>` — Delete product by ID.
+- `/set_deliver <id> <text>` — Set text/link delivered upon purchase.
+- `/set_file <id>` — Reply to any file, video, audio, or document with this command to attach a real file for digital delivery.
+- `/broadcast <message>` — Send announcement to all active subscribers.
+- `/stats` — View sales analytics and subscriber counts.
+- `/set_setting <key> <value>` — Update settings (`website_url`, `support_url`, `channel_id`).
 
 ---
 
-## 9. Files in this package
+## 8. VIP Channel Automation (Optional)
 
-```
+To sell access to a private Telegram channel:
+1. Add your bot as an **Administrator** in your private channel (with invite users and ban users permissions).
+2. Set `CHANNEL_ID=-1001234567890` and `CHANNEL_LINK=https://t.me/yourchannel` in `.env` or via `/set_setting`.
+3. The bot automatically generates single-use invite links upon successful payment and sweeps expired subscribers on schedule.
+
+---
+
+## 9. Package File Structure
+
+```text
 telstore/
-├── README.md               This file — reference index + owner tools
-├── INSTALL.md              Quick-start install
-├── DEPLOY_SERVER.md        Full 24/7 server deployment
-├── BUYER_GUIDE.md          Welcome + first 15 minutes
-├── ARCHITECTURE.md         How the code is organised
-├── FOR_SELLER.md           Seller's brief (distribution & rebuild checklist)
+├── README.md               Reference index and technical documentation
+├── README.fa.md            Persian documentation for Persian administrators
+├── INSTALL.md              Quick-start installation guide
+├── DEPLOY_SERVER.md        Full 24/7 server deployment, backup & uninstallation
+├── BUYER_GUIDE.md          Buyer onboarding and admin administration walkthrough
+├── ARCHITECTURE.md         System architecture and storage guarantees
+├── FOR_SELLER.md           Seller package verification and distribution rules
 └── scripts/
-    ├── bot.py               Main bot (logic only)
-    ├── config.py            Loads all settings from .env
-    ├── lang.py              Every customer-facing message & button label
-    ├── nowpayments.py       NOWPayments card/crypto gateway
-    ├── coingate.py          CoinGate web-payment gateway (optional)
-    ├── admin.py             Owner admin panel
-    ├── channel_access.py    Channel membership control
-    ├── broadcast.py         Send messages to subscribers
-    ├── deploy_server.sh     One-shot installer (creates the 24/7 service)
-    ├── run_bot.sh           Run the bot in the foreground (testing)
-    ├── check_bot.sh         Health check / self-test
-    ├── requirements.txt     (Standard library only — nothing to install)
-    └── .env.example         Copy to .env and fill in your values
+    ├── bot.py               Main bot polling, command dispatcher, and order state machine
+    ├── storage.py           Crash-safe atomic storage engine and concurrency locking
+    ├── config.py            Configuration loader, environment isolation & validation
+    ├── lang.py              Customer-facing messages, UI strings and button labels
+    ├── file_delivery.py     Native file and media delivery engine (sendDocument, sendVideo, etc.)
+    ├── chaincheck.py        Automatic EVM on-chain verification for manual crypto transactions
+    ├── prices.py            Live cryptocurrency spot prices via CoinGecko public API
+    ├── nowpayments.py       NOWPayments card and cryptocurrency payment gateway
+    ├── coingate.py          CoinGate hosted web-payment gateway
+    ├── admin.py             Admin administration and channel membership management
+    ├── channel_access.py    Channel admission and expiration sweep routines
+    ├── broadcast.py         Subscriber announcement messaging engine
+    ├── deploy_server.sh     Interactive server installer and upgrade manager
+    ├── install_telstore.sh  Non-interactive unattended server installer (flags only)
+    ├── uninstall_server.sh  Safe server uninstaller with mandatory backup and data preservation
+    ├── run_bot.sh           Manual foreground execution script
+    ├── check_bot.sh         Health diagnostic and configuration audit tool
+    ├── requirements.txt     Development documentation (standard library only at runtime)
+    └── .env.example         Configuration template
 ```
 
-**No coding required.** The bot uses only Python's standard library, so there
-is nothing extra to install. Every message the customers see lives in
-`lang.py`; every setting lives in `.env`.
+---
+
+## 10. Safe Uninstallation
+
+To safely uninstall the bot and service from your server:
+
+```bash
+# Dry-run preview:
+bash scripts/uninstall_server.sh --dry-run
+
+# Execute uninstallation:
+bash scripts/uninstall_server.sh
+```
+
+- Creates an emergency rollback archive (`/tmp/telstore_pre_uninstall_*.tar.gz`).
+- Stops and disables `telstore-bot` systemd service.
+- Cleans up executable scripts and caches.
+- **Strictly preserves** `subscribers.json`, `pending_payments.json`, `manual_orders.json`, `.env`, and all `.bak_*` files.
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| Installer fails with "python3 not found" | Run `apt-get update && apt-get install -y python3`, then re-run. |
-| Bot doesn't reply to `/start` | Make sure your token in `.env` is correct (re-check with `check_bot.sh`). |
-| NOWPayments button hidden | You left the API key empty during install. Add it to `.env` and restart: `systemctl restart telstore-bot`. |
-| Money not reaching you | Check your payout wallet is **verified in your NOWPayments dashboard**. |
-| Bot stops when I close the terminal | You used `run_bot.sh` — for 24/7 use run the systemd installer (Step 3–5) on a server. |
-
-## 11. Support
-
-Need help getting your shop running? Contact us:
-
-- **Telegram:** [@k1_adineh](https://t.me/k1_adineh)
-
-We'll help you get setup, configure products, or troubleshoot your bot.
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `python3 not found` | Python not installed | Run `apt-get update && apt-get install -y python3`. |
+| Bot not replying to `/start` | Invalid token or network issue | Check token in `.env`; run `bash scripts/check_bot.sh`. |
+| Admin Menu not showing | `OWNER_CHAT_ID` mismatch | Send `/start` from the account matching `OWNER_CHAT_ID` in `.env`. |
+| `SingleInstanceLock: already running` | Previous process still running or dead lock | Check `ps aux | grep bot.py`. If stopped, remove `rm -f scripts/bot.lock`. |
+| Gateway checkout button hidden | API key unconfigured or CoinGate KYC required | Provide keys in `.env`. For CoinGate, ensure `COINGATE_ENABLED=1`. Restart service: `systemctl restart telstore-bot`. |
+| `GatewayConfigurationError` | Environment/key mismatch | Ensure `NOWPAYMENTS_ENVIRONMENT=production` matches live keys. |
+| Customer funds not arriving | Unverified payout wallet | Ensure payout wallet is verified in your gateway dashboard. |
 
 ---
 
-_Thank you for choosing TelStore! 🚀_
+## 12. Support & Contact
+
+- **Telegram Support:** [@k1_adineh](https://t.me/k1_adineh)
+- **License:** Single-site commercial license. Use for your own shop, channel, or commercial bot. Redistribution is strictly prohibited.

@@ -1,110 +1,199 @@
-# DEPLOY_SERVER.md — Deploy the TelStore Bot to a 24/7 server
+# DEPLOY_SERVER.md — Deploy the TelStore Bot to a 24/7 Production Server
 
-The bot is a plain Python 3 program that polls the Telegram Bot API. To sell
-around the clock it must run on an always-on server. This guide steps you
-through a full deployment to any Ubuntu/Debian VPS.
+The TelStore bot is a resilient Python 3 program that polls the Telegram Bot API. To process payments and manage subscriptions around the clock, it must run on an always-on Linux VPS or dedicated server.
 
-> Two ways to run: **[A] the one-command installer** (recommended, ~1 minute)
-> or **[B] fully manual**. Both produce the same running bot; use A unless you
-> need to customise.
+> Two deployment methods:
+> - **[Method A] The one-command installer** (`bash scripts/deploy_server.sh`) — Recommended, automated systemd service setup.
+> - **[Method B] Fully manual** — Useful for custom process supervisors (supervisor, Docker, systemd templates).
 
 ---
 
-## Part A — One-command installer (recommended)
+## System Requirements
 
-### A0. Copy the package to your server
+- **Operating System:** Ubuntu 20.04+, Ubuntu 22.04+, Debian 11+, or any systemd-based Linux distribution.
+- **Python Version:** Python 3.8 or higher.
+- **Dependencies:** **Python standard library only.** No external pip packages (`urllib3`, `requests`, `pip`) are required.
+- **Privileges:** Root or `sudo` access to register systemd service units.
 
-From your **own computer** (a terminal):
+---
+
+## Method A — Automated Installer (Recommended)
+
+### Step 1. Transfer the package to your server
+
+From your local machine terminal:
 
 ```bash
 scp -r telstore root@YOUR_SERVER_IP:~/
 ```
 
-Replace `YOUR_SERVER_IP` with your server's public IP. (WinSCP / FileZilla:
-just drag the `telstore` folder into your home directory.)
+*(Or use SFTP clients such as WinSCP or FileZilla to upload the `telstore/` directory to your home folder).*
 
-### A1. Log in
+### Step 2. Connect via SSH
 
 ```bash
 ssh root@YOUR_SERVER_IP
 cd ~/telstore
 ```
 
-### A2. Run the installer
+### Step 3. Run the installer
 
 ```bash
 bash scripts/deploy_server.sh
 ```
 
-Answer the prompts with **your** values: bot token, owner chat_id, EVM wallet
-(optional), NOWPayments API key (optional).
+Answer the interactive prompts with your credentials:
+1. **Telegram bot token** (from [@BotFather](https://t.me/BotFather))
+2. **Owner chat_id** (from [@userinfobot](https://t.me/userinfobot))
+3. **EVM wallet address** (BSC/ETH/Polygon — press Enter to skip manual crypto)
+4. **NOWPayments API key** (press Enter to skip, or type `none` to disable)
+5. **CoinGate Auth token** (press Enter to skip, or type `none` to disable)
+6. **CoinGate KYC confirmation** (if token provided: confirm whether live payments are approved; answering `y` sets `COINGATE_ENABLED=1`, `n` sets `COINGATE_ENABLED=0`)
 
-The script does everything:
+#### Installer Guarantees
+- **Version Compatibility:** Validates all core release modules (`bot.py`, `storage.py`, `config.py`, etc.) before configuring.
+- **Configuration Backup:** Creates a timestamped backup of any existing `.env` (`.env.bak_YYYYMMDD_HHMMSS`) with secure `600` permissions.
+- **Fail-Closed Safety:** Halts immediately if backup creation fails.
+- **Data Preservation:** Never overwrites or resets `subscribers.json`, `pending_payments.json`, or `manual_orders.json`.
+- **Systemd Service:** Installs and enables `telstore-bot.service` to automatically launch on boot.
 
-- checks/installs Python 3
-- writes a `.env` with your settings
-- installs a **systemd service** named `telstore-bot`
-- starts it now and enables it to start on every boot
+Expected completion output:
+```text
+✅ Bot service (telstore-bot) is RUNNING.
+   Status : systemctl status telstore-bot
+   Logs   : journalctl -u telstore-bot -f
+```
 
-You should see: `✅ Bot service is RUNNING.`
-
-### A3. Verify
+### Step 4. Verify deployment
 
 ```bash
 bash scripts/check_bot.sh
 systemctl status telstore-bot
 ```
 
-Then open Telegram → send `/start` → your bot replies with the main menu.
+Open Telegram and send `/start` to your bot. As the owner, the **⚙️ Admin Menu** will appear.
 
 ---
 
-## Part B — Manual deployment
+## Method B — Non-Interactive Automated Installation
 
-If you prefer to run it yourself (e.g. on WSL or a container):
+For scripted or headless CI/CD deployments where interactive prompts cannot be used:
 
 ```bash
-cd telstore
-cp scripts/.env.example .env
-nano .env                       # fill in your token, owner id, wallet, keys
-python3 -m pip install -r requirements.txt || true   # stdlib only, optional
-bash scripts/run_bot.sh         # foreground; Ctrl+C stops it
+cd ~/telstore
+bash scripts/install_telstore.sh --install-dir /opt/telstore --service-name telstore-bot --create-service -y
 ```
 
-For a persistent background process you can wrap `run_bot.sh` with your own
-`nohup`, Docker, or supervisor.
+- **`scripts/install_telstore.sh`** accepts command-line flags only (`--install-dir`, `--service-name`, `--create-service`, `--dry-run`, `-y`).
+- Copies application files and registers the systemd unit without prompting for credentials.
+- Pre-populate `/opt/telstore/.env` before launching the service.
 
 ---
 
-## Day-to-day management
+## Method C — Manual Deployment
+
+For containerized environments or existing supervisor configurations:
+
+```bash
+cd ~/telstore
+cp scripts/.env.example .env
+nano .env                          # Populate tokens, IDs, and keys
+chmod 600 .env                     # Restrict file permissions to owner only
+bash scripts/run_bot.sh            # Run in foreground
+```
+
+---
+
+## Configuration Reference & Environment Isolation
+
+All configuration values live in `.env` in the project root:
+
+| Variable | Description | Production Requirement |
+|----------|-------------|------------------------|
+| `TELEGRAM_BOT_TOKEN` | Token provided by @BotFather | **Required** |
+| `OWNER_CHAT_ID` | Owner numeric ID for admin privileges | **Required** |
+| `CRYPTO_ADDRESS` | EVM address for manual crypto payments | Optional |
+| `MANUAL_CHAIN` | Blockchain network for JSON-RPC verification (`BSC`, `Ethereum`, `Polygon`) | Optional (default: `BSC`) |
+| `MANUAL_TOKEN_CONTRACT` | Specific ERC-20 token contract to require for manual payments | Optional (default: auto-detected USDT) |
+| `NOWPAYMENTS_ENVIRONMENT` | Gateway environment: `production` or `sandbox` | Required if NOWPayments enabled |
+| `NOWPAYMENTS_API_KEY` | Live API key from nowpayments.io | Required if NOWPayments enabled |
+| `COINGATE_ENVIRONMENT` | Gateway environment: `production` or `sandbox` | Required if CoinGate enabled |
+| `COINGATE_AUTH_TOKEN` | Live Auth token from coingate.com | Required if CoinGate enabled |
+| `COINGATE_ENABLED` | Master switch for CoinGate button (`0` or `1`); keep `0` until KYC approved | Optional (default: `0`) |
+| `PRICE_USD` | Default product pricing in USD | Optional (default: 5) |
+| `PREMIUM_DAYS` | Default subscription duration in days | Optional (default: 30) |
+| `CHANNEL_ID` | Telegram VIP channel ID (`-100...`) | Optional (for channel access) |
+| `CHANNEL_LINK` | Invite link for VIP channel | Optional |
+| `SUPPORT_URL` | Support handle or URL displayed in menu | Optional |
+| `WEBSITE_URL` | Official website URL displayed in menu | Optional |
+
+> **Security Rule:** TelStore strictly isolates sandbox and production credentials. The application refuses to transmit sandbox credentials to live endpoints or vice versa (`GatewayConfigurationError`).
+
+---
+
+## Day-to-Day Service Management
 
 | Task | Command |
 |------|---------|
-| Is it running? | `systemctl status telstore-bot` |
-| Live logs | `journalctl -u telstore-bot -f`  *(Ctrl+C to exit)* |
-| Restart after a `.env` edit | `systemctl restart telstore-bot` |
-| Auto-start on boot | done by the installer (`enable`) |
+| Check service status | `systemctl status telstore-bot` |
+| View live logs | `journalctl -u telstore-bot -f` |
+| View last 50 log lines | `journalctl -u telstore-bot -n 50 --no-pager` |
+| Restart bot (after .env update) | `systemctl restart telstore-bot` |
+| Stop bot temporarily | `systemctl stop telstore-bot` |
+| Enable autostart on boot | `systemctl enable telstore-bot` |
+| Disable autostart | `systemctl disable telstore-bot` |
 
 ---
 
-## Editing settings later
+## Upgrades, Backups, and Rollback Procedures
 
-All keys live in `.env` (created by the installer in the project root):
+### Upgrading an Existing Installation
+When applying code updates:
+1. Copy updated scripts into `telstore/scripts/`.
+2. Run `bash scripts/deploy_server.sh`.
+3. The script will detect existing settings and allow you to keep them by pressing Enter.
+4. Existing customer subscriptions (`subscribers.json`) and orders (`pending_payments.json`) are preserved automatically.
 
-- `TELEGRAM_BOT_TOKEN` — Telegram bot token
-- `CRYPTO_ADDRESS` — EVM wallet for manual BSC/ETH/Polygon payments
-- `NOWPAYMENTS_API_KEY` — automatic card/crypto checkout
-- `COINGATE_AUTH_TOKEN` — optional 2nd web-payment option
-- `OWNER_CHAT_ID` / `TELEGRAM_CHAT_ID` — your owner id (admin panel)
-- `CHANNEL_ID` / `CHANNEL_LINK` — optional VIP channel
-- `WEBSITE_URL` / `SUPPORT_URL` — shown to customers
-
-After editing: `systemctl restart telstore-bot`.
+### Database Backup & Restore Principles
+- **Critical Data Files:**
+  - `scripts/subscribers.json` — All subscriber access expiration dates and processed transaction IDs (`processed_payments`).
+  - `scripts/pending_payments.json` — In-flight payment sessions.
+  - `scripts/manual_orders.json` — Manual card/wallet payment tickets.
+  - `.env` — Secret credentials.
+- **Backup Command:**
+  ```bash
+  tar -czf telstore_backup_$(date +%Y%m%d_%H%M%S).tar.gz telstore/
+  ```
+- **Delta Merge Rule:** During rollbacks or downgrades, **never blindly overwrite `subscribers.json` with an older snapshot**. New customers who paid during the run window must be merged (by appending newer entries and retaining the latest `expiry` timestamp) to prevent subscriber loss.
 
 ---
 
-## Common issues
+## Safe Uninstallation
 
-- **`python3 not found`** → `apt-get update && apt-get install -y python3`
-- **Bot silent after `/start`** → re-check the token in `.env`, then `bash scripts/check_bot.sh`
-- **`systemctl restart` says unit not found** → you used `run_bot.sh`, not the installer; run Part A.
+To safely remove TelStore from your server:
+
+```bash
+# 1. Preview changes (Dry-Run):
+bash scripts/uninstall_server.sh --dry-run
+
+# 2. Execute safe uninstallation:
+bash scripts/uninstall_server.sh
+```
+
+### Uninstaller Guarantees:
+- **Mandatory Backup:** Creates a full compressed snapshot (`/tmp/telstore_pre_uninstall_*.tar.gz`) before making any changes. Halts immediately if backup fails.
+- **Service Decommissioning:** Safely stops and disables `telstore-bot` systemd service and deletes `/etc/systemd/system/telstore-bot.service`.
+- **Absolute Data Protection:** Removes application binaries and caches while **strictly preserving** `subscribers.json`, `pending_payments.json`, `manual_orders.json`, `.env`, and all `.bak_*` backups.
+
+---
+
+## Troubleshooting
+
+| Problem | Root Cause | Solution |
+|---------|------------|----------|
+| `python3: command not found` | Python not installed | Run `apt-get update && apt-get install -y python3`. |
+| `Python 3.8+ is required` | Outdated Python version | Upgrade system Python to 3.8 or newer. |
+| Bot not responding to `/start` | Invalid token or network blockage | Verify token in `.env`; run `bash scripts/check_bot.sh`. |
+| `SingleInstanceLock: already running` | Stale lock or concurrent process | Verify single instance: `ps aux \| grep bot.py`. If bot crashed, remove `rm -f scripts/bot.lock`. |
+| Gateway buttons missing in menu | API credentials empty or invalid | Enter credentials in `.env` and restart: `systemctl restart telstore-bot`. |
+| `GatewayConfigurationError` | Environment mismatch | Verify `NOWPAYMENTS_ENVIRONMENT=production` matches production API keys. |
