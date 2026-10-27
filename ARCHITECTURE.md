@@ -74,7 +74,7 @@ framework, no external runtime. It works out of the box on any Python 3.8+.
    status every ~20s and calls `_deliver_product` when finished.
 3. **Manual Crypto** — bot displays merchant's wallet address and exact live token amount (calculated via `prices.py`). Customer submits transaction hash (`0x...`). The bot verifies transaction on-chain via `chaincheck.py` using public EVM JSON-RPC:
    - Verifies recipient address matches configured merchant wallet.
-   - Verifies transaction is mined with $\ge 2$ block confirmations.
+   - Verifies transaction is mined with $\ge 2$ block confirmations within a 36-hour wall-clock validity window.
    - Validates transfer amount against expected price (including ERC-20 tokens like BSC USDT 18-decimals, within 2% tolerance).
    - If confirmed on-chain: grants instant delivery and notifies admin.
    - If pending or unmined: transitions to `pending_approval` for one-tap manual review by admin.

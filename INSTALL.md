@@ -13,7 +13,7 @@ management, backup/restore, and uninstallation), see **DEPLOY_SERVER.md**.
 | Telegram bot token | [@BotFather](https://t.me/BotFather) → `/newbot` | Required |
 | Your Telegram chat_id | [@userinfobot](https://t.me/userinfobot) | Required for Admin Menu and owner alerts |
 | An EVM wallet `0x...` | e.g. MetaMask / TrustWallet | Optional — for direct crypto payments |
-| NOWPayments API key | [nowpayments.io](https://nowpayments.io) → Settings → API Keys | Optional — automatic card/crypto checkout |
+| NOWPayments API key | [nowpayments.io](https://nowpayments.io) → Settings → API Keys | Optional — automatic crypto checkout |
 | CoinGate Auth token | [coingate.com](https://coingate.com) → Settings → API | Optional — hosted crypto invoice checkout |
 
 ---

@@ -31,7 +31,7 @@ telstore/
     ├── storage.py       Crash-safe atomic storage engine
     ├── config.py        Configuration and environment validation
     ├── lang.py          All customer-facing texts and button labels
-    ├── nowpayments.py   NOWPayments card/crypto checkout gateway
+    ├── nowpayments.py   NOWPayments crypto checkout gateway
     ├── coingate.py      CoinGate crypto web checkout gateway
     ├── admin.py         Owner administration and stats
     ├── channel_access.py VIP channel access controller
@@ -97,7 +97,7 @@ Digital products can deliver **real files** directly to buyers:
 ### 2. Automatic Blockchain Verification (`scripts/chaincheck.py`)
 Direct crypto payments to your wallet are verified on-chain automatically:
 - When a buyer pays and submits their transaction hash (TXID), the bot queries public EVM JSON-RPC nodes (BSC, Ethereum, Polygon, testnets) with **no third-party API keys or ports required**.
-- The bot confirms that the transaction was mined (`status == 1`), has reached at least **2 block confirmations**, was sent to your configured merchant address, and covers the required price within a 2% exchange tolerance.
+- The bot confirms that the transaction was mined (`status == 1`), has reached at least **2 block confirmations**, was sent to your configured merchant address, occurred within the 36-hour wall-clock validity window, and covers the required price within a 2% exchange tolerance.
 - Token decimals are resolved automatically: **USDT on BSC (BEP-20) uses 18 decimals** (`0x55d398326f99059ff775485246999027b3197955`), while Ethereum/Polygon USDT uses 6 decimals. Native coin payments (BNB, ETH, POL) are fully supported.
 - **Instant Delivery:** If verified on-chain, access or files are delivered immediately without admin intervention.
 - **Fail-Closed Forwarding:** If a transaction is unmined, underpaid, sent to the wrong wallet, or uses an invalid hash, it creates a `pending_approval` order and alerts the admin with the reason so you can review and approve/reject with one click.
