@@ -96,11 +96,13 @@ Digital products can deliver **real files** directly to buyers:
 
 ### 2. Automatic Blockchain Verification (`scripts/chaincheck.py`)
 Direct crypto payments to your wallet are verified on-chain automatically:
+- **Anti-Sniping Protection via Unique Fractional Amounts:** To prevent third-party transaction sniping on public blockchains, each direct-chain order is assigned a unique, non-round payable amount with a small 3-decimal fraction (e.g. `$5.037` instead of `$5.00`).
+- **Exact Amount Required:** The buyer **must send the exact amount as shown, including the small fraction**. The on-chain checker enforces strict exact matching ($\pm 0.001$). If a buyer sends a round number, rounds off the fraction, underpays, or overpays (e.g. `$5.20`), the order is **not** auto-delivered and instead transitions safely to `pending_approval` for manual review by the admin.
 - When a buyer pays and submits their transaction hash (TXID), the bot queries public EVM JSON-RPC nodes (BSC, Ethereum, Polygon, testnets) with **no third-party API keys or ports required**.
-- The bot confirms that the transaction was mined (`status == 1`), has reached at least **2 block confirmations**, was sent to your configured merchant address, occurred within the 36-hour wall-clock validity window, and covers the required price within a 2% exchange tolerance.
+- The bot confirms that the transaction was mined (`status == 1`), has reached at least **2 block confirmations**, was sent to your configured merchant address, and occurred within the 36-hour wall-clock validity window.
 - Token decimals are resolved automatically: **USDT on BSC (BEP-20) uses 18 decimals** (`0x55d398326f99059ff775485246999027b3197955`), while Ethereum/Polygon USDT uses 6 decimals. Native coin payments (BNB, ETH, POL) are fully supported.
 - **Instant Delivery:** If verified on-chain, access or files are delivered immediately without admin intervention.
-- **Fail-Closed Forwarding:** If a transaction is unmined, underpaid, sent to the wrong wallet, or uses an invalid hash, it creates a `pending_approval` order and alerts the admin with the reason so you can review and approve/reject with one click.
+- **Fail-Closed Forwarding:** If a transaction is unmined, underpaid, overpaid, sent to the wrong wallet, or uses an invalid hash, it creates a `pending_approval` order and alerts the admin with the exact expected and received figures so you can review and approve/reject with one click.
 
 ### 3. Live Cryptocurrency Price Quotes (`scripts/prices.py`)
 - The bot retrieves live USD spot rates from the CoinGecko public API with an 8-second timeout.

@@ -45,7 +45,7 @@ framework, no external runtime. It works out of the box on any Python 3.8+.
 | `lang.py` | **Every** customer-facing message, button label, and hint lives here in one place. Reword/translate without touching logic. |
 | `admin.py` | Admin-only actions: `/stats`, `/broadcast`, `/add_member`, `/kick`, `/set_price`, product add/remove, `/set_file`, settings. |
 | `file_delivery.py` | Inspects Telegram messages for file attachments (`extract_file_ref`), delivers native files via Bot API (`sendDocument`, `sendVideo`, `sendAudio`, `sendPhoto`). |
-| `chaincheck.py` | Automatic EVM blockchain verification for manual crypto payments via public JSON-RPC (BSC, ETH, Polygon, $\ge 2$ confirmations, 2% tolerance). |
+| `chaincheck.py` | Automatic EVM blockchain verification for manual crypto payments via public JSON-RPC (BSC, ETH, Polygon, $\ge 2$ confirmations, exact match $\pm 0.001$ with unique anti-sniping amount). |
 | `prices.py` | Live crypto spot price fetching via CoinGecko public API with in-memory caching and USD fallback. |
 | `channel_access.py` | Automatic VIP channel membership: grant an invite link on payment, kick on expiry. |
 | `nowpayments.py` | Creates crypto invoices and checks payment status (auto-delivery). |
@@ -72,12 +72,12 @@ framework, no external runtime. It works out of the box on any Python 3.8+.
 2. **NOWPayments** — bot calls `create_payment`/`create_invoice`; customer pays
    on the NOWPayments page (card or crypto). A **background thread** polls the
    status every ~20s and calls `_deliver_product` when finished.
-3. **Manual Crypto** — bot displays merchant's wallet address and exact live token amount (calculated via `prices.py`). Customer submits transaction hash (`0x...`). The bot verifies transaction on-chain via `chaincheck.py` using public EVM JSON-RPC:
+3. **Manual Crypto** — bot generates a unique payable USD amount (`generate_pay_amount`) with a small 3-decimal fraction (e.g. `$5.037`) to make transactions un-snipable, and persists it to pending payments. It displays the merchant's wallet address and exact live token amount (calculated via `prices.py`). The customer must transfer the exact figure as shown. Customer submits transaction hash (`0x...`). The bot verifies transaction on-chain via `chaincheck.py` using public EVM JSON-RPC:
    - Verifies recipient address matches configured merchant wallet.
    - Verifies transaction is mined with $\ge 2$ block confirmations within a 36-hour wall-clock validity window.
-   - Validates transfer amount against expected price (including ERC-20 tokens like BSC USDT 18-decimals, within 2% tolerance).
-   - If confirmed on-chain: grants instant delivery and notifies admin.
-   - If pending or unmined: transitions to `pending_approval` for one-tap manual review by admin.
+   - Enforces exact amount matching (`exact=True`, strict $\pm 0.001$ window) to prevent front-running / sniping.
+   - If confirmed on-chain with exact match: grants instant delivery and notifies admin with expected vs received amounts.
+   - If unmined, underpaid, overpaid, or non-matching: transitions to `pending_approval` for one-tap manual review by admin.
 4. **CoinGate** — bot creates an order and sends the hosted `payment_url` (active only when `COINGATE_ENABLED=1`).
 5. On success the bot delivers the product (real file via `file_delivery.py` or channel single-use invite link) and notifies the admin with the transaction ID.
 
