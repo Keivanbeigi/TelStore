@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TelStore Bot — Buy</title>
-<meta name="description" content="A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically.">
+<title>TelStore — Telegram Sales Bot with Crypto Checkout</title>
+<meta name="description" content="A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically. Full source code, installer, 156 tests.">
+<meta property="og:title" content="TelStore — Telegram Sales Bot with Crypto Checkout">
+<meta property="og:description" content="Sell digital products and VIP channel access inside Telegram. Crypto payment verified on chain, delivered automatically.">
+<meta property="og:type" content="website">
+<meta property="og:video" content="https://www.youtube.com/watch?v=dUZw-DvjTB4">
+<meta property="og:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+<meta name="twitter:card" content="player">
+<meta name="twitter:title" content="TelStore — Telegram Sales Bot with Crypto Checkout">
+<meta name="twitter:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
 <style>
   :root { --bg:#0f1117; --card:#1a1d27; --accent:#ffd600; --text:#e8e8ea; --muted:#9aa0ae; }
   * { box-sizing: border-box; margin:0; padding:0; }
@@ -31,6 +39,8 @@
   .cap { color:var(--muted); font-size:.85rem; text-align:center; margin-top:8px; }
   .cap b { color:var(--text); }
   video { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; background:#000; }
+  .yt { position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; border:1px solid #2a2d3a; background:#000; }
+  .yt iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
   .vcap { color:var(--muted); font-size:.85rem; margin-top:8px; text-align:center; }
   .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:6px; }
   .feat div { color:var(--muted); font-size:.92rem; }
@@ -45,13 +55,16 @@
   <!-- ===== DEMO VIDEO ===== -->
   <div class="card">
     <h2>▶️ Watch it working</h2>
-    <video controls preload="metadata" playsinline
-           poster="screenshots/owner-view-main-menu.png"
-           src="video/TelStore-Demo.mp4">
-      Your browser does not support the video tag.
-      <a href="video/TelStore-Demo.mp4">Download the demo (MP4, 11 MB)</a>
-    </video>
-    <div class="vcap">2 min 19 s — the admin panel, the product wizard, and a real crypto checkout, start to finish.</div>
+    <div class="yt">
+      <iframe src="https://www.youtube-nocookie.com/embed/dUZw-DvjTB4"
+              title="TelStore — 2 minute demo"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
+    </div>
+    <div class="vcap">2 min 19 s — the admin panel, the product wizard, and a real crypto checkout, start to finish.
+      <br><a href="https://www.youtube.com/watch?v=dUZw-DvjTB4" style="color:var(--accent)">Watch on YouTube</a>
+      &nbsp;·&nbsp;<a href="video/TelStore-Demo.mp4" style="color:var(--muted)">Download MP4</a></div>
   </div>
 
   <div class="card">
@@ -89,7 +102,7 @@
     <p>
       <a class="btn" href="https://telstore.sell.app/product/telstore-bot-source-code">🛒 Buy on SellApp</a>
       <span style="display:inline-block;width:10px"></span>
-      <a class="btn" href="https://telstore.mysellauth.com">🛒 Buy on SellAuth</a>
+      <a class="btn" href="https://telstore.sellauth.com">🛒 Buy on SellAuth</a>
     </p>
   </div>
 
