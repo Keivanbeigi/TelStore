@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TelStore Bot — Buy</title>
+<meta name="description" content="A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically.">
 <style>
   :root { --bg:#0f1117; --card:#1a1d27; --accent:#ffd600; --text:#e8e8ea; --muted:#9aa0ae; }
   * { box-sizing: border-box; margin:0; padding:0; }
   body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; padding:20px; }
   .wrap { max-width:760px; margin:0 auto; }
   h1 { font-size:1.7rem; margin-bottom:4px; }
+  h2 { font-size:1.1rem; margin-bottom:10px; }
   .sub { color:var(--muted); margin-bottom:24px; }
   .card { background:var(--card); border-radius:14px; padding:22px; margin-bottom:18px; border:1px solid #2a2d3a; }
   .prod { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #2a2d3a; padding:12px 0; }
@@ -23,28 +25,47 @@
   .steps { margin:8px 0 0 18px; }
   .steps li { margin:6px 0; }
   .tag { font-size:.75rem; background:#2a2d3a; padding:2px 8px; border-radius:20px; color:var(--muted); margin-left:8px; }
-  h2 { font-size:1.1rem; margin-bottom:8px; }
   .shots { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
   .shot { flex:1 1 200px; min-width:180px; }
   .shot img { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; }
   .cap { color:var(--muted); font-size:.85rem; text-align:center; margin-top:8px; }
   .cap b { color:var(--text); }
+  video { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; background:#000; }
+  .vcap { color:var(--muted); font-size:.85rem; margin-top:8px; text-align:center; }
+  .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:6px; }
+  .feat div { color:var(--muted); font-size:.92rem; }
+  .feat b { color:var(--text); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>🤖 TelStore Telegram Bot</h1>
-  <div class="sub">A ready-to-sell Telegram VIP subscription &amp; product bot. Pay once, deploy your own. Works from anywhere, no bank card needed to receive payments.</div>
+  <div class="sub">A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically. Pay once, deploy your own.</div>
+
+  <!-- ===== DEMO VIDEO ===== -->
+  <div class="card">
+    <h2>▶️ Watch it working</h2>
+    <video controls preload="metadata" playsinline
+           poster="screenshots/owner-view-main-menu.png"
+           src="video/TelStore-Demo.mp4">
+      Your browser does not support the video tag.
+      <a href="video/TelStore-Demo.mp4">Download the demo (MP4, 11 MB)</a>
+    </video>
+    <div class="vcap">2 min 19 s — the admin panel, the product wizard, and a real crypto checkout, start to finish.</div>
+  </div>
 
   <div class="card">
     <h2>🛒 What's included (one-time license)</h2>
     <div class="prod"><span class="name">Source code license</span><span class="price">$29</span></div>
     <div class="note" style="margin-top:10px">
       • Multi-product shop — each product its own price<br>
-      • Telegram subscription bot + VIP channel auto-membership<br>
-      • Crypto payments (manual wallet + NOWPayments)<br>
-      • Owner admin panel<br>
-      • English, clean, documented code (config / lang / bot separated)
+      • VIP channel access with timed expiry, auto-membership<br>
+      • Three payment paths: direct on-chain, NOWPayments, CoinGate (after KYC)<br>
+      • On-chain verification: exact amount, recipient address, 2 confirmations<br>
+      • Automatic file delivery for digital products<br>
+      • Admin panel inside Telegram — add, edit, remove products, approve payments<br>
+      • Installer, uninstaller, and 156 automated tests<br>
+      • English, documented code (config / lang / bot separated)
     </div>
   </div>
 
@@ -53,8 +74,8 @@
     <ol class="steps">
       <li>Open the bot on Telegram (button below).</li>
       <li>Tap <b>🛒 Shop / Products</b> and pick "Source Code License".</li>
-      <li>Pay with crypto (BTC, USDT, ETH…). Funds go <b>straight to the seller's wallet</b>.</li>
-      <li>Once paid, you instantly get the download link + setup guide.</li>
+      <li>Pay with crypto (BTC, USDT, ETH…). Funds go <b>straight to your wallet</b>.</li>
+      <li>Once the transaction is verified, you instantly get the download link + setup guide.</li>
     </ol>
     <p style="margin-top:12px">
       <a class="btn tg" href="https://t.me/ADNC_bot">✈️ Buy via Telegram bot</a>
@@ -86,19 +107,19 @@
 
   <div class="card">
     <h2>📱 How it works — from your customer's perspective</h2>
-    <div class="note" style="margin-bottom:12px">Everyone starts at the customer menu. After purchasing the source code, the <b>⚙️ Owner Menu</b> unlocks automatically in the buyer's menu — they instantly become the owner of their own bot.</div>
+    <div class="note" style="margin-bottom:12px">Everyone starts at the customer menu. After purchasing the source code, the <b>⚙️ Admin Menu</b> unlocks automatically in the buyer's menu — they instantly become the owner of their own bot.</div>
     <div class="shots">
       <div class="shot">
         <img src="screenshots/customer-view-main-menu.png" alt="Customer menu before purchase">
-        <div class="cap"><b>1. Customer menu</b><br>(before purchase — no Owner Menu)</div>
+        <div class="cap"><b>1. Customer menu</b><br>(before purchase — no Admin Menu)</div>
       </div>
       <div class="shot">
-        <img src="screenshots/owner-view-main-menu.png" alt="Owner menu after purchase">
-        <div class="cap"><b>2. After purchase</b><br>⚙️ Owner Menu unlocked</div>
+        <img src="screenshots/owner-view-main-menu.png" alt="Admin menu after purchase">
+        <div class="cap"><b>2. After purchase</b><br>⚙️ Admin Menu unlocked</div>
       </div>
       <div class="shot">
-        <img src="screenshots/owner-menu.png" alt="Owner management menu">
-        <div class="cap"><b>3. Owner Menu</b><br>manage your whole store</div>
+        <img src="screenshots/owner-menu.png" alt="Admin management menu">
+        <div class="cap"><b>3. Admin Menu</b><br>manage your whole store</div>
       </div>
     </div>
   </div>

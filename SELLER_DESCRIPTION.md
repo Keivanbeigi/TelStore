@@ -39,11 +39,11 @@ Every customer starts here. They can browse the shop, subscribe for free updates
 > 👤 My Account
 > ```
 
-**Note:** a customer does **not** see the private **⚙️ Owner Menu** yet.
+**Note:** a customer does **not** see the private **⚙️ Admin Menu** yet.
 
 ### 2️⃣ Owner menu — unlocked after purchase 🎁
 
-After the buyer completes the purchase of the **source code**, the **⚙️ Owner Menu** button automatically appears in their main menu. That is the moment they become the **owner** of their own bot.
+After the buyer completes the purchase of the **source code**, the **⚙️ Admin Menu** button automatically appears in their main menu. That is the moment they become the **owner** of their own bot.
 
 > ```
 > 👋 Welcome to TelStore!
@@ -55,15 +55,15 @@ After the buyer completes the purchase of the **source code**, the **⚙️ Owne
 > 🌐 Official Website
 > 🎧 Support
 > 👤 My Account
-> ⚙️ Owner Menu   ← appears after purchase
+> ⚙️ Admin Menu   ← appears after purchase
 > ```
 
-### 3️⃣ The Owner Menu itself
+### 3️⃣ The Admin Menu itself
 
 From here the new owner manages their whole store — no coding required:
 
 > ```
-> ⚙️ Owner Menu — manage your products & shop.
+> ⚙️ Admin Menu — manage your products & shop.
 >
 > ➕ Add Product
 > 🗑️ Remove Product
