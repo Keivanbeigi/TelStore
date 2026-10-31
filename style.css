@@ -1,0 +1,1393 @@
+:root {
+  --bg: #0f1117;
+  --surface: #171a23;
+  --border: #262a36;
+  --text: #e8e8ea;
+  --muted: #9aa0ae;
+  --accent: #ffd600;
+  --accent-ink: #0f1117;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessibility skip link */
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 24px;
+  background-color: var(--accent);
+  color: var(--accent-ink);
+  padding: 10px 18px;
+  font-weight: 700;
+  border-radius: 4px;
+  text-decoration: none;
+  z-index: 999;
+  transition: top 0.15s ease-out;
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Layout container */
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Typography */
+h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
+h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* One accent color rule: only for primary CTA, section eyebrows, and inline links */
+.eyebrow {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
+p a, li a, .inline-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: text-decoration-thickness 0.15s;
+}
+
+p a:hover, li a:hover, .inline-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Header & Navigation */
+header {
+  width: 100%;
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+.wordmark {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--text);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface);
+  border-color: var(--muted);
+}
+
+/* Sections */
+section {
+  padding-top: 56px;
+  padding-bottom: 56px;
+}
+
+.section-header {
+  margin-bottom: 32px;
+}
+
+/* Hero Section */
+.hero {
+  padding-top: 56px;
+  padding-bottom: 48px;
+}
+
+.hero-sub {
+  color: var(--muted);
+  max-width: 60ch;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.hero-smallprint {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+/* Demo Section */
+#demo {
+  padding-top: 32px;
+  padding-bottom: 56px;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 14px;
+}
+
+/* How It Works Section */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.step-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.step-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.step-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.step-desc {
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Features Section */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-item {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.feature-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.feature-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Screenshots Section */
+.section-sub {
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 10px 0 0;
+}
+
+/* Row is vertically centred so the shorter admin capture sits in the middle of
+   the two taller ones instead of sinking to the baseline. Each figure keeps its
+   caption directly beneath its own phone. */
+.screenshots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  align-items: center;
+  margin-top: 36px;
+}
+
+.screenshot-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+  justify-self: center;
+}
+
+.phone-frame {
+  width: 100%;
+  padding: 9px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #232733 0%, #141822 100%);
+  border: 1px solid #2f3442;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.phone-frame picture { display: block; }
+
+.screenshot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 21px;
+  background-color: var(--surface);
+}
+
+.screenshot-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin-top: 16px;
+  max-width: 26ch;
+}
+
+@media (max-width: 900px) {
+  .screenshots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    align-items: center;
+  }
+  .screenshot-figure { max-width: 320px; }
+  .screenshot-figure:last-child {
+    grid-column: 1 / -1;
+    max-width: 320px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    align-items: center;
+  }
+  .screenshot-figure,
+  .screenshot-figure:last-child {
+    max-width: min(100%, 360px);
+    grid-column: auto;
+  }
+  .phone-frame { border-radius: 26px; padding: 8px; }
+  .screenshot-img { border-radius: 19px; }
+}
+
+/* Each figure is a column: bezel, then caption. The bezel hugs its own image
+   height, so a short capture gets a short phone instead of empty letterboxing.
+   Captions are pinned to the bottom of the row so they still read as a set. */
+.screenshots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  align-items: end;
+  margin-top: 36px;
+}
+
+.screenshot-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 300px;
+  justify-self: center;
+}
+
+.phone-frame {
+  width: 100%;
+  padding: 9px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #232733 0%, #141822 100%);
+  border: 1px solid #2f3442;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.phone-frame picture { display: block; }
+
+.screenshot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 21px;
+  background-color: var(--surface);
+}
+
+.screenshot-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin-top: 16px;
+  max-width: 26ch;
+  min-height: 2.9em;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .screenshots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: end;
+  }
+  .screenshot-figure { max-width: 320px; }
+  .screenshot-figure:last-child {
+    grid-column: 1 / -1;
+    max-width: 320px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .screenshot-figure,
+  .screenshot-figure:last-child {
+    max-width: min(100%, 360px);
+    grid-column: auto;
+  }
+  .phone-frame { border-radius: 26px; padding: 8px; }
+  .screenshot-img { border-radius: 19px; }
+}
+
+/* The bezel is capped to the SHORTEST capture so all three frames end on the
+   same line; taller captures scroll-fit inside instead of pushing captions down. */
+.screenshot-figure .phone-frame {
+  width: 100%;
+  padding: 9px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #232733 0%, #141822 100%);
+  border: 1px solid #2f3442;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: 1 1 auto;
+  max-height: 430px;
+}
+
+.phone-frame picture {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+/* object-fit: contain keeps the whole screenshot visible, letterboxed on the
+   bezel colour, so nothing is cropped and the rows line up. */
+.screenshot-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 412px;
+  object-fit: contain;
+  object-position: center top;
+  border-radius: 21px;
+  background-color: #10141c;
+}
+
+.screenshot-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin-top: 14px;
+  max-width: 26ch;
+  min-height: 2.9em;             /* reserves two lines so all captions sit level */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .screenshots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .screenshot-figure { max-width: 320px; }
+  .screenshot-figure:last-child {
+    grid-column: 1 / -1;
+    max-width: 320px;
+    justify-self: center;
+  }
+  .screenshot-figure .phone-frame { max-height: 400px; }
+  .screenshot-img { max-height: 382px; }
+}
+
+@media (max-width: 768px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+  .screenshot-figure,
+  .screenshot-figure:last-child {
+    max-width: min(100%, 360px);
+    grid-column: auto;
+    height: auto;
+  }
+  .screenshot-figure .phone-frame {
+    max-height: none;
+    display: block;
+    border-radius: 26px;
+    padding: 8px;
+  }
+  .screenshot-img {
+    height: auto;
+    max-height: none;
+    object-fit: fill;
+    border-radius: 19px;
+  }
+  .screenshot-caption { min-height: 0; }
+}
+
+/* Phone bezel so each capture reads as a phone screen, not a loose image. */
+.phone-frame {
+  width: 100%;
+  padding: 9px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #232733 0%, #141822 100%);
+  border: 1px solid #2f3442;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+}
+
+.phone-frame picture { display: block; }
+
+.screenshot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 21px;
+  background-color: var(--surface);
+}
+
+.screenshot-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin-top: 14px;
+  max-width: 26ch;
+}
+
+@media (max-width: 900px) {
+  .screenshots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .screenshot-figure { max-width: 320px; }
+  /* the third shot spans the row and stays centred */
+  .screenshot-figure:last-child {
+    grid-column: 1 / -1;
+    max-width: 320px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .screenshot-figure,
+  .screenshot-figure:last-child {
+    max-width: min(100%, 360px);
+    grid-column: auto;
+  }
+  .phone-frame { border-radius: 26px; padding: 8px; }
+  .screenshot-img { border-radius: 19px; }
+}
+
+/* A phone bezel so the capture reads as a phone screenshot, not a stray image. */
+.phone-frame {
+  width: 100%;
+  padding: 10px;
+  border-radius: 32px;
+  background: linear-gradient(180deg, #232733 0%, #141822 100%);
+  border: 1px solid #2f3442;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+}
+
+.phone-frame picture,
+.phone-frame img {
+  display: block;
+  width: 100%;
+}
+
+.screenshot-img {
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  background-color: var(--surface);
+  display: block;
+}
+
+.screenshot-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 16px;
+}
+
+/* On narrow screens keep the shots large: one per row, still capped so the bezel
+   stays proportionate to the viewport. */
+@media (max-width: 768px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .screenshot-figure {
+    max-width: min(100%, 380px);
+  }
+  .phone-frame {
+    border-radius: 28px;
+    padding: 8px;
+  }
+  .screenshot-img {
+    border-radius: 21px;
+  }
+}
+
+/* What You Get Section (Plain list, no cards) */
+.plain-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 680px;
+}
+
+.plain-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.plain-list li::before {
+  content: "✓";
+  color: var(--muted);
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Pricing Section */
+.pricing-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.pricing-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 36px 32px;
+  text-align: center;
+}
+
+.pricing-figure {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.pricing-cadence {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+.pricing-details {
+  list-style: none;
+  padding: 20px 0;
+  margin: 0 0 28px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pricing-details li {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pricing-details li::before {
+  content: "•";
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.pricing-card .btn-primary {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1.05rem;
+}
+
+.pricing-extra {
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.pricing-questions {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* FAQ Section */
+.faq-list {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+details.faq-item {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+details.faq-item summary {
+  padding: 18px 20px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+details.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+details.faq-item summary::after {
+  content: "+";
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+details.faq-item[open] summary::after {
+  content: "−";
+}
+
+details.faq-item[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.faq-answer {
+  padding: 18px 20px;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 48px 0 36px;
+  margin-top: 64px;
+}
+
+.footer-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.footer-wordmark {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer-wordmark:hover {
+  color: var(--text);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.15s ease;
+}
+
+.footer-links a:hover {
+  color: var(--text);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Documentation Page Layout */
+.docs-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 48px;
+  padding-top: 36px;
+  padding-bottom: 64px;
+  align-items: start;
+}
+
+.docs-sidebar {
+  position: sticky;
+  top: 32px;
+}
+
+.docs-sidebar-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.docs-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.docs-nav a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.docs-nav a:hover,
+.docs-nav a.active {
+  color: var(--text);
+  background-color: var(--surface);
+}
+
+.docs-content {
+  min-width: 0;
+}
+
+.docs-section {
+  margin-bottom: 56px;
+  scroll-margin-top: 32px;
+}
+
+.docs-section:last-child {
+  margin-bottom: 0;
+}
+
+.docs-section h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.docs-section p {
+  color: var(--text);
+  margin-bottom: 16px;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* Code & Pre */
+pre {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 16px 0 20px 0;
+  position: relative;
+  color: var(--text);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+p code, li code {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88em;
+  color: var(--text);
+}
+
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--border);
+  color: var(--muted);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.copy-btn:hover {
+  color: var(--text);
+  background-color: #333847;
+}
+
+.copy-btn.copied {
+  color: var(--text);
+}
+
+ol.docs-steps {
+  padding-left: 20px;
+  margin: 16px 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+ol.docs-steps li {
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+ol.docs-steps li strong {
+  color: var(--text);
+}
+
+ul.docs-list {
+  padding-left: 20px;
+  margin: 16px 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+ul.docs-list li {
+  color: var(--text);
+  line-height: 1.65;
+}
+
+/* Terms Page Layout */
+.terms-content {
+  max-width: 760px;
+  margin: 36px auto 64px auto;
+}
+
+.terms-header {
+  margin-bottom: 36px;
+}
+
+.terms-section {
+  margin-bottom: 40px;
+}
+
+.terms-section h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.terms-section p {
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.terms-section ul {
+  padding-left: 20px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text);
+}
+
+/* 404 Page */
+.error-hero {
+  text-align: center;
+  padding: 96px 0;
+}
+
+.error-hero h1 {
+  margin-bottom: 16px;
+}
+
+.error-hero p {
+  color: var(--muted);
+  max-width: 520px;
+  margin: 0 auto 32px auto;
+  font-size: 1.1rem;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 900px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .docs-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .docs-sidebar {
+    position: static;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+  .docs-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    gap: 16px;
+  }
+  .nav-links a {
+    font-size: 0.9rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-actions .btn {
+    width: 100%;
+  }
+  .pricing-card {
+    padding: 28px 20px;
+  }
+  .error-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .error-actions .btn {
+    width: 100%;
+  }
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* Docs page title block */
+.docs-intro { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.docs-intro h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin: 0 0 10px; letter-spacing: -0.02em; }
+.docs-intro p { color: var(--muted); margin: 0; max-width: 62ch; }
+
+
+/* Contact Section */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  max-width: 720px;
+  margin: 34px auto 0;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 30px 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.contact-card:hover,
+.contact-card:focus-visible {
+  border-color: var(--accent);
+  background-color: #1c2130;
+  transform: translateY(-2px);
+}
+
+.contact-icon {
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 8px;
+  line-height: 1;
+}
+
+.contact-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.contact-value {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.contact-note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 28ch;
+}
+
+@media (max-width: 600px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 26px;
+  }
+  .contact-card { padding: 24px 20px; }
+}
+
+
+/* Floating Telegram support button */
+.tg-fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px 13px 15px;
+  border-radius: 999px;
+  background: #229ED9;              /* Telegram brand blue */
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.85);
+  transition: transform 170ms ease, box-shadow 170ms ease, background-color 170ms ease;
+}
+
+/* the mark is drawn in a light stroke, so no colour clash with the button */
+.tg-fab img {
+  display: block;
+  filter: brightness(0) invert(1);   /* force the line icon to pure white */
+}
+
+.tg-fab:hover,
+.tg-fab:focus-visible {
+  background: #1d8dc1;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -10px rgba(34, 158, 217, 0.55);
+}
+
+.tg-fab-text { line-height: 1; }
+
+/* Footer links with inline icons */
+.footer-tg,
+.footer-ic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-tg img,
+.footer-ic img {
+  display: block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  opacity: 0.6;
+  /* the SVGs are drawn in accent yellow; desaturate them so the footer reads calm
+     and let the mark light up on hover alongside the label */
+  filter: grayscale(1) brightness(1.6);
+  transition: opacity 160ms ease, filter 160ms ease;
+}
+
+.footer-tg:hover img,
+.footer-tg:focus-visible img,
+.footer-ic:hover img,
+.footer-ic:focus-visible img {
+  opacity: 1;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-tg img, .footer-ic img { transition: none; }
+}
+
+/* the telegram mark in the footer sits on a dark bar, so keep it legible */
+.footer-tg img { opacity: 0.95; }
+
+/* Footer Telegram link with mark */
+.footer-tg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-tg img { display: block; opacity: 0.9; }
+
+/* On small screens keep it compact but still tappable */
+@media (max-width: 600px) {
+  .tg-fab {
+    right: 14px;
+    bottom: 14px;
+    padding: 12px;
+  }
+  .tg-fab-text { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-fab { transition: none; }
+  .tg-fab:hover, .tg-fab:focus-visible { transform: none; }
+}

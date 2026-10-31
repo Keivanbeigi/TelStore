@@ -1,146 +1,404 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TelStore — Telegram Sales Bot with Crypto Checkout</title>
-<meta name="description" content="A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically. Full source code, installer, 156 tests.">
-<meta property="og:title" content="TelStore — Telegram Sales Bot with Crypto Checkout">
-<meta property="og:description" content="Sell digital products and VIP channel access inside Telegram. Crypto payment verified on chain, delivered automatically.">
-<meta property="og:type" content="website">
-<meta property="og:video" content="https://www.youtube.com/watch?v=dUZw-DvjTB4">
-<meta property="og:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
-<meta name="twitter:card" content="player">
-<meta name="twitter:title" content="TelStore — Telegram Sales Bot with Crypto Checkout">
-<meta name="twitter:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
-<style>
-  :root { --bg:#0f1117; --card:#1a1d27; --accent:#ffd600; --text:#e8e8ea; --muted:#9aa0ae; }
-  * { box-sizing: border-box; margin:0; padding:0; }
-  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; padding:20px; }
-  .wrap { max-width:760px; margin:0 auto; }
-  h1 { font-size:1.7rem; margin-bottom:4px; }
-  h2 { font-size:1.1rem; margin-bottom:10px; }
-  .sub { color:var(--muted); margin-bottom:24px; }
-  .card { background:var(--card); border-radius:14px; padding:22px; margin-bottom:18px; border:1px solid #2a2d3a; }
-  .prod { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #2a2d3a; padding:12px 0; }
-  .prod:last-child{border-bottom:none;}
-  .prod .name { font-weight:600; }
-  .prod .price { color:var(--accent); font-weight:700; }
-  .btn { display:inline-block; background:var(--accent); color:#000; font-weight:700; padding:10px 18px; border-radius:8px; text-decoration:none; margin-top:10px; }
-  .btn.small { padding:6px 12px; font-size:.9rem; margin:0; }
-  .btn.tg { background:#229ed9; color:#fff; }
-  .note { color:var(--muted); font-size:.92rem; }
-  .steps { margin:8px 0 0 18px; }
-  .steps li { margin:6px 0; }
-  .tag { font-size:.75rem; background:#2a2d3a; padding:2px 8px; border-radius:20px; color:var(--muted); margin-left:8px; }
-  .shots { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
-  .shot { flex:1 1 200px; min-width:180px; }
-  .shot img { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; }
-  .cap { color:var(--muted); font-size:.85rem; text-align:center; margin-top:8px; }
-  .cap b { color:var(--text); }
-  video { width:100%; border-radius:12px; border:1px solid #2a2d3a; display:block; background:#000; }
-  .yt { position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; border:1px solid #2a2d3a; background:#000; }
-  .yt iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
-  .vcap { color:var(--muted); font-size:.85rem; margin-top:8px; text-align:center; }
-  .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:6px; }
-  .feat div { color:var(--muted); font-size:.92rem; }
-  .feat b { color:var(--text); }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TelStore — Sell digital products inside Telegram</title>
+  <meta name="description" content="Your own shop bot, deployed on your own server. Products and paid channel access, paid in crypto, verified on chain, delivered automatically.">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Product",
+      "name": "TelStore",
+      "description": "Your own shop bot, deployed on your own server. Products and paid channel access, paid in crypto, verified on chain, delivered automatically.",
+      "brand": {
+        "@type": "Brand",
+        "name": "TelStore"
+      },
+      "category": "SoftwareApplication",
+      "url": "https://telstore.store/",
+      "image": "https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg",
+      "offers": {
+        "@type": "Offer",
+        "price": "29.00",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://telstore.sell.app/product/telstore-bot-source-code",
+        "priceValidUntil": "2027-12-31"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need a merchant account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Payments go straight to your wallet, or through NOWPayments if you want card support."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which coins?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Any EVM token on BSC (USDT, BNB), plus USDT/TRON. NOWPayments adds BTC, ETH and more."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I sell to buyers without crypto?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, through NOWPayments, which accepts cards. CoinGate is also supported once your account passes KYC."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if a buyer underpays?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The bot does not deliver. It flags the order and asks the admin to approve or reject it in one tap."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What do I need to run it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A small Linux VPS (1 vCPU / 2 GB is enough) and a Telegram bot token from BotFather."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it a subscription?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. One payment, $29, source code yours."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+
+  <link rel="canonical" href="https://telstore.store/">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="TelStore — Sell digital products inside Telegram">
+  <meta property="og:description" content="Your own shop bot, deployed on your own server. Products and paid channel access, paid in crypto, verified on chain, delivered automatically.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TelStore">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://telstore.store/">
+  <meta property="og:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TelStore — Sell digital products inside Telegram">
+  <meta name="twitter:description" content="Your own shop bot, deployed on your own server. Products and paid channel access, paid in crypto, verified on chain, delivered automatically.">
+  <meta name="twitter:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="stylesheet" href="style.css?v2">
+  <script src="main.js?v2" defer></script>
 </head>
 <body>
-<div class="wrap">
-  <h1>🤖 TelStore Telegram Bot</h1>
-  <div class="sub">A ready-to-sell Telegram shop bot. Digital products and paid channel access, settled in crypto, verified on chain, delivered automatically. Pay once, deploy your own.</div>
+  <a href="#main" class="skip-link">Skip to main content</a>
 
-  <!-- ===== DEMO VIDEO ===== -->
-  <div class="card">
-    <h2>▶️ Watch it working</h2>
-    <div class="yt">
-      <iframe src="https://www.youtube-nocookie.com/embed/dUZw-DvjTB4"
-              title="TelStore — 2 minute demo"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen></iframe>
+  <!-- Top bar -->
+  <header>
+    <div class="container nav-container">
+      <a href="index.html" class="wordmark" aria-label="TelStore home">TelStore</a>
+      <nav aria-label="Main navigation">
+        <ul class="nav-links">
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="https://telstore.sell.app/product/telstore-bot-source-code">Buy</a></li>
+          <li><a href="https://keivanbeigi.github.io/TelStore/" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+        </ul>
+      </nav>
     </div>
-    <div class="vcap">2 min 19 s — the admin panel, the product wizard, and a real crypto checkout, start to finish.
-      <br><a href="https://www.youtube.com/watch?v=dUZw-DvjTB4" style="color:var(--accent)">Watch on YouTube</a>
-      &nbsp;·&nbsp;<a href="video/TelStore-Demo.mp4" style="color:var(--muted)">Download MP4</a></div>
-  </div>
+  </header>
 
-  <div class="card">
-    <h2>🛒 What's included (one-time license)</h2>
-    <div class="prod"><span class="name">Source code license</span><span class="price">$29</span></div>
-    <div class="note" style="margin-top:10px">
-      • Multi-product shop — each product its own price<br>
-      • VIP channel access with timed expiry, auto-membership<br>
-      • Three payment paths: direct on-chain, NOWPayments, CoinGate (after KYC)<br>
-      • On-chain verification: exact amount, recipient address, 2 confirmations<br>
-      • Automatic file delivery for digital products<br>
-      • Admin panel inside Telegram — add, edit, remove products, approve payments<br>
-      • Installer, uninstaller, and 156 automated tests<br>
-      • English, documented code (config / lang / bot separated)
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow">Telegram sales bot</span>
+        <h1>Sell digital products inside Telegram.</h1>
+        <p class="hero-sub">Your own shop bot, deployed on your own server. Products and paid channel access, paid in crypto, verified on chain, delivered automatically.</p>
+        <div class="hero-actions">
+          <a href="https://telstore.sell.app/product/telstore-bot-source-code" class="btn btn-primary">Buy for $29</a>
+          <a href="#demo" class="btn btn-secondary">Watch the demo</a>
+        </div>
+        <p class="hero-smallprint">One-time payment · Source code included · 156 automated tests</p>
+      </div>
+    </section>
+
+    <!-- Demo -->
+    <section id="demo">
+      <div class="container">
+        <div class="video-container">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/dUZw-DvjTB4"
+            title="TelStore product demo video"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <p class="video-caption">2 min 19 s — the admin panel, the product wizard, and a real crypto checkout.</p>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">How it works</span>
+          <h2>Three simple steps from setup to sale.</h2>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-num">01</span>
+            <h3 class="step-title">Deploy</h3>
+            <p class="step-desc">Run the installer on a VPS. Set your bot token, wallet, and products in one config file.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">02</span>
+            <h3 class="step-title">Sell</h3>
+            <p class="step-desc">Customers browse your shop inside Telegram, pick a product, and pay in crypto.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">03</span>
+            <h3 class="step-title">Deliver</h3>
+            <p class="step-desc">The bot verifies the transaction on chain and sends the file or channel invite automatically.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Features</span>
+          <h2>Built for reliability and hands-off delivery.</h2>
+        </div>
+        <div class="features-grid">
+          <div class="feature-item">
+            <strong class="feature-title">Multi-product shop</strong>
+            <p class="feature-desc">Each product carries its own price, duration, and category.</p>
+          </div>
+          <div class="feature-item">
+            <strong class="feature-title">VIP channel access</strong>
+            <p class="feature-desc">Buyers are invited automatically, with timed expiry.</p>
+          </div>
+          <div class="feature-item">
+            <strong class="feature-title">Three payment paths</strong>
+            <p class="feature-desc">Direct on-chain transfer, NOWPayments, CoinGate after KYC.</p>
+          </div>
+          <div class="feature-item">
+            <strong class="feature-title">On-chain verification</strong>
+            <p class="feature-desc">Exact amount, recipient address, and two confirmations.</p>
+          </div>
+          <div class="feature-item">
+            <strong class="feature-title">Admin panel in Telegram</strong>
+            <p class="feature-desc">Add, edit and remove products without a web dashboard.</p>
+          </div>
+          <div class="feature-item">
+            <strong class="feature-title">Unique payment amounts</strong>
+            <p class="feature-desc">Every order gets a distinct amount so a copied transaction hash cannot be reused.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section id="screenshots">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Interface</span>
+          <h2>Everything happens inside Telegram.</h2>
+          <p class="section-sub">No dashboard to learn, no separate admin site. The bot is the store.</p>
+        </div>
+        <div class="screenshots-grid">
+          <figure class="screenshot-figure">
+            <div class="phone-frame">
+              <picture>
+                <source srcset="assets/customer-view-main-menu@2x.webp 2x, assets/customer-view-main-menu.webp 1x" type="image/webp">
+                <img src="assets/customer-view-main-menu.webp" class="screenshot-img" width="820" height="1200"
+                     alt="TelStore bot in Telegram showing the customer menu with Shop, Subscription, My Status, Help, Support and My Account"
+                     loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <figcaption class="screenshot-caption">Customer menu &mdash; what a buyer sees</figcaption>
+          </figure>
+          <figure class="screenshot-figure">
+            <div class="phone-frame">
+              <picture>
+                <source srcset="assets/admin-view-main-menu@2x.webp 2x, assets/admin-view-main-menu.webp 1x" type="image/webp">
+                <img src="assets/admin-view-main-menu.webp" class="screenshot-img" width="820" height="767"
+                     alt="TelStore admin menu in Telegram reading Admin Menu, with Add Product, Remove Product, List Products and How to add"
+                     loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <figcaption class="screenshot-caption">Admin menu &mdash; product management</figcaption>
+          </figure>
+          <figure class="screenshot-figure">
+            <div class="phone-frame">
+              <picture>
+                <source srcset="assets/owner-with-access-main-menu@2x.webp 2x, assets/owner-with-access-main-menu.webp 1x" type="image/webp">
+                <img src="assets/owner-with-access-main-menu.webp" class="screenshot-img" width="820" height="1283"
+                     alt="TelStore main menu as seen by the shop owner, showing the customer buttons plus an Admin Menu entry"
+                     loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <figcaption class="screenshot-caption">Owner view &mdash; the same menu, plus Admin</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- What you get -->
+    <section id="what-you-get">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Package</span>
+          <h2>What you get</h2>
+        </div>
+        <ul class="plain-list">
+          <li>Complete Python source code, config/lang/bot separated</li>
+          <li>Automated installer and uninstaller for Ubuntu 22.04 / 24.04</li>
+          <li>156 automated tests</li>
+          <li>Full English documentation: install, buyer guide, architecture, security audit</li>
+          <li>Free updates for the current major version</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing">
+      <div class="container">
+        <div class="section-header" style="text-align: center;">
+          <span class="eyebrow">Pricing</span>
+          <h2>Simple, transparent pricing.</h2>
+        </div>
+        <div class="pricing-wrapper">
+          <div class="pricing-card">
+            <div class="pricing-figure">$29</div>
+            <div class="pricing-cadence">one-time</div>
+            <ul class="pricing-details">
+              <li>Single-site licence</li>
+              <li>Complete source code included</li>
+              <li>No recurring subscription fees</li>
+              <li>Self-hosted on your own server</li>
+            </ul>
+            <a href="https://telstore.sell.app/product/telstore-bot-source-code" class="btn btn-primary">Buy now</a>
+            <p class="pricing-extra">Also available on <a href="https://telstore.mysellauth.com" target="_blank" rel="noopener noreferrer">SellAuth</a></p>
+            <p class="pricing-questions">Questions before buying? Message <a href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer">@ADNC_bot</a> on Telegram, or email <!--email_off--><a href="mailto:TelStorebot@gmail.com">TelStorebot@gmail.com</a><!--/email_off-->.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">FAQ</span>
+          <h2>Frequently asked questions</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Do I need a merchant account?</summary>
+            <p class="faq-answer">No. Payments go straight to your wallet, or through NOWPayments if you want card support.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Which coins?</summary>
+            <p class="faq-answer">Any EVM token on BSC (USDT, BNB), plus USDT/TRON. NOWPayments adds BTC, ETH and more.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I sell to buyers without crypto?</summary>
+            <p class="faq-answer">Yes, through NOWPayments, which accepts cards. CoinGate is also supported once your account passes KYC.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What if a buyer underpays?</summary>
+            <p class="faq-answer">The bot does not deliver. It flags the order and asks the admin to approve or reject it in one tap.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What do I need to run it?</summary>
+            <p class="faq-answer">A small Linux VPS (1 vCPU / 2 GB is enough) and a Telegram bot token from BotFather.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is it a subscription?</summary>
+            <p class="faq-answer">No. One payment, $29, source code yours.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+      <div class="container">
+        <div class="section-header" style="text-align: center;">
+          <span class="eyebrow">Contact</span>
+          <h2>Questions before you buy?</h2>
+          <p class="section-sub" style="margin-left:auto;margin-right:auto;">
+            Ask anything about deployment, payments or licensing. No sales pressure.
+          </p>
+        </div>
+        <div class="contact-grid">
+          <!--email_off--><a class="contact-card" href="mailto:TelStorebot@gmail.com">
+            <img class="contact-icon" src="assets/email.svg" width="34" height="34" alt="" loading="lazy" decoding="async">
+            <span class="contact-label">Email</span>
+            <span class="contact-value">TelStorebot@gmail.com</span>
+            <span class="contact-note">Replies within two business days.</span>
+          </a><!--/email_off-->
+          <a class="contact-card" href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer">
+            <img class="contact-icon" src="assets/telegram.svg" width="34" height="34" alt="" loading="lazy" decoding="async">
+            <span class="contact-label">Telegram</span>
+            <span class="contact-value">@ADNC_bot</span>
+            <span class="contact-note">Message me directly for support. Fastest route.</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-main">
+        <a href="index.html" class="footer-wordmark">TelStore</a>
+        <ul class="footer-links">
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="terms.html">Terms</a></li>
+          <li><a href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer" class="footer-tg"><img src="assets/telegram.svg" width="15" height="15" alt="" decoding="async"> Telegram</a></li>
+          <li><!--email_off--><a href="mailto:TelStorebot@gmail.com" class="footer-ic"><img src="assets/email.svg" width="15" height="15" alt="" decoding="async"> Email</a><!--/email_off--></li>
+          <li><a href="https://www.youtube.com/watch?v=dUZw-DvjTB4" target="_blank" rel="noopener noreferrer" class="footer-ic"><img src="assets/youtube.svg" width="15" height="15" alt="" decoding="async"> YouTube</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 TelStore. Source code licensed, not sold as a service.</p>
+      </div>
     </div>
-  </div>
+  </footer>
 
-  <div class="card">
-    <h2>💳 Pay with crypto (no card needed)</h2>
-    <ol class="steps">
-      <li>Open the bot on Telegram (button below).</li>
-      <li>Tap <b>🛒 Shop / Products</b> and pick "Source Code License".</li>
-      <li>Pay with crypto (BTC, USDT, ETH…). Funds go <b>straight to your wallet</b>.</li>
-      <li>Once the transaction is verified, you instantly get the download link + setup guide.</li>
-    </ol>
-    <p style="margin-top:12px">
-      <a class="btn tg" href="https://t.me/ADNC_bot">✈️ Buy via Telegram bot</a>
-    </p>
-    <p class="note" style="margin-top:10px">You can also message the seller in Telegram with any questions.</p>
-  </div>
-
-  <div class="card">
-    <h2>🛍️ Buy directly from an online store</h2>
-    <p class="note" style="margin-bottom:12px">Instant checkout — pay with crypto or card on SellApp or SellAuth.</p>
-    <p>
-      <a class="btn" href="https://telstore.sell.app/product/telstore-bot-source-code">🛒 Buy on SellApp</a>
-      <span style="display:inline-block;width:10px"></span>
-      <a class="btn" href="https://telstore.mysellauth.com">🛒 Buy on SellAuth</a>
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>📦 Deliverable</h2>
-    <div class="note">You receive <code>telstore/</code> (source + <code>INSTALL.md</code> + <code>.env.example</code>) — everything in English, ready to configure with your own token, wallet, and products.</div>
-  </div>
-
-  <div class="card">
-    <h2>📄 License</h2>
-    <div class="note"><b>Single-site license.</b> You may use this bot for your own
-    channel / shop / business. Reselling or redistributing the software (or any
-    modified copy) to others is <b>not permitted</b>.</div>
-  </div>
-
-  <div class="card">
-    <h2>📱 How it works — from your customer's perspective</h2>
-    <div class="note" style="margin-bottom:12px">Everyone starts at the customer menu. After purchasing the source code, the <b>⚙️ Admin Menu</b> unlocks automatically in the buyer's menu — they instantly become the owner of their own bot.</div>
-    <div class="shots">
-      <div class="shot">
-        <img src="screenshots/customer-view-main-menu.png" alt="Customer menu before purchase">
-        <div class="cap"><b>1. Customer menu</b><br>(before purchase — no Admin Menu)</div>
-      </div>
-      <div class="shot">
-        <img src="screenshots/owner-view-main-menu.png" alt="Admin menu after purchase">
-        <div class="cap"><b>2. After purchase</b><br>⚙️ Admin Menu unlocked</div>
-      </div>
-      <div class="shot">
-        <img src="screenshots/owner-menu.png" alt="Admin management menu">
-        <div class="cap"><b>3. Admin Menu</b><br>manage your whole store</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>❓ Questions?</h2>
-    <div class="note">Message the seller on Telegram — we usually reply within a day.</div>
-  </div>
-</div>
+  <!-- Floating Telegram support button -->
+  <a class="tg-fab" href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer"
+     aria-label="Chat with TelStore support on Telegram">
+    <img src="assets/telegram.svg" width="30" height="30" alt="" decoding="async">
+    <span class="tg-fab-text">Support</span>
+  </a>
 </body>
 </html>

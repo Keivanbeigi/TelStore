@@ -133,4 +133,4 @@ Direct crypto payments to your wallet are verified on-chain automatically:
 
 - **License:** Single-site commercial license. Use it for your own shop / channel / business.
   Reselling or redistributing the bot codebase itself is strictly prohibited.
-- **Support:** See **README.md** → Troubleshooting, or contact [@k1_adineh](https://t.me/k1_adineh) on Telegram.
+- **Support:** See **README.md** → Troubleshooting, or contact [@ADNC_bot](https://t.me/ADNC_bot) on Telegram.

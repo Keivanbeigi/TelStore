@@ -4,6 +4,8 @@ A complete, production-hardened Telegram bot for selling digital products and VI
 access with automated crypto payments (NOWPayments + CoinGate) and manual wallet verification.
 It runs 24/7 on your Linux server, survives restarts, and is fully configurable from Telegram.
 
+**Website:** [https://telstore.store](https://telstore.store) · **Demo video:** [2-minute walkthrough](https://youtu.be/dUZw-DvjTB4)
+
 ## Documentation Index
 
 Everything you need ships directly in this package:
@@ -240,5 +242,8 @@ bash scripts/uninstall_server.sh
 
 ## 12. Support & Contact
 
-- **Telegram Support:** [@k1_adineh](https://t.me/k1_adineh)
+- **Website:** [https://telstore.store](https://telstore.store)
+- **Telegram Support:** [@ADNC_bot](https://t.me/ADNC_bot)
+- **Email:** TelStorebot@gmail.com
+- **Demo video:** [https://youtu.be/dUZw-DvjTB4](https://youtu.be/dUZw-DvjTB4)
 - **License:** Single-site commercial license. Use for your own shop, channel, or commercial bot. Redistribution is strictly prohibited.

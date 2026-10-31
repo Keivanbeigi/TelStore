@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — TelStore</title>
+  <meta name="description" content="Technical setup guide, requirements, installation, configuration, and troubleshooting for TelStore.">
+  <link rel="canonical" href="https://telstore.store/docs.html">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Documentation — TelStore">
+  <meta property="og:description" content="Technical setup guide, requirements, installation, configuration, and troubleshooting for TelStore.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TelStore">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://telstore.store/docs.html">
+  <meta property="og:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Documentation — TelStore">
+  <meta name="twitter:description" content="Technical setup guide, requirements, installation, configuration, and troubleshooting for TelStore.">
+  <meta name="twitter:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="stylesheet" href="style.css?v2">
+  <script src="main.js?v2" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <!-- Top bar -->
+  <header>
+    <div class="container nav-container">
+      <a href="index.html" class="wordmark" aria-label="TelStore home">TelStore</a>
+      <nav aria-label="Main navigation">
+        <ul class="nav-links">
+          <li><a href="docs.html" class="active">Docs</a></li>
+          <li><a href="https://telstore.sell.app/product/telstore-bot-source-code">Buy</a></li>
+          <li><a href="https://keivanbeigi.github.io/TelStore/" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="container docs-layout">
+      <!-- Sidebar -->
+      <aside class="docs-sidebar">
+        <div class="docs-sidebar-title">Documentation</div>
+        <nav class="docs-nav" aria-label="Documentation sections">
+          <a href="#requirements">Requirements</a>
+          <a href="#install">Install</a>
+          <a href="#configure">Configure</a>
+          <a href="#add-product">Add a product</a>
+          <a href="#troubleshooting">Troubleshooting</a>
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <div class="docs-content">
+        <header class="docs-intro">
+          <h1>TelStore documentation</h1>
+          <p>Everything needed to deploy, configure and run your own TelStore
+             shop bot on a Linux server.</p>
+        </header>
+
+        <!-- Requirements -->
+        <section id="requirements" class="docs-section">
+          <span class="eyebrow">Prerequisites</span>
+          <h2>Requirements</h2>
+          <p>TelStore runs directly on your own infrastructure. Before installing, ensure your host environment meets these requirements:</p>
+          <ul class="docs-list">
+            <li><strong>Operating System:</strong> Ubuntu 22.04 LTS or Ubuntu 24.04 LTS</li>
+            <li><strong>Hardware:</strong> 1 vCPU and 2 GB RAM (a standard small Linux VPS)</li>
+            <li><strong>Python:</strong> Python 3.11 or newer</li>
+            <li><strong>Telegram Bot Token:</strong> Created via <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">@BotFather</a></li>
+            <li><strong>Wallet Address:</strong> A crypto wallet address (BSC / Tron) to receive direct customer payments</li>
+          </ul>
+        </section>
+
+        <!-- Install -->
+        <section id="install" class="docs-section">
+          <span class="eyebrow">Setup</span>
+          <h2>Install</h2>
+          <p>Follow these numbered steps to deploy TelStore on your server:</p>
+          <ol class="docs-steps">
+            <li>
+              <strong>Download the source archive</strong>
+              <p>Get <code>TelStore-Bot.zip</code> from your purchase — the download link is on the order page and in the delivery email.</p>
+              <p>The source code is not in the public GitHub repository. That repository holds the documentation only.</p>
+            </li>
+            <li>
+              <strong>Upload and unpack</strong>
+              <p>Copy the archive to your server over SSH or SFTP, then unpack it:</p>
+              <pre><code>unzip TelStore-Bot.zip -d /opt
+cd /opt/telstore</code></pre>
+              <p>This lands you inside <code>telstore/</code>, which contains the <code>scripts/</code> subfolder — run all subsequent commands from this project root.</p>
+            </li>
+            <li>
+              <strong>Preview the installer</strong>
+              <p>The installer supports a dry run so you can see what will change:</p>
+              <pre><code>bash scripts/install_telstore.sh --dry-run</code></pre>
+            </li>
+            <li>
+              <strong>Run the installer</strong>
+              <pre><code>sudo bash scripts/install_telstore.sh --create-service</code></pre>
+              <p><code>--create-service</code> writes the systemd unit and needs root. Run the whole command with <code>sudo</code> if your shell is not root.</p>
+            </li>
+            <li>
+              <strong>Start and check the bot</strong>
+              <p>The installer deliberately does not start the bot — start it explicitly:</p>
+              <pre><code>sudo systemctl start telstore-bot
+sudo systemctl status telstore-bot</code></pre>
+              <p>To remove the deployment cleanly later, run <code>sudo bash scripts/uninstall_server.sh</code>.</p>
+            </li>
+          </ol>
+        </section>
+
+        <!-- Configure -->
+        <section id="configure" class="docs-section">
+          <span class="eyebrow">Environment</span>
+          <h2>Configure</h2>
+          <p>TelStore reads its configuration from a <code>.env</code> file in the project root. Populate this file with your credentials:</p>
+          <pre><code>TELEGRAM_BOT_TOKEN=your_bot_token_here
+CRYPTO_ADDRESS=0xYourWalletAddressHere
+MANUAL_CHAIN=BSC
+NOWPAYMENTS_API_KEY=
+COINGATE_AUTH_TOKEN=
+COINGATE_ENABLED=0
+PRICE_USD=5
+OWNER_CHAT_ID=your_chat_id_here
+WEBSITE_URL=https://example.com
+SUPPORT_URL=https://t.me/yourusername</code></pre>
+          <p>Configuration keys explained:</p>
+          <ul class="docs-list">
+            <li><code>TELEGRAM_BOT_TOKEN</code> — The secret API token provided by @BotFather when you register your bot.</li>
+            <li><code>CRYPTO_ADDRESS</code> — Your wallet address receiving direct on-chain customer payments.</li>
+            <li><code>MANUAL_CHAIN</code> — BSC for BEP-20 tokens, or TRON for TRC-20.</li>
+            <li><code>NOWPAYMENTS_API_KEY</code> — Your API key from NOWPayments if accepting card payments or extended coins.</li>
+            <li><code>COINGATE_ENABLED</code> — Leave at 0 until your CoinGate account has passed KYC.</li>
+            <li><code>OWNER_CHAT_ID</code> — Your numerical Telegram account ID, granting full admin panel privileges inside the bot.</li>
+            <li><code>WEBSITE_URL</code> — Where the <strong>Official Website</strong> button in the bot sends customers. Must start with <code>https://</code>. Leave it empty to hide the button's link.</li>
+            <li><code>SUPPORT_URL</code> — Where the <strong>Support</strong> button sends customers. Must be an <code>https://</code>, <code>tg://</code> or <code>t.me/</code> link, or an <code>@username</code>.</li>
+          </ul>
+        </section>
+
+        <!-- Add a product -->
+        <section id="add-product" class="docs-section">
+          <span class="eyebrow">Product Management</span>
+          <h2>Add a product</h2>
+          <p>Products are created entirely within Telegram without needing a web dashboard. The shortest path is:</p>
+          <p><strong>Admin Menu → Add Product → the eight-step wizard:</strong></p>
+          <ol class="docs-steps">
+            <li>Open the bot in Telegram and launch the <strong>Admin Menu</strong>.</li>
+            <li>Tap <strong>Add Product</strong> to initialize the interactive wizard.</li>
+            <li>Enter the <strong>Product Title</strong>.</li>
+            <li>Provide the <strong>Product Description</strong>.</li>
+            <li>Select or create the <strong>Product Category</strong>.</li>
+            <li>Choose the delivery type: <strong>Digital File</strong> or <strong>VIP Channel Access</strong>.</li>
+            <li>Upload the digital file or specify the invite link for your private Telegram channel.</li>
+            <li>Set the <strong>Price</strong> and access duration (for VIP access), then review and confirm to publish the product to your live shop catalog.</li>
+          </ol>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section id="troubleshooting" class="docs-section">
+          <span class="eyebrow">Diagnostics</span>
+          <h2>Troubleshooting</h2>
+          <p>Common issues and resolutions when running TelStore:</p>
+          <ul class="docs-list">
+            <li>
+              <strong>Bot silent:</strong>
+              Check that your <code>TELEGRAM_BOT_TOKEN</code> matches your @BotFather settings exactly. Verify that the bot service process is actively running on your VPS and check system service logs for errors.
+            </li>
+            <li>
+              <strong>Payment not confirming:</strong>
+              On-chain confirmations require time to clear on the blockchain network (two confirmations are enforced). Confirm that the buyer sent the exact transaction amount to your designated wallet address on the correct network (BSC or TRON).
+            </li>
+            <li>
+              <strong>VIP invite fails:</strong>
+              The bot must be added to your VIP channel or group as an Administrator with permissions to create invite links and add subscribers.
+            </li>
+          </ul>
+        
+          <p>Still stuck? Email <!--email_off--><a href="mailto:TelStorebot@gmail.com">TelStorebot@gmail.com</a><!--/email_off--> with your server's OS version, the exact command you ran, and the error output.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-main">
+        <a href="index.html" class="footer-wordmark">TelStore</a>
+        <ul class="footer-links">
+          <li><a href="terms.html">Terms</a></li>
+          <li><a href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer" class="footer-tg"><img src="assets/telegram.svg" width="15" height="15" alt="" decoding="async"> Telegram</a></li>
+          <li><a href="https://www.youtube.com/watch?v=dUZw-DvjTB4" target="_blank" rel="noopener noreferrer" class="footer-ic"><img src="assets/youtube.svg" width="15" height="15" alt="" decoding="async"> YouTube</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 TelStore. Source code licensed, not sold as a service.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Telegram support button -->
+  <a class="tg-fab" href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer"
+     aria-label="Chat with TelStore support on Telegram">
+    <img src="assets/telegram.svg" width="30" height="30" alt="" decoding="async">
+    <span class="tg-fab-text">Support</span>
+  </a>
+</body>
+</html>
