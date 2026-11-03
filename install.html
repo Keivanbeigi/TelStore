@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install TelStore — server setup guide</title>
+  <meta name="description" content="Step-by-step guide to install the TelStore Telegram shop bot on an Ubuntu or Debian VPS: prerequisites, the interactive installer, .env configuration, systemd service, and verification.">
+  <link rel="canonical" href="https://telstore.store/install.html">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Install TelStore — server setup guide">
+  <meta property="og:description" content="Step-by-step guide to install the TelStore Telegram shop bot on an Ubuntu or Debian VPS: prerequisites, the interactive installer, .env configuration, systemd service, and verification.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TelStore">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://telstore.store/install.html">
+  <meta property="og:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Install TelStore — server setup guide">
+  <meta name="twitter:description" content="Step-by-step guide to install the TelStore Telegram shop bot on an Ubuntu or Debian VPS: prerequisites, the interactive installer, .env configuration, systemd service, and verification.">
+  <meta name="twitter:image" content="https://i.ytimg.com/vi/dUZw-DvjTB4/maxresdefault.jpg">
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="stylesheet" href="style.css?v2">
+  <script src="main.js?v2" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <!-- Top bar -->
+  <header>
+    <div class="container nav-container">
+      <a href="index.html" class="wordmark" aria-label="TelStore home">TelStore</a>
+      <nav aria-label="Main navigation">
+        <ul class="nav-links">
+          <li><a href="https://telstore.sell.app/product/telstore-bot-source-code">Buy</a></li>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="install.html" class="active">Installation</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="container docs-layout">
+      <!-- Sidebar -->
+      <aside class="docs-sidebar">
+        <div class="docs-sidebar-title">Installation</div>
+        <nav class="docs-nav" aria-label="Installation sections">
+          <a href="#before-you-start">Before you start</a>
+          <a href="#get-package">Get package</a>
+          <a href="#install-easy">Install (easy path)</a>
+          <a href="#install-scriptable">Scriptable install</a>
+          <a href="#env-file">The .env file</a>
+          <a href="#start-service">Start service</a>
+          <a href="#verify">Verify</a>
+          <a href="#troubleshooting">Troubleshooting</a>
+          <a href="#updating-removing">Updating &amp; removing</a>
+          <a href="#support">Support</a>
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <div class="docs-content">
+        <header class="docs-intro">
+          <h1>Install TelStore — server setup guide</h1>
+          <p>Step-by-step guide to install the TelStore Telegram shop bot on an Ubuntu or Debian VPS: prerequisites, the interactive installer, .env configuration, systemd service, and verification.</p>
+        </header>
+
+        <!-- Section 1 — Before you start -->
+        <section id="before-you-start" class="docs-section">
+          <span class="eyebrow">Section 1</span>
+          <h2>Before you start</h2>
+          <div class="docs-table-wrapper">
+            <table class="docs-table">
+              <tbody>
+                <tr>
+                  <td><strong>Server</strong></td>
+                  <td>Any Linux VPS. Ubuntu 22.04 / 24.04 and Debian 12 are tested.</td>
+                </tr>
+                <tr>
+                  <td><strong>CPU / RAM</strong></td>
+                  <td>1 vCPU and 1 GB RAM is enough. The bot idles around 16 MB.</td>
+                </tr>
+                <tr>
+                  <td><strong>Python</strong></td>
+                  <td>3.8 or newer. The installer checks this and stops if it fails.</td>
+                </tr>
+                <tr>
+                  <td><strong>Disk</strong></td>
+                  <td>~50 MB for the application. Product files you upload are stored separately.</td>
+                </tr>
+                <tr>
+                  <td><strong>Root access</strong></td>
+                  <td>Yes — the installer writes a systemd unit.</td>
+                </tr>
+                <tr>
+                  <td><strong>Bot token</strong></td>
+                  <td>From <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">@BotFather</a> → <code>/newbot</code>.</td>
+                </tr>
+                <tr>
+                  <td><strong>Your chat ID</strong></td>
+                  <td>From <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer">@userinfobot</a>. This is both the admin account and where sale alerts go.</td>
+                </tr>
+                <tr>
+                  <td><strong>Wallet address</strong></td>
+                  <td>Any EVM address you control. Used for direct on-chain payments.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout">
+            <p>No paid API is required. Direct wallet payments and on-chain verification work with nothing but a bot token and an address. NOWPayments is optional and only needed if you want buyers to pay by card.</p>
+          </div>
+        </section>
+
+        <!-- Section 2 — Get the package onto the server -->
+        <section id="get-package" class="docs-section">
+          <span class="eyebrow">Section 2</span>
+          <h2>Get the package onto the server</h2>
+          <p>The buyer receives <code>TelStore-Bot.zip</code>. Show both routes.</p>
+          
+          <p><strong>From your own computer:</strong></p>
+          <pre><code class="language-bash">scp TelStore-Bot.zip root@YOUR_SERVER_IP:/opt/
+ssh root@YOUR_SERVER_IP</code></pre>
+
+          <p><strong>Unzip on the server:</strong></p>
+          <pre><code class="language-bash">cd /opt
+unzip TelStore-Bot.zip
+cd /opt/telstore</code></pre>
+
+          <div class="callout">
+            <p><code>unzip</code> is not installed on every minimal image. If the command is not found: <code>apt-get update &amp;&amp; apt-get install -y unzip</code>.</p>
+          </div>
+
+          <p>Check the tree is intact before going further:</p>
+          <pre><code class="language-bash">ls scripts/</code></pre>
+          <p>You should see <code>bot.py</code>, <code>config.py</code>, <code>deploy_server.sh</code> and <code>install_telstore.sh</code> in that listing. If <code>scripts/</code> is missing, the archive was extracted into the wrong directory — check that <code>telstore/</code> sits directly under <code>/opt</code>.</p>
+        </section>
+
+        <!-- Section 3 — Install (the easy path) -->
+        <section id="install-easy" class="docs-section">
+          <span class="eyebrow">Section 3</span>
+          <h2>Install (the easy path)</h2>
+          <div class="primary-card">
+            <p>This is the route most people should take. One command, eleven questions, and it writes <code>.env</code> and registers the service for you.</p>
+            <pre><code class="language-bash">cd /opt/telstore
+bash scripts/deploy_server.sh</code></pre>
+
+            <p>Then explain what happens, because a buyer facing eleven prompts wants to know this is normal:</p>
+            <p>The script asks eleven questions, in this order:</p>
+            <ol class="docs-steps">
+              <li>Telegram bot token</li>
+              <li>Your chat ID (the owner/admin account)</li>
+              <li>Crypto wallet address</li>
+              <li>NOWPayments API key — press Enter to skip</li>
+              <li>CoinGate auth token — press Enter to skip</li>
+              <li>Whether CoinGate business KYC is complete — answer <code>n</code> unless it is</li>
+            </ol>
+
+            <p>Pressing Enter on the optional ones leaves those payment routes hidden, which is the correct choice if you only want direct wallet payments.</p>
+            <p>Before writing anything it makes a timestamped backup of any existing <code>.env</code>. If that backup fails it stops rather than continuing — that is deliberate.</p>
+
+            <div class="callout">
+              <p>When it finishes, <code>.env</code> exists with your values, the file is <code>chmod 600</code>, and a systemd unit named <code>telstore-bot</code> is registered.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4 — Install (the scriptable path) -->
+        <section id="install-scriptable" class="docs-section">
+          <span class="eyebrow">Section 4</span>
+          <h2>Install (the scriptable path)</h2>
+          <details class="docs-details">
+            <summary>Non-interactive install (advanced)</summary>
+            <div class="details-content">
+              <pre><code class="language-bash">cd /opt/telstore
+bash scripts/install_telstore.sh --dry-run
+sudo bash scripts/install_telstore.sh --create-service</code></pre>
+
+              <p><code>install_telstore.sh</code> does not prompt for anything. It copies <code>scripts/.env.example</code> into place and leaves you to edit <code>.env</code> yourself. It is the right choice when you are provisioning from a script or an Ansible playbook; <code>deploy_server.sh</code> is faster when you are doing this by hand.</p>
+              <p>The installer configures systemd and tells you to run <code>sudo systemctl start telstore-bot</code> — it does not start the bot automatically.</p>
+
+              <div class="docs-table-wrapper">
+                <table class="docs-table">
+                  <thead>
+                    <tr>
+                      <th>Flag</th>
+                      <th>What it does</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>--dry-run</code></td>
+                      <td>Prints every action without changing anything. Run this first.</td>
+                    </tr>
+                    <tr>
+                      <td><code>--create-service</code></td>
+                      <td>Writes and enables the systemd unit. Needs root.</td>
+                    </tr>
+                    <tr>
+                      <td><code>--install-dir DIR</code></td>
+                      <td>Target directory. Defaults to the current one.</td>
+                    </tr>
+                    <tr>
+                      <td><code>--service-name NAME</code></td>
+                      <td>Systemd unit name. Defaults to <code>telstore-bot</code>.</td>
+                    </tr>
+                    <tr>
+                      <td><code>-y</code>, <code>--yes</code></td>
+                      <td>Assume yes for prompts. Use with <code>--create-service</code> in automation.</td>
+                    </tr>
+                    <tr>
+                      <td><code>-h</code>, <code>--help</code></td>
+                      <td>Print the script's own help text.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="callout">
+                <p><strong>Warning:</strong> The installer refuses to run against <code>/</code>, <code>/etc</code>, <code>/root</code>, <code>/var</code> or <code>/usr</code> directly. It will stop rather than install into a system directory — that is a safety check, not an error.</p>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- Section 5 — The .env file -->
+        <section id="env-file" class="docs-section">
+          <span class="eyebrow">Section 5</span>
+          <h2>The .env file</h2>
+          <p>Every value below is a placeholder — replace each one with your own. Nothing here is a real credential, and your filled-in <code>.env</code> should never be committed to git.</p>
+          <pre><code class="language-bash"># --- Telegram bot ---
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# --- Payment: wallet address (manual crypto payment) ---
+CRYPTO_ADDRESS=0xYourWalletAddressHere
+MANUAL_CHAIN=BSC
+MANUAL_TOKEN_CONTRACT=
+
+# --- Payment: NOWPayments (optional) ---
+NOWPAYMENTS_ENVIRONMENT=
+NOWPAYMENTS_API_KEY=
+
+# --- Payment: CoinGate (optional) ---
+COINGATE_ENVIRONMENT=
+COINGATE_AUTH_TOKEN=
+COINGATE_ENABLED=0
+
+# --- Price ---
+PRICE_USD=5
+
+# --- Admin / Owner ---
+OWNER_CHAT_ID=your_chat_id_here
+TELEGRAM_CHAT_ID=your_chat_id_here
+
+# --- VIP Channel (optional) ---
+# CHANNEL_ID=-1001234567890
+# CHANNEL_LINK=https://t.me/yourchannel
+
+# --- Website & Support (shown to customers) ---
+WEBSITE_URL=https://example.com
+SUPPORT_URL=https://t.me/yourusername</code></pre>
+
+          <p>Here is what each key accepts. This is where most setups go wrong, so read the notes column.</p>
+          <div class="docs-table-wrapper">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Required</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>TELEGRAM_BOT_TOKEN</code></td>
+                  <td>Yes</td>
+                  <td>From @BotFather. A wrong token makes the bot exit on start.</td>
+                </tr>
+                <tr>
+                  <td><code>CRYPTO_ADDRESS</code></td>
+                  <td>Yes*</td>
+                  <td>Your EVM wallet. *Required unless you only use NOWPayments.</td>
+                </tr>
+                <tr>
+                  <td><code>MANUAL_CHAIN</code></td>
+                  <td>Yes</td>
+                  <td>One of <code>BSC</code>, <code>Ethereum</code>, <code>Polygon</code>, <code>BSC-Testnet</code>, <code>Ethereum-Sepolia</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>MANUAL_TOKEN_CONTRACT</code></td>
+                  <td>No</td>
+                  <td>Leave empty to use the chain's default USDT. Set it to accept a different token.</td>
+                </tr>
+                <tr>
+                  <td><code>NOWPAYMENTS_ENVIRONMENT</code></td>
+                  <td>No</td>
+                  <td><code>sandbox</code> or <code>production</code>. Must match the key you provide.</td>
+                </tr>
+                <tr>
+                  <td><code>NOWPAYMENTS_API_KEY</code></td>
+                  <td>No</td>
+                  <td>Leave empty to hide the NOWPayments button entirely.</td>
+                </tr>
+                <tr>
+                  <td><code>COINGATE_ENABLED</code></td>
+                  <td>No</td>
+                  <td>Default <code>0</code>. Set to <code>1</code> only after CoinGate business KYC is approved.</td>
+                </tr>
+                <tr>
+                  <td><code>PRICE_USD</code></td>
+                  <td>Yes</td>
+                  <td>Monthly price in USD. Integer.</td>
+                </tr>
+                <tr>
+                  <td><code>OWNER_CHAT_ID</code></td>
+                  <td>Yes</td>
+                  <td>The admin account <em>and</em> the destination for sale alerts.</td>
+                </tr>
+                <tr>
+                  <td><code>CHANNEL_ID</code> / <code>CHANNEL_LINK</code></td>
+                  <td>No</td>
+                  <td>Leave commented out if you are not selling channel access.</td>
+                </tr>
+                <tr>
+                  <td><code>WEBSITE_URL</code></td>
+                  <td>No</td>
+                  <td>Must start with <code>https://</code>. Leave empty to hide the menu button.</td>
+                </tr>
+                <tr>
+                  <td><code>SUPPORT_URL</code></td>
+                  <td>No</td>
+                  <td>Must be <code>https://</code>, <code>tg://</code>, <code>t.me/...</code>, or <code>@username</code>. <strong><code>mailto:</code> is rejected.</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            <p><strong>Validation Notice:</strong> That last row matters — <code>SUPPORT_URL</code> must start with <code>https://</code>, <code>tg://</code>, <code>t.me/</code>, or <code>@username</code>. <strong><code>mailto:</code> is rejected</strong> — pasting an email address triggers <code>SUPPORT_URL must start with https://, tg://, t.me/, or @username</code>.</p>
+          </div>
+
+          <p>Add a permissions step:</p>
+          <pre><code class="language-bash">chmod 600 /opt/telstore/.env</code></pre>
+          <p>The file holds your bot token and gateway keys. It must not be world-readable.</p>
+        </section>
+
+        <!-- Section 6 — Start the service -->
+        <section id="start-service" class="docs-section">
+          <span class="eyebrow">Section 6</span>
+          <h2>Start the service</h2>
+          <pre><code class="language-bash">sudo systemctl start telstore-bot
+sudo systemctl status telstore-bot</code></pre>
+          <p>Expect <code>active (running)</code>. The unit restarts on failure with a 5 second delay, so a crash loop shows up here as repeated restart lines.</p>
+
+          <p>Enable on boot:</p>
+          <pre><code class="language-bash">sudo systemctl enable telstore-bot</code></pre>
+          <p><code>--create-service</code> already enables it. Run this only if you skipped that flag.</p>
+        </section>
+
+        <!-- Section 7 — Verify it works -->
+        <section id="verify" class="docs-section">
+          <span class="eyebrow">Section 7</span>
+          <h2>Verify it works</h2>
+          <p>Work through these in order. Each one proves a different part of the chain is alive.</p>
+          <ol class="docs-steps">
+            <li>
+              <strong>Open Telegram and send <code>/start</code> to your bot.</strong> You should get the main menu. No reply means the token or the service is wrong — check <code>sudo journalctl -u telstore-bot -n 50 --no-pager</code>.
+            </li>
+            <li>
+              <strong>Open the Admin Menu.</strong> It appears only when your chat ID matches <code>OWNER_CHAT_ID</code>. If it is missing, that value is wrong.
+            </li>
+            <li>
+              <strong>Add a test product</strong> with a price of <code>1</code> through the Admin Menu wizard.
+            </li>
+            <li>
+              <strong>Place a test order</strong> from a second Telegram account. You should see the payment screen with an amount and the wallet address.
+            </li>
+            <li>
+              <strong>Confirm the sale alert reaches you</strong> — the owner account receives a receipt with product, price, buyer, TXID and status.
+            </li>
+          </ol>
+
+          <p>Then the health-check script:</p>
+          <pre><code class="language-bash">bash scripts/check_bot.sh</code></pre>
+          <p>This checks the service state, the token, the wallet, the IPN listener and the gateway configuration, and prints what is wrong rather than just failing.</p>
+        </section>
+
+        <!-- Section 8 — Troubleshooting -->
+        <section id="troubleshooting" class="docs-section">
+          <span class="eyebrow">Section 8</span>
+          <h2>Troubleshooting</h2>
+          <p>These are the failures that actually happen in the first hour, in rough order of frequency.</p>
+          <div class="docs-table-wrapper">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Symptom</th>
+                  <th>Cause</th>
+                  <th>Fix</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>python3: command not found</code></td>
+                  <td>Python not installed</td>
+                  <td><code>apt-get update &amp;&amp; apt-get install -y python3</code></td>
+                </tr>
+                <tr>
+                  <td>Bot does not answer <code>/start</code></td>
+                  <td>Bad token, or the service is not running</td>
+                  <td><code>sudo journalctl -u telstore-bot -n 50 --no-pager</code>, then check <code>TELEGRAM_BOT_TOKEN</code></td>
+                </tr>
+                <tr>
+                  <td><code>SingleInstanceLock: already running</code></td>
+                  <td>A previous process is still alive, or a stale lock</td>
+                  <td><code>ps aux | grep bot.py</code>, then <code>rm -f /opt/telstore/scripts/bot.lock</code></td>
+                </tr>
+                <tr>
+                  <td>Admin Menu missing</td>
+                  <td><code>OWNER_CHAT_ID</code> does not match your account</td>
+                  <td>Send <code>/start</code> from the account whose ID is in <code>.env</code></td>
+                </tr>
+                <tr>
+                  <td>Gateway button not shown</td>
+                  <td>The key is empty, or CoinGate KYC is incomplete</td>
+                  <td>Fill the key and restart; for CoinGate set <code>COINGATE_ENABLED=1</code> only after KYC</td>
+                </tr>
+                <tr>
+                  <td><code>GatewayConfigurationError</code></td>
+                  <td><code>NOWPAYMENTS_ENVIRONMENT</code> does not match the key type</td>
+                  <td>Use <code>production</code> with a live key, <code>sandbox</code> with a sandbox key</td>
+                </tr>
+                <tr>
+                  <td>Payments not arriving</td>
+                  <td>The payout wallet is not verified at the gateway</td>
+                  <td>Verify the wallet in the gateway dashboard</td>
+                </tr>
+                <tr>
+                  <td><code>unzip: command not found</code></td>
+                  <td>Minimal image</td>
+                  <td><code>apt-get install -y unzip</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Section 9 — Updating and removing -->
+        <section id="updating-removing" class="docs-section">
+          <span class="eyebrow">Section 9</span>
+          <h2>Updating and removing</h2>
+          <p>Both scripts touch only the application code. Your configuration and business data survive.</p>
+
+          <p><strong>Updating:</strong></p>
+          <pre><code class="language-bash">cd /opt/telstore
+bash scripts/update_telstore.sh</code></pre>
+          <p>This keeps your <code>.env</code>, <code>subscribers.json</code>, <code>pending_payments.json</code> and <code>manual_orders.json</code> and replaces only the application code. Read <code>UPGRADE_AND_ROLLBACK.md</code> in the package before running it on a shop with live orders.</p>
+
+          <p><strong>Removing:</strong></p>
+          <pre><code class="language-bash">cd /opt/telstore
+sudo bash scripts/uninstall_server.sh --dry-run
+sudo bash scripts/uninstall_server.sh</code></pre>
+          <p>The uninstaller backs everything up to <code>/tmp/telstore_pre_uninstall_*.tar.gz</code> first, stops and disables the service, and deliberately <strong>preserves</strong> <code>subscribers.json</code>, <code>pending_payments.json</code>, <code>manual_orders.json</code>, <code>.env</code> and any <code>.bak_*</code> files. It does not wipe your business data.</p>
+        </section>
+
+        <!-- Section 10 — Support -->
+        <section id="support" class="docs-section">
+          <span class="eyebrow">Section 10</span>
+          <h2>Support</h2>
+          <div class="callout">
+            <p>Still stuck? The package ships full documentation — <code>INSTALL.md</code>, <code>DEPLOY_SERVER.md</code>, <code>BUYER_GUIDE.md</code> and <code>SECURITY_AUDIT.md</code> are all in the <code>telstore/</code> folder you extracted.</p>
+            <p>Email <!--email_off--><strong><a href="mailto:TelStorebot@gmail.com">TelStorebot@gmail.com</a></strong><!--/email_off--> or message <!--email_off--><strong><a href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer">@ADNC_bot</a></strong><!--/email_off--> on Telegram and describe the step that failed, with the exact command and the error output.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-main">
+        <a href="index.html" class="footer-wordmark">TelStore</a>
+        <ul class="footer-links">
+          <li><a href="terms.html">Terms</a></li>
+          <li><a href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer" class="footer-tg"><img src="assets/telegram.svg" width="15" height="15" alt="" decoding="async"> Telegram</a></li>
+          <li><a href="https://www.youtube.com/watch?v=dUZw-DvjTB4" target="_blank" rel="noopener noreferrer" class="footer-ic"><img src="assets/youtube.svg" width="15" height="15" alt="" decoding="async"> YouTube</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 TelStore. Source code licensed, not sold as a service.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Telegram support button -->
+  <a class="tg-fab" href="https://t.me/ADNC_bot" target="_blank" rel="noopener noreferrer"
+     aria-label="Chat with TelStore support on Telegram">
+    <img src="assets/telegram.svg" width="30" height="30" alt="" decoding="async">
+    <span class="tg-fab-text">Support</span>
+  </a>
+</body>
+</html>

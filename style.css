@@ -637,11 +637,10 @@ pre {
   padding: 18px 20px;
   overflow-x: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  margin: 16px 0 20px 0;
-  position: relative;
+  font-size: 0.95rem;
+  line-height: 1.7;
   color: var(--text);
+  -webkit-overflow-scrolling: touch;
 }
 
 code {
@@ -1018,4 +1017,67 @@ summary:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .tg-fab { transition: none; }
   .tg-fab:hover, .tg-fab:focus-visible { transform: none; }
+}
+
+/* Tables */
+.docs-table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0 24px;
+  -webkit-overflow-scrolling: touch;
+}
+.docs-table code {
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.docs-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; line-height: 1.55; text-align: left; }
+.docs-table th, .docs-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text);
+  line-height: 1.65;
+}
+.docs-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+.docs-table th { font-weight: 600; background-color: var(--surface); border-top: 1px solid var(--border); }
+.docs-table tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+
+/* Callout Box */
+.callout { background-color: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 18px 0; color: var(--text); }
+.callout p { margin: 0; color: var(--text); font-size: 0.98rem; line-height: 1.6; }
+.callout p + p { margin-top: 8px; }
+
+/* Primary Installation Card */
+.primary-card { background-color: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 24px 28px; margin: 20px 0 28px; }
+
+/* Collapsible Details in Docs */
+details.docs-details { background-color: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 20px 0; }
+details.docs-details summary { padding: 16px 20px; font-weight: 600; color: var(--text); cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+details.docs-details summary::-webkit-details-marker { display: none; }
+details.docs-details summary::after { content: "+"; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.25rem; color: var(--muted); }
+details.docs-details[open] summary::after { content: "−"; }
+details.docs-details[open] summary { border-bottom: 1px solid var(--border); }
+details.docs-details .details-content { padding: 20px; }
+
+
+
+/* Install page on small screens */
+@media (max-width: 768px) {
+  pre {
+    font-size: 0.85rem;
+    padding: 14px 16px;
+    line-height: 1.6;
+  }
+  .docs-table {
+    font-size: 0.88rem;
+  }
+  .docs-table td,
+  .docs-table th {
+    padding: 10px 12px;
+  }
+  .docs-table-wrapper {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
 }
