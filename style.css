@@ -806,11 +806,16 @@ ul.docs-list li {
 }
 
 @media (max-width: 480px) {
+  .nav-container {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
   .nav-links {
-    gap: 16px;
+    gap: 10px 14px;
+    flex-wrap: wrap;
   }
   .nav-links a {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
   .hero-actions {
     flex-direction: column;
