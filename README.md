@@ -6,6 +6,11 @@ It runs 24/7 on your Linux server, survives restarts, and is fully configurable 
 
 **Website:** [https://telstore.store](https://telstore.store) · **Demo video:** [2-minute walkthrough](https://youtu.be/dUZw-DvjTB4)
 
+
+**Try it before you buy:** [live demo bot](https://t.me/demotelstore_bot) — the real admin panel, running in sandbox mode.
+
+**Install guide:** [https://telstore.store/install](https://telstore.store/install) · **Docs:** [https://telstore.store/docs](https://telstore.store/docs)
+
 ## Documentation Index
 
 Everything you need ships directly in this package:
@@ -15,7 +20,6 @@ Everything you need ships directly in this package:
 - **`BUYER_GUIDE.md`** — Welcome walkthrough, first 15 minutes, and admin administration
 - **`ARCHITECTURE.md`** — System architecture, storage engine, and security invariants
 - **`FOR_SELLER.md`** — Seller's distribution, build verification, and clean package checklist
-- **`README.fa.md`** — Persian documentation for Persian-speaking administrators
 - This **`README.md`** — Complete technical reference index and operational manual
 
 ---
@@ -177,7 +181,6 @@ To sell access to a private Telegram channel:
 ```text
 telstore/
 ├── README.md               Reference index and technical documentation
-├── README.fa.md            Persian documentation for Persian administrators
 ├── INSTALL.md              Quick-start installation guide
 ├── DEPLOY_SERVER.md        Full 24/7 server deployment, backup & uninstallation
 ├── BUYER_GUIDE.md          Buyer onboarding and admin administration walkthrough
@@ -243,7 +246,7 @@ bash scripts/uninstall_server.sh
 ## 12. Support & Contact
 
 - **Website:** [https://telstore.store](https://telstore.store)
-- **Telegram Support:** [@ADNC_bot](https://t.me/ADNC_bot)
+- **Telegram Support:** [@k1_adineh](https://t.me/k1_adineh)
 - **Email:** TelStorebot@gmail.com
 - **Demo video:** [https://youtu.be/dUZw-DvjTB4](https://youtu.be/dUZw-DvjTB4)
 - **License:** Single-site commercial license. Use for your own shop, channel, or commercial bot. Redistribution is strictly prohibited.
